@@ -32,3 +32,9 @@ cat gnome.00 gnome.01 gnome.02 | python pre-dose.py trixie_Sources bullseye_Sour
 
 ...
 ```
+
+```
+awk -v RS='\n\n' '/Version: 6\.3\.4.*KDE Main/' trixie_Sources | grep ^Package:
+awk -v RS='\n\n' '/Version: 24\.12.*KDE Main/' trixie_Sources | grep ^Package:
+awk -v RS='\n\n' '/Version: 25\.0.*KDE Main/' trixie_Sources | grep ^Package:
+```
