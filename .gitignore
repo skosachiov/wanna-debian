@@ -1,0 +1,8 @@
+.venv
+*.gz
+*_Packages
+Packages
+*_Sources
+Sources
+*.json
+*.[0-9][0-9]
