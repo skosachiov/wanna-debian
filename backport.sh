@@ -16,7 +16,7 @@ if [ ! -s "$filename" ]; then
     exit 1
 fi
 
-cat $filename | python3 pre-dose $2_Sources $3_Sources > modified_Sources
+cat $filename | python3 pre-dose.py $2_Sources $3_Sources > modified_Sources
 
 while [ -s "$filename" ]; do
     echo "Processing $filename"
