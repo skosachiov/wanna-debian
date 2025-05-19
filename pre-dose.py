@@ -1,6 +1,18 @@
 import re, argparse, sys
 
-def parse_local_packages(filepath, bin_src = None):
+def version_records_first(block):
+    result = []
+    for line in block.splitlines():
+        if ':' in line: key, value = line.split(':', 1)
+        if key == 'Build-Depends':
+            elements = [x.strip() for x in value.split(',')]
+            with_brackets = [x for x in elements if '(' in x or ')' in x]
+            without_brackets = [x for x in elements if x not in with_brackets]
+            line = key + ": " + ', '.join(with_brackets + without_brackets)
+        result.append(line)
+    return "\n".join(result)
+
+def parse_local_packages(filepath, change_order = False):
     packages = {}
     with open(filepath, 'rt', encoding='utf-8') as f:
         content = f.read()
@@ -11,7 +23,7 @@ def parse_local_packages(filepath, bin_src = None):
                 else:
                     if ':' in line: key, value = line.split(':', 1)
                 if key == 'Package':
-                    packages[value.strip()] = block
+                    packages[value.strip()] = version_records_first(block) if change_order else block
                     break
     return packages
 
@@ -19,10 +31,11 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Pre-dose script performs a targeted substitution of package information from a source repository to a target repository, only for packages specified in the stdin input list.')
     parser.add_argument('source_repo', help='Newer repo Packages/Sources')
     parser.add_argument('target_repo', help='Older repo Packages/Sources')
+    parser.add_argument('-o', '--change-order', action='store_true', help='move version records to the top of the build dependency list')
     parser.add_argument('-r', '--remove', action='store_true', help='remove instead of replacing or adding')
     args = parser.parse_args()
 
-    source = parse_local_packages(args.source_repo)
+    source = parse_local_packages(args.source_repo, args.change_order)
     target = parse_local_packages(args.target_repo)
 
     for line in sys.stdin:
