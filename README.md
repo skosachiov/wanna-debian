@@ -18,17 +18,17 @@ awk -v RS='\n\n' '/Version: 4[3-8]\..*GNOME Main/' trixie_Sources | grep ^Packag
 
 vim gnome.00
 
-cat gnome.00 | python pre-dose.py trixie_Sources bullseye_Sources > bullseye_gnome_Sources
+cat gnome.00 | python3 pre-dose.py trixie_Sources bullseye_Sources > bullseye_gnome_Sources
 
 dose-builddebcheck --deb-native-arch=amd64 -e -f bullseye_Packages bullseye_gnome_Sources | \
     grep unsat-dep | awk '{print $2}' | cut -f 1 -d ":" | sort -u > gnome.01
 
-cat gnome.00 gnome.01 | python pre-dose.py trixie_Sources bullseye_Sources > bullseye_gnome_Sources
+cat gnome.00 gnome.01 | python3 pre-dose.py trixie_Sources bullseye_Sources > bullseye_gnome_Sources
 
 dose-builddebcheck --deb-native-arch=amd64 -e -f bullseye_Packages bullseye_gnome_Sources | \
     grep unsat-dep | awk '{print $2}' | cut -f 1 -d ":" | sort -u > gnome.02
 
-cat gnome.00 gnome.01 gnome.02 | python pre-dose.py trixie_Sources bullseye_Sources > bullseye_gnome_Sources
+cat gnome.00 gnome.01 gnome.02 | python3 pre-dose.py trixie_Sources bullseye_Sources > bullseye_gnome_Sources
 
 ...
 ```
