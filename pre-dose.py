@@ -11,7 +11,7 @@ def delete_depends(block, exclude_list):
         result.append(line)
     return "\n".join(result)
 
-def parse_local_packages(filepath, change_order = False, src_dict = None):
+def parse_local_packages(filepath, src_dict = None):
     packages = {}
     with open(filepath, 'rt', encoding='utf-8') as f:
         content = f.read()
