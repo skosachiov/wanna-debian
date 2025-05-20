@@ -22,11 +22,11 @@ def parse_local_packages(filepath, src_dict = None):
                 else:
                     if ':' in line: key, value = line.split(':', 1)
                 if key == 'Package':
-                    packages[value.strip()] = block
                     src = value.strip()
+                    packages[src] = block
                 if src_dict != None and key == 'Binary':
-                    packages = [p.strip() for p in value.split(',')]
-                    for p in packages:
+                    bin_pkgs = [p.strip() for p in value.split(',')]
+                    for p in bin_pkgs:
                         src_dict[p] = src
                     break
     return packages
@@ -59,7 +59,7 @@ if __name__ == "__main__":
                 else:
                     if not args.dont_resolve:
                         if pkg_name in src_dict:
-                            target[pkg_name] = source[src_dict(pkg_name)]
+                            target[pkg_name] = source[src_dict[pkg_name]]
                             print("Binary name resolved:", pkg_name, file=sys.stderr)
                         else:
                             print("Resolve error:", pkg_name, file=sys.stderr)
