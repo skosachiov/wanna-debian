@@ -56,16 +56,16 @@ if __name__ == "__main__":
             else:
                 if pkg_name in source:
                     target[pkg_name] = source[pkg_name]
-                    print("Name has not been changed:", pkg_name, file=sys.stderr)
+                    print(f'Name has not been changed: {pkg_name}', file=sys.stderr)
                 else:
                     if not args.dont_resolve:
                         if pkg_name in src_dict:
                             target[src_dict[pkg_name]] = source[src_dict[pkg_name]]
-                            print("Source name resolved:", src_dict[pkg_name], file=sys.stderr)
+                            print(f'Source name resolved {pkg_name}: {src_dict[pkg_name]}', file=sys.stderr)
                         else:
-                            print("Resolve binary error:", pkg_name, file=sys.stderr)
+                            print(f'Resolve binary error: {pkg_name}', file=sys.stderr)
                     else:
-                        print("Package name error:", pkg_name, file=sys.stderr)
+                        print(f'Package name error: {pkg_name}', file=sys.stderr)
     else:
         exclude_depends = []
         for line in sys.stdin:
