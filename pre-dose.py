@@ -23,13 +23,23 @@ def parse_local_packages(filepath, src_dict = None):
                     if ':' in line: key, value = line.split(':', 1)
                 if key == 'Package':
                     src = value.strip()
-                    packages[src] = block
-                if src_dict != None and key == 'Binary':
+                if key == 'Binary' and src_dict != None:
                     bin_pkgs = [p.strip() for p in value.split(',')]
                     for p in bin_pkgs:
                         src_dict[p] = src
-                    break
+                if key == 'Version':
+                    ver = value.strip()
+            packages[src] = {'ver': ver, 'block': block}
     return packages
+
+def backport_version(source, target, name):
+    if name not in source:
+        print(f'Error: no name {name} in source', file=sys.stderr)
+        return False
+    if target[name]['ver'] != source[name]['ver']:
+        target[name] = source[name]
+        return True
+    return False
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Pre-dose script performs a targeted substitution of package \
@@ -43,7 +53,7 @@ if __name__ == "__main__":
 
     src_dict = {}
 
-    source = parse_local_packages(args.source_repo, None if args.dont_resolve else src_dict)
+    source = parse_local_packages(args.source_repo, src_dict)
     target = parse_local_packages(args.target_repo)
 
     if not args.delete_depends:
@@ -55,13 +65,13 @@ if __name__ == "__main__":
                     del target[pkg_name]
             else:
                 if pkg_name in source:
-                    target[pkg_name] = source[pkg_name]
-                    print(f'Name has not been changed: {pkg_name}', file=sys.stderr)
+                    if backport_version(source, target, pkg_name):
+                        print(f'Name has not been changed: {pkg_name}', file=sys.stderr)
                 else:
                     if not args.dont_resolve:
                         if pkg_name in src_dict:
-                            target[src_dict[pkg_name]] = source[src_dict[pkg_name]]
-                            print(f'Source name {pkg_name} resolved: {src_dict[pkg_name]}', file=sys.stderr)
+                            if backport_version(source, target, src_dict[pkg_name]):
+                                print(f'Source name {pkg_name} resolved: {src_dict[pkg_name]}', file=sys.stderr)
                         else:
                             print(f'Resolve binary error: {pkg_name}', file=sys.stderr)
                     else:
