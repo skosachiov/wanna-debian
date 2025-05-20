@@ -20,31 +20,35 @@ wget -O trixie_Sources.gz http://ftp.debian.org/debian/dists/trixie/main/source/
 * https://wiki.debian.org/PkgQtKde/TrixieReleasePlans
 
 ```
-awk -v RS='\n\n' '/Version: 4[3-8]\..*GNOME Main/' trixie_Sources | grep ^Package: | cut -f 2 -d ' ' | sort -u > backport.00
+awk -v RS='\n\n' '/Version: 4[3-8]\..*GNOME Main/' trixie_Sources | grep ^Package: | cut -f 2 -d ' ' | sort -u > gnome.00
 ```
 
 #### kde backport example
 
 ```
-awk -v RS='\n\n' '/Version: 6\.3\.4.*KDE Main/' trixie_Sources | grep ^Package: > backport.00
-awk -v RS='\n\n' '/Version: 24\.12.*KDE Main/' trixie_Sources | grep ^Package: >> backport.00
-awk -v RS='\n\n' '/Version: 25\.0.*KDE Main/' trixie_Sources | grep ^Package: >> backport.00
-sort -u -o backport.00 backport.00
+awk -v RS='\n\n' '/Version: 6\.3\.4.*KDE Main/' trixie_Sources | grep ^Package: > kde.00
+awk -v RS='\n\n' '/Version: 24\.12.*KDE Main/' trixie_Sources | grep ^Package: >> kde.00
+awk -v RS='\n\n' '/Version: 25\.0.*KDE Main/' trixie_Sources | grep ^Package: >> kde.00
+sort -u -o kde.00 kde.00
 ```
 
 ### workflow
 
+```
 cat backport.00 | python3 pre-dose.py trixie_Sources bullseye_Sources > modified_Sources
 
 dose-builddebcheck --deb-native-arch=amd64 -e -f bullseye_Packages modified_Sources | \
     grep unsat-dep | awk '{print $2}' | cut -f 1 -d ":" | sort -u > backport.01
+```
 
 #### sanitize repo
 
-bash backport.sh nu trixie bullseye 2> nu.err
+`bash backport.sh nu trixie bullseye 2> nu.err`
 
 #### iter backport
 
-bash backport.sh backport trixie bullseye 2> backport.err
+`bash backport.sh backport trixie bullseye 2> backport.err`
 
 #### diff backport and nu
+
+`comm -23 gnome.list nu.list`
