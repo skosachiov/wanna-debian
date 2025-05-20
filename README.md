@@ -34,24 +34,17 @@ sort -u -o backport.00 backport.00
 
 ### workflow
 
+cat backport.00 | python3 pre-dose.py trixie_Sources bullseye_Sources > modified_Sources
+
+dose-builddebcheck --deb-native-arch=amd64 -e -f bullseye_Packages modified_Sources | \
+    grep unsat-dep | awk '{print $2}' | cut -f 1 -d ":" | sort -u > backport.01
+
 #### sanitize repo
 
-dose-builddebcheck --deb-native-arch=amd64 -e -f bullseye_Packages bullseye_Sources | \
-    grep unsat-dep | awk '{print $2}' | cut -f 1 -d ":" | sort -u > broken.before
+bash backport.sh nu trixie bullseye 2> nu.err
 
+#### iter backport
 
-cat gnome.00 | python3 pre-dose.py trixie_Sources bullseye_Sources > bullseye_gnome_Sources
+bash backport.sh backport trixie bullseye 2> backport.err
 
-dose-builddebcheck --deb-native-arch=amd64 -e -f bullseye_Packages bullseye_gnome_Sources | \
-    grep unsat-dep | awk '{print $2}' | cut -f 1 -d ":" | sort -u > gnome.01
-
-cat gnome.00 gnome.01 | python3 pre-dose.py trixie_Sources bullseye_Sources > bullseye_gnome_Sources
-
-dose-builddebcheck --deb-native-arch=amd64 -e -f bullseye_Packages bullseye_gnome_Sources | \
-    grep unsat-dep | awk '{print $2}' | cut -f 1 -d ":" | sort -u > gnome.02
-
-cat gnome.00 gnome.01 gnome.02 | python3 pre-dose.py trixie_Sources bullseye_Sources > bullseye_gnome_Sources
-
-...
-```
-
+#### diff backport and nu
