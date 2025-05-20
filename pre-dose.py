@@ -6,7 +6,7 @@ def delete_depends(block, exclude_list):
         if ':' in line: key, value = line.split(':', 1)
         if key == 'Build-Depends':
             packages = [p.strip() for p in value.split(',')]
-            filtered_packages = [p for p in packages if not any(p.startswith(name) for name in exclude_list)]
+            filtered_packages = [p for p in packages if not any(p.startswith(name + " ") or p == name for name in exclude_list)]
             line = key + ": " + ', '.join(filtered_packages)
         result.append(line)
     return "\n".join(result)
