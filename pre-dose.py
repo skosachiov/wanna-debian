@@ -60,8 +60,11 @@ if __name__ == "__main__":
                     if not args.dont_resolve:
                         if pkg_name in src_dict:
                             target[pkg_name] = source[src_dict(pkg_name)]
+                            print("Binary name resolved:", pkg_name, file=sys.stderr)
+                        else:
+                            print("Resolve error:", pkg_name, file=sys.stderr)
                     else:
-                        print("Package name error:", line.strip(), file=sys.stderr)
+                        print("Package name error:", pkg_name, file=sys.stderr)
     else:
         exclude_depends = []
         for line in sys.stdin:
