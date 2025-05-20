@@ -25,10 +25,10 @@ while [ -s "$filename" ]; do
     
     dose-builddebcheck --deb-native-arch=amd64 -e -f $3_Packages modified_Sources | grep unsat-dep | awk '{print $2}' | cut -f 1 -d ":" | sort -u > $next_filename
 
-    comm -23 $next_filename $filename | python3 pre-dose.py -d $2_Sources modified_Sources > modified_Sources.tmp
+    comm -23 $filename $next_filename | python3 pre-dose.py -d $2_Sources modified_Sources > modified_Sources.tmp
     mv -f modified_Sources.tmp modified_Sources
     
-    comm -23 $next_filename $filename | python3 pre-dose.py $2_Sources modified_Sources > modified_Sources.tmp
+    comm -13 $filename $next_filename | python3 pre-dose.py $2_Sources modified_Sources > modified_Sources.tmp
     mv -f modified_Sources.tmp modified_Sources
     
     filename="$next_filename"
