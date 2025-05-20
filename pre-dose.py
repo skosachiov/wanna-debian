@@ -59,7 +59,7 @@ if __name__ == "__main__":
                 else:
                     if not args.dont_resolve:
                         if pkg_name in src_dict:
-                            target[pkg_name] = source[src_dict[pkg_name]]
+                            target[src_dict[pkg_name]] = source[src_dict[pkg_name]]
                             print("Source name resolved:", src_dict[pkg_name], file=sys.stderr)
                         else:
                             print("Resolve binary error:", pkg_name, file=sys.stderr)
