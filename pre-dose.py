@@ -56,6 +56,7 @@ if __name__ == "__main__":
             else:
                 if pkg_name in source:
                     target[pkg_name] = source[pkg_name]
+                    print("Name has not been changed:", pkg_name, file=sys.stderr)
                 else:
                     if not args.dont_resolve:
                         if pkg_name in src_dict:
