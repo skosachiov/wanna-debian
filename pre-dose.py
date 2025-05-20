@@ -36,6 +36,9 @@ def backport_version(source, target, name):
     if name not in source:
         print(f'Error: no name {name} in source', file=sys.stderr)
         return False
+    if name not in target:
+        target[name] = source[name]
+        return True
     if target[name]['ver'] != source[name]['ver']:
         target[name] = source[name]
         return True
@@ -84,5 +87,5 @@ if __name__ == "__main__":
         target = {k: delete_depends(v, exclude_depends) for k, v in target.items()}
     
     for pkg in target.values():
-        print(pkg)
+        print(pkg['block'])
         print()
