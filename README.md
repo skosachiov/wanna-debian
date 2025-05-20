@@ -32,7 +32,7 @@ awk -v RS='\n\n' '/Version: 25\.0.*KDE Main/' trixie_Sources | grep ^Package: >>
 sort -u -o kde.00 kde.00
 ```
 
-### workflow
+### main loop
 
 ```
 cat backport.00 | python3 pre-dose.py trixie_Sources bullseye_Sources > modified_Sources
@@ -41,13 +41,18 @@ dose-builddebcheck --deb-native-arch=amd64 -e -f bullseye_Packages modified_Sour
     grep unsat-dep | awk '{print $2}' | cut -f 1 -d ":" | sort -u > backport.01
 ```
 
+#### main loop automation
+
+`bash backport.sh gnome trixie bullseye 2> gnome.err`
+
 #### sanitize repo
 
 `bash backport.sh nu trixie bullseye 2> nu.err`
 
-#### iter backport
+#### grep result
 
-`bash backport.sh backport trixie bullseye 2> backport.err`
+with binary `cat gnome.[0-9]* | sort -u`
+source only `grep -v error: gnome.err | awk -F': ' '{print $2}' | sort -u`
 
 #### diff backport and nu
 
