@@ -100,8 +100,8 @@ if __name__ == "__main__":
                             if backport_version(source, target, src_dict[pkg_name]):
                                 print(f'Source name {pkg_name} resolved: {src_dict[pkg_name]}', file=sys.stderr)
                         elif pkg_name in prov_dict:
-                            if backport_version(source, target, prov_dict[pkg_name]):
-                                print(f'Source name {pkg_name} provided: {prov_dict[pkg_name]}', file=sys.stderr)                                
+                            if backport_version(source, target, src_dict[prov_dict[pkg_name]]):
+                                print(f'Source name {pkg_name} provided by {prov_dict[pkg_name]}: {src_dict[prov_dict[pkg_name]]}', file=sys.stderr)
                         else:
                             print(f'Resolve binary error: {pkg_name}', file=sys.stderr)
                     else:
@@ -110,3 +110,4 @@ if __name__ == "__main__":
     for pkg in target.values():
         print(pkg['block'])
         print()
+    print(prov_dict)
