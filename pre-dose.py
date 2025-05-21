@@ -98,12 +98,14 @@ if __name__ == "__main__":
                     if not args.dont_resolve:
                         if pkg_name in src_dict:
                             if backport_version(source, target, src_dict[pkg_name]):
-                                print(f'Source name {pkg_name} resolved: {src_dict[pkg_name]}', file=sys.stderr)
+                                print(f'Binary package {pkg_name} resolved to: {src_dict[pkg_name]}', file=sys.stderr)
                         elif pkg_name in prov_dict:
-                            if backport_version(source, target, src_dict[prov_dict[pkg_name]]):
-                                print(f'Source name {pkg_name} provided by {prov_dict[pkg_name]}: {src_dict[prov_dict[pkg_name]]}', file=sys.stderr)
+                            if prov_dict[pkg_name] in src_dict:
+                                if backport_version(source, target, src_dict[prov_dict[pkg_name]]):
+                                    print(f'Binary package {pkg_name} provided by {prov_dict[pkg_name]} resolved to: \
+                                        {src_dict[prov_dict[pkg_name]]}', file=sys.stderr)
                         else:
-                            print(f'Resolve binary error: {pkg_name}', file=sys.stderr)
+                            print(f'Resolve binary package error: {pkg_name}', file=sys.stderr)
                     else:
                         print(f'Package name error: {pkg_name}', file=sys.stderr)
     
