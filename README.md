@@ -2,6 +2,8 @@
 
 ## pre-dose workflow
 
+Pre-doce is a workflow for analyzing and backporting Debian packages from newer releases (e.g., trixie) to older stable releases (e.g., bullseye). It automates dependency resolution and identifies packages that can be cleanly backported, as well as those with unsatisfied dependencies.
+
 ### get metadata
 
 ```
