@@ -102,8 +102,8 @@ if __name__ == "__main__":
                         elif pkg_name in prov_dict:
                             if prov_dict[pkg_name] in src_dict:
                                 if backport_version(source, target, src_dict[prov_dict[pkg_name]]):
-                                    print(f'Binary package {pkg_name} provided by {prov_dict[pkg_name]} resolved to: \
-                                        {src_dict[prov_dict[pkg_name]]}', file=sys.stderr)
+                                    print(f'Binary package {pkg_name} provided by {prov_dict[pkg_name]} resolved to: {src_dict[prov_dict[pkg_name]]}',
+                                        file=sys.stderr)
                         else:
                             print(f'Resolve binary package error: {pkg_name}', file=sys.stderr)
                     else:
