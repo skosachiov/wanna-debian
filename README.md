@@ -59,3 +59,5 @@ source only `grep -v error: gnome.err | awk -F': ' '{print $2}' | sort -u`
 #### diff backport and nu
 
 `comm -23 gnome.list nu.list`
+
+with versions `comm -23 gnome.list nu.list | python3 pre-dose.py -a trixie_Sources bullseye_Sources 2>&1 > /dev/null | grep '='`
