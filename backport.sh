@@ -26,6 +26,11 @@ while [ -s "$filename" ]; do
     dose-builddebcheck --deb-native-arch=amd64 -e -f $3_Packages modified_Sources | grep unsat-dep | awk '{print $2}' | cut -f 1 -d ":" | sort -u > $next_filename
     cp -f modified_Sources modified_Sources.prev
 
+    if cmp -s "$filename" "$next_filename"; then
+        echo "Stopping: '$next_filename' has identical content to '$filename'"
+        break
+    fi
+
     comm -13 $filename $next_filename | python3 pre-dose.py -d $2_Sources modified_Sources > modified_Sources.tmp
     mv -f modified_Sources.tmp modified_Sources
     
