@@ -29,7 +29,7 @@ while [ -s "$filename" ]; do
     comm -13 $filename $next_filename | python3 pre-dose.py -d $2_Sources modified_Sources > modified_Sources.tmp
     mv -f modified_Sources.tmp modified_Sources
     
-    comm -13 $filename $next_filename | python3 pre-dose.py $2_Sources modified_Sources > modified_Sources.tmp
+    comm -13 $filename $next_filename | python3 pre-dose.py -p $2_Packages $2_Sources modified_Sources > modified_Sources.tmp
     mv -f modified_Sources.tmp modified_Sources
     
     filename="$next_filename"

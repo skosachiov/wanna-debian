@@ -12,27 +12,31 @@ def delete_depends(block, exclude_list):
         result.append(line)
     return "\n".join(result)
 
-def parse_local_packages(filepath, src_dict = None):
+def parse_local_packages(filepath, src_dict = None, prov_dict = None):
     packages = {}
     with open(filepath, 'rt', encoding='utf-8') as f:
         content = f.read()
         package_blocks = re.split(r'\n\n+', content.strip())
         for block in package_blocks:
-            src = version = None
+            pkg_name = version = None
             for line in block.splitlines():
                 if not line or line[0].isspace(): continue
                 if ':' in line:
                     key, value = line.split(':', 1)
                     if key == 'Package':
-                        src = value.strip()
+                        pkg_name = value.strip()
                     if key == 'Binary' and src_dict != None:
                         bin_pkgs = [p.strip() for p in value.split(',')]
                         for p in bin_pkgs:
-                            src_dict[p] = src
+                            src_dict[p] = pkg_name
+                    if key == 'Provides' and prov_dict != None:
+                        prov_pkgs = [p.strip().split()[0] for p in value.split(',')]
+                        for p in prov_pkgs:
+                            prov_dict[p] = pkg_name
                     if key == 'Version':
                         version = value.strip()
-            if src != None and version != None:
-                packages[src] = {'version': version, 'block': block}
+            if pkg_name != None and version != None:
+                packages[pkg_name] = {'version': version, 'block': block}
     return packages
 
 def backport_version(source, target, name):
@@ -50,18 +54,21 @@ def backport_version(source, target, name):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Pre-dose script performs a targeted substitution of package \
         information from a source repository to a target repository, only for packages specified in the stdin input list.')
-    parser.add_argument('source_repo', help='Newer repo Packages/Sources')
-    parser.add_argument('target_repo', help='Older repo Packages/Sources')
+    parser.add_argument('source_repo', help='Newer repo Sources')
+    parser.add_argument('target_repo', help='Older repo Sources')
     parser.add_argument('-r', '--remove', action='store_true', help='remove instead of replacing or adding')
     parser.add_argument('-d', '--delete-depends', action='store_true', help='delete from build depends instead of replacing or adding')
     parser.add_argument('-n', '--dont-resolve', action='store_true', help='do not try to resolve the package name in the source repo')
     parser.add_argument('-a', '--add-version', action='store_true', help='add source version to package name')
+    parser.add_argument('-p', '--provide', type=str, help="path to binary Packages to provide replacement")
     args = parser.parse_args()
 
     src_dict = {}
+    prov_dict = {}
 
-    source = parse_local_packages(args.source_repo, src_dict)
+    source = parse_local_packages(args.source_repo, src_dict = src_dict)
     target = parse_local_packages(args.target_repo)
+    if args.provide: parse_local_packages(args.provide, prov_dict = prov_dict)
 
     if args.delete_depends:
         exclude_depends = []
@@ -92,6 +99,9 @@ if __name__ == "__main__":
                         if pkg_name in src_dict:
                             if backport_version(source, target, src_dict[pkg_name]):
                                 print(f'Source name {pkg_name} resolved: {src_dict[pkg_name]}', file=sys.stderr)
+                        elif pkg_name in prov_dict:
+                            if backport_version(source, target, prov_dict[pkg_name]):
+                                print(f'Source name {pkg_name} provided: {prov_dict[pkg_name]}', file=sys.stderr)                                
                         else:
                             print(f'Resolve binary error: {pkg_name}', file=sys.stderr)
                     else:

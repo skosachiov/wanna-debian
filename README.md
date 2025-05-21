@@ -35,7 +35,7 @@ sort -u -o kde.00 kde.00
 ### main loop
 
 ```
-cat backport.00 | python3 pre-dose.py trixie_Sources bullseye_Sources > modified_Sources
+cat backport.00 | python3 pre-dose.py -p trixie_Packages trixie_Sources bullseye_Sources > modified_Sources
 
 dose-builddebcheck --deb-native-arch=amd64 -e -f bullseye_Packages modified_Sources | \
     grep unsat-dep | awk '{print $2}' | cut -f 1 -d ":" | sort -u > backport.01
