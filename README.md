@@ -53,8 +53,8 @@ dose-builddebcheck --deb-native-arch=amd64 -e -f bullseye_Packages modified_Sour
 
 #### grep result
 
-with binary `cat gnome.[0-9]* | sort -u`
-source only `grep -v error: gnome.err | awk -F': ' '{print $2}' | sort -u`
+* with binary `cat gnome.[0-9]* | sort -u`
+* source only `grep -v error: gnome.err | awk -F': ' '{print $2}' | sort -u`
 
 #### diff backport and nu
 
