@@ -28,9 +28,9 @@ awk -v RS='\n\n' '/Version: 4[3-8]\..*GNOME Main/' trixie_Sources | grep ^Packag
 #### kde backport example
 
 ```
-awk -v RS='\n\n' '/Version: 6\.3\.4.*KDE Main/' trixie_Sources | grep ^Package: | cut -f 2 -d ' ' > kde.00
-awk -v RS='\n\n' '/Version: 24\.12.*KDE Main/' trixie_Sources | grep ^Package: | cut -f 2 -d ' ' >> kde.00
-awk -v RS='\n\n' '/Version: 25\.0.*KDE Main/' trixie_Sources | grep ^Package: | cut -f 2 -d ' ' >> kde.00
+awk -v RS='\n\n' '/Version:.*6\.3\.4.*KDE Main/' trixie_Sources | grep ^Package: | cut -f 2 -d ' ' > kde.00
+awk -v RS='\n\n' '/Version:.*24\.12.*KDE Main/' trixie_Sources | grep ^Package: | cut -f 2 -d ' ' >> kde.00
+awk -v RS='\n\n' '/Version:.*25\.0.*KDE Main/' trixie_Sources | grep ^Package: | cut -f 2 -d ' ' >> kde.00
 sort -u -o kde.00 kde.00
 ```
 
