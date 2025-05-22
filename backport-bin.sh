@@ -16,26 +16,26 @@ if [ ! -s "$filename" ]; then
     exit 1
 fi
 
-cat $filename | python3 pre-dose.py $2_Sources $3_Sources > modified_Sources
+cat $filename | python3 pre-dose.py $2_Packages $3_Packages > modified_Packages
 
 while [ -s "$filename" ]; do
     echo "Processing $filename"
     ((counter++))
     next_filename=$(printf "%s.%02d" "$base_name" $counter)
     
-    dose-builddebcheck --deb-native-arch=amd64 -e -f $3_Packages modified_Sources | grep unsat-dep | awk '{print $2}' | cut -f 1 -d ":" | sort -u > $next_filename
-    cp -f modified_Sources modified_Sources.prev
+    dose-debcheck --deb-native-arch=amd64 -e -f modified_Packages | grep unsat-dep | awk '{print $2}' | cut -f 1 -d ":" | sort -u > $next_filename
+    cp -f modified_Packages modified_Packages.prev
 
     if cmp -s "$filename" "$next_filename"; then
         echo "Stopping: '$next_filename' has identical content to '$filename'"
         break
     fi
 
-    cat $next_filename | python3 pre-dose.py -d $2_Sources modified_Sources > modified_Sources.tmp
-    mv -f modified_Sources.tmp modified_Sources
+    cat $next_filename | python3 pre-dose.py -d $2_Packages modified_Packages > modified_Packages.tmp
+    mv -f modified_Packages.tmp modified_Packages
     
-    comm -13 $filename $next_filename | python3 pre-dose.py -p $2_Packages $2_Sources modified_Sources > modified_Sources.tmp
-    mv -f modified_Sources.tmp modified_Sources
+    comm -13 $filename $next_filename | python3 pre-dose.py $2_Packages modified_Packages > modified_Packages.tmp
+    mv -f modified_Packages.tmp modified_Packages
     
     filename="$next_filename"
 done

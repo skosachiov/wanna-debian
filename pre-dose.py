@@ -5,9 +5,9 @@ def delete_depends(block, exclude_list):
     for line in block.splitlines():
         if ':' in line:
             key, value = line.split(':', 1)
-            if key == 'Build-Depends':
+            if key in ('Build-Depends', 'Build-Depends-Indep', 'Build-Depends-Arch', 'Depends'):
                 packages = [p.strip() for p in value.split(',')]
-                filtered_packages = [p for p in packages if not any((p.startswith(name + " ") or p == name) for name in exclude_list)]
+                filtered_packages = [p for p in packages if not any((p.startswith(name + " ") or p.startswith(name + ":") or p == name) for name in exclude_list)]
                 line = key + ": " + ', '.join(filtered_packages)
         result.append(line)
     return "\n".join(result)
@@ -19,6 +19,7 @@ def parse_local_packages(filepath, src_dict = None, prov_dict = None):
         package_blocks = re.split(r'\n\n+', content.strip())
         for block in package_blocks:
             pkg_name = version = None
+            depends = []
             for line in block.splitlines():
                 if not line or line[0].isspace(): continue
                 if ':' in line:
@@ -35,8 +36,12 @@ def parse_local_packages(filepath, src_dict = None, prov_dict = None):
                             prov_dict[p] = pkg_name
                     if key == 'Version':
                         version = value.strip()
+                    if key == 'Depends':
+                        deps_pkgs = [p.strip() for p in value.split(',')]
+                        for p in deps_pkgs:
+                            depends.append(p)
             if pkg_name != None and version != None:
-                packages[pkg_name] = {'version': version, 'block': block}
+                packages[pkg_name] = {'version': version, 'block': block, 'depends': depends}
     return packages
 
 def backport_version(source, target, name):
@@ -54,13 +59,14 @@ def backport_version(source, target, name):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Pre-dose script performs a targeted substitution of package \
         information from a source repository to a target repository, only for packages specified in the stdin input list.')
-    parser.add_argument('source_repo', help='Newer repo Packages/Sources')
-    parser.add_argument('target_repo', help='Older repo Packages/Sources')
+    parser.add_argument('source_repo', help='Newer repository Packages/Sources')
+    parser.add_argument('target_repo', help='Older repository Packages/Sources')
     parser.add_argument('-r', '--remove', action='store_true', help='remove instead of replacing or adding')
-    parser.add_argument('-d', '--delete-depends', action='store_true', help='delete from build depends instead of replacing or adding')
+    parser.add_argument('-d', '--delete-depends', action='store_true', help='delete from depends instead of replacing or adding')
     parser.add_argument('-n', '--dont-resolve', action='store_true', help='do not try to resolve the package name in the source repo')
-    parser.add_argument('-a', '--add-version', action='store_true', help='add source version to package name')
     parser.add_argument('-p', '--provide', type=str, help="path to binary Packages to provide replacement")
+    parser.add_argument('-a', '--add-version', action='store_true', help='add source repository version to package name and exit')
+    parser.add_argument('-e', '--depends', action='store_true', help='print source repository dependencies and exit')    
     args = parser.parse_args()
 
     src_dict = {}
@@ -83,8 +89,12 @@ if __name__ == "__main__":
             pkg_name = line.strip()
             if args.add_version:
                 if pkg_name in source:
-                    print(f'{pkg_name}={source[pkg_name]["version"]}', file=sys.stderr)
-            if args.remove:
+                    print(f'{pkg_name}={source[pkg_name]["version"]}')
+            elif args.depends:
+                if pkg_name in source:
+                    for p in source[pkg_name]["depends"]:
+                        print(p)                    
+            elif args.remove:
                 if pkg_name in target:
                     del target[pkg_name]
                     print(f'Package removed: {pkg_name}', file=sys.stderr)
@@ -109,7 +119,8 @@ if __name__ == "__main__":
                     else:
                         print(f'Package name error: {pkg_name}', file=sys.stderr)
     
-    for pkg in target.values():
-        print(pkg['block'])
-        print()
+    if not any((args.add_version, args.depends)):
+        for pkg in target.values():
+            print(pkg['block'])
+            print()
     
