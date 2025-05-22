@@ -54,8 +54,8 @@ def backport_version(source, target, name):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Pre-dose script performs a targeted substitution of package \
         information from a source repository to a target repository, only for packages specified in the stdin input list.')
-    parser.add_argument('source_repo', help='Newer repo Sources')
-    parser.add_argument('target_repo', help='Older repo Sources')
+    parser.add_argument('source_repo', help='Newer repo Packages/Sources')
+    parser.add_argument('target_repo', help='Older repo Packages/Sources')
     parser.add_argument('-r', '--remove', action='store_true', help='remove instead of replacing or adding')
     parser.add_argument('-d', '--delete-depends', action='store_true', help='delete from build depends instead of replacing or adding')
     parser.add_argument('-n', '--dont-resolve', action='store_true', help='do not try to resolve the package name in the source repo')
