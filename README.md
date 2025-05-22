@@ -57,11 +57,11 @@ dose-builddebcheck --deb-native-arch=amd64 -e -f bullseye_Packages modified_Sour
 
 #### main loop automation
 
-`bash backport.sh gnome.src trixie bullseye 2> gnome.src.log`
+`bash backport-src.sh gnome.src trixie bullseye 2> gnome.src.log`
 
 #### sanitize repo
 
-`bash backport.sh nu.src trixie bullseye 2> nu.src.log`
+`bash backport-src.sh nu.src trixie bullseye 2> nu.src.log`
 
 #### grep result
 
