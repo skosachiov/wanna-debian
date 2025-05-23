@@ -4,6 +4,10 @@
 
 Pre-doce is a workflow for analyzing and backporting Debian packages from newer releases (e.g., trixie) to older stable releases (e.g., bullseye). It automates dependency resolution and identifies packages that can be cleanly backported, as well as those with unsatisfied dependencies.
 
+The process begins by resolving binary dependencies and proceeds iteratively through dose-debcheck. The output is then fed into an iterative core process using dose-builddebcheck, which cycles through the source package metadata.
+
+At each iteration, unsatisfied dependencies are removed from the metadata, and the verification repeats. Since the package databases may already contain unresolved dependencies at the start, these are preemptively filtered out from the metadata.
+
 ### get metadata
 
 ```
@@ -44,7 +48,7 @@ sort -u -o kde.00 kde.00
 
 #### preparing the start file
 
-`cat gnome.bin.* | sort -u > gnome.src.00`
+`cat gnome.bin.[0-9]* | sort -u > gnome.src.00`
 
 ### main loop sources
 
@@ -59,22 +63,6 @@ dose-builddebcheck --deb-native-arch=amd64 -e -f bullseye_Packages modified_Sour
 
 `bash backport-src.sh gnome.src trixie bullseye 2> gnome.src.log`
 
-#### sanitize repo
-
-`bash backport-src.sh nu.src trixie bullseye 2> nu.src.log`
-
 #### grep result
 
-* `cat gnome.src.[0-1]* | sort -u | python3 pre-dose.py -a trixie_Packages bullseye_Sources | cut -f 1 -d " " | sort -u > gnome.src.all`
-
-* `cat nu.src.[0-1]* | sort -u | python3 pre-dose.py -a trixie_Packages bullseye_Sources | cut -f 1 -d " " | sort -u > nu.src.all`
-
-source only `grep -v error: gnome.src.log | awk -F': ' '{print $2}' | sort -u > gnome.src.all`
-
-#### diff backport and nu
-
-with versions `comm -23 gnome.src.all nu.src.all | python3 pre-dose.py -a trixie_Sources bullseye_Sources | grep '='`
-
-or Packages for binary resolve:
-
-with versions `comm -23 gnome.bin.all nu.bin.all | python3 pre-dose.py -a trixie_Packages bullseye_Sources | grep '='`
+`cat gnome.src.[0-9]* | sort -u | python3 pre-dose.py -a trixie_Packages trixie_Sources | cut -f 1 -d " " | sort -u > gnome.src.all`

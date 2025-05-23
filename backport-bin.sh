@@ -22,7 +22,7 @@ dose-debcheck --deb-native-arch=amd64 -e -f $3_Packages \
     | grep unsat-dep | awk '{print $2}' | cut -f 1 -d ":" | sort -u > $base_name.broken.before
 
 cat $base_name.broken.before \
-        | sort -u | python3 pre-dose.py -d $2_Packages modified_Packages > modified_Packages.tmp &&
+        | sort -u | python3 pre-dose.py -d $2_Packages modified_Packages > modified_Packages.tmp && \
         mv -f modified_Packages.tmp modified_Packages    
 
 while [ -s "$filename" ]; do
@@ -40,11 +40,11 @@ while [ -s "$filename" ]; do
     fi
 
     comm -13 $filename $next_filename \
-        | python3 pre-dose.py $2_Packages modified_Packages > modified_Packages.tmp &&
+        | python3 pre-dose.py $2_Packages modified_Packages > modified_Packages.tmp && \
         mv -f modified_Packages.tmp modified_Packages
 
     cat $base_name.[0-9]* \
-        | sort -u | python3 pre-dose.py -d $2_Packages modified_Packages > modified_Packages.tmp &&
+        | sort -u | python3 pre-dose.py -d $2_Packages modified_Packages > modified_Packages.tmp && \
         mv -f modified_Packages.tmp modified_Packages
            
     filename="$next_filename"
