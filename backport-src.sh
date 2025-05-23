@@ -30,11 +30,11 @@ while [ -s "$filename" ]; do
         echo "Stopping: '$next_filename' has identical content to '$filename'"
         break
     fi
-
-    cat $next_filename | python3 pre-dose.py -d $2_Sources modified_Sources > modified_Sources.tmp
-    mv -f modified_Sources.tmp modified_Sources
-    
+  
     comm -13 $filename $next_filename | python3 pre-dose.py -p $2_Packages $2_Sources modified_Sources > modified_Sources.tmp
+    mv -f modified_Sources.tmp modified_Sources
+
+    cat $base_name.[0-9]* | sort -u | python3 pre-dose.py -d $2_Sources modified_Sources > modified_Sources.tmp
     mv -f modified_Sources.tmp modified_Sources
     
     filename="$next_filename"

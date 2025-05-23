@@ -31,12 +31,13 @@ while [ -s "$filename" ]; do
         break
     fi
 
-    cat $next_filename | python3 pre-dose.py -d $2_Packages modified_Packages > modified_Packages.tmp
-    mv -f modified_Packages.tmp modified_Packages
-    
     comm -13 $filename $next_filename | python3 pre-dose.py $2_Packages modified_Packages > modified_Packages.tmp
     mv -f modified_Packages.tmp modified_Packages
+
+    cat $base_name.[0-9]* | sort -u | python3 pre-dose.py -d $2_Packages modified_Packages > modified_Packages.tmp
+    mv -f modified_Packages.tmp modified_Packages
     
+       
     filename="$next_filename"
 done
 
