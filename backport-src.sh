@@ -18,12 +18,16 @@ fi
 
 cat $filename | python3 pre-dose.py $2_Sources $3_Sources > modified_Sources
 
+dose-builddebcheck --deb-native-arch=amd64 -e -f $3_Packages $3_Sources \
+    | grep unsat-dep | awk '{print $2}' | cut -f 1 -d ":" | sort -u > $base_name.broken.before
+
 while [ -s "$filename" ]; do
     echo "Processing $filename"
     ((counter++))
     next_filename=$(printf "%s.%02d" "$base_name" $counter)
     
-    dose-builddebcheck --deb-native-arch=amd64 -e -f $3_Packages modified_Sources | grep unsat-dep | awk '{print $2}' | cut -f 1 -d ":" | sort -u > $next_filename
+    dose-builddebcheck --deb-native-arch=amd64 -e -f $3_Packages modified_Sources \
+        | grep unsat-dep | awk '{print $2}' | cut -f 1 -d ":" | sort -u > $next_filename
     cp -f modified_Sources modified_Sources.prev
 
     if cmp -s "$filename" "$next_filename"; then
@@ -31,10 +35,12 @@ while [ -s "$filename" ]; do
         break
     fi
   
-    comm -13 $filename $next_filename | python3 pre-dose.py -p $2_Packages $2_Sources modified_Sources > modified_Sources.tmp
+    comm -13 $filename $next_filename \
+        | python3 pre-dose.py -p $2_Packages $2_Sources modified_Sources > modified_Sources.tmp
     mv -f modified_Sources.tmp modified_Sources
 
-    cat $base_name.[0-9]* | sort -u | python3 pre-dose.py -d $2_Sources modified_Sources > modified_Sources.tmp
+    cat $base_name.broken.before $base_name.[0-9]* \
+        | sort -u | python3 pre-dose.py -d $2_Sources modified_Sources > modified_Sources.tmp
     mv -f modified_Sources.tmp modified_Sources
     
     filename="$next_filename"
