@@ -65,11 +65,13 @@ dose-builddebcheck --deb-native-arch=amd64 -e -f bullseye_Packages modified_Sour
 
 #### grep result
 
-* with binary `cat gnome.src.[0-9]* | sort -u`
-* source only `grep -v error: gnome.src.log | awk -F': ' '{print $2}' | sort -u`
+* with binary `cat gnome.src.[0-9]* | sort -u > gnome.bin.all`
+* source only `grep -v error: gnome.src.log | awk -F': ' '{print $2}' | sort -u > gnome.src.all`
 
 #### diff backport and nu
 
-`comm -23 gnome.src.list nu.src.list`
+with versions `comm -23 gnome.src.all nu.src.all | python3 pre-dose.py -a trixie_Sources bullseye_Sources | grep '='`
 
-with versions `comm -23 gnome.src.list nu.src.list | python3 pre-dose.py -a trixie_Sources bullseye_Sources | grep '='`
+or Packages for binary resolve:
+
+with versions `comm -23 gnome.bin.list nu.bin.list | python3 pre-dose.py -a trixie_Packages bullseye_Sources | grep '='`
