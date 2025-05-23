@@ -90,7 +90,7 @@ if __name__ == "__main__":
             if args.add_version:
                 if pkg_name in source:
                     print(f'{pkg_name}={source[pkg_name]["version"]}')
-                else pkg_name in src_dict:
+                elif pkg_name in src_dict:
                     print(f'{src_dict[pkg_name]}={source[src_dict[pkg_name]]["version"]}')
             elif args.depends:
                 if pkg_name in source:
