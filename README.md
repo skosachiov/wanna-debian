@@ -2,11 +2,15 @@
 
 ## pre-dose workflow
 
-Pre-doce is a workflow for analyzing and backporting Debian packages from newer releases (e.g., trixie) to older stable releases (e.g., bullseye). It automates dependency resolution and identifies packages that can be cleanly backported, as well as those with unsatisfied dependencies.
+### intro
 
-The process begins by resolving binary dependencies and proceeds iteratively through dose-debcheck. The output is then fed into an iterative core process using dose-builddebcheck, which cycles through the source package metadata.
+Pre-doce is a specialized workflow designed to analyze and backport Debian packages from newer releases, such as trixie, to older stable releases like bullseye. By automating dependency resolution and compatibility assessment, it efficiently identifies which packages can be cleanly backported and which cannot due to unsatisfied dependencies.
 
-At each iteration, unsatisfied dependencies are removed from the metadata, and the verification repeats. Since the package databases may already contain unresolved dependencies at the start, these are preemptively filtered out from the metadata.
+The workflow begins with binary dependency resolution, analyzing which packages can be migrated without conflicts. This initial assessment is then processed by dose-debcheck, which systematically verifies package installability against the target release’s repository. The output is fed into dose-builddebcheck, the core iterative engine that refines dependency resolution by cycling through source package metadata.
+
+During each iteration, unsatisfied dependencies are stripped from the metadata, and the verification process repeats with the updated constraints. Since the package databases may already contain unresolvable dependencies—such as missing or incompatible libraries—these are preemptively filtered out before processing. This step minimizes redundant checks and accelerates convergence toward a viable solution.
+
+By combining dose-debcheck and dose-builddebcheck, Pre-doce ensures an efficient and reliable backporting process. It reduces manual effort, precisely pinpoints problematic dependencies, and automates the end-to-end workflow, making it an indispensable tool for Debian maintainers and developers.
 
 ### get metadata
 
