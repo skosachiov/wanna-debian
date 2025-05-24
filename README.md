@@ -12,6 +12,10 @@ During each iteration, unsatisfied dependencies are stripped from the metadata, 
 
 By combining dose-debcheck and dose-builddebcheck, Pre-doce ensures an efficient and reliable backporting process. It reduces manual effort, precisely pinpoints problematic dependencies, and automates the end-to-end workflow, making it an indispensable tool for Debian maintainers and developers.
 
+### apt
+
+`apt install dose-distcheck dose-builddebcheck`
+
 ### get metadata
 
 ```
@@ -45,6 +49,14 @@ awk -v RS='\n\n' '/Version:.*24\.12.*KDE Main/' trixie_Packages | grep ^Package:
 awk -v RS='\n\n' '/Version:.*25\.0.*KDE Main/' trixie_Packages | grep ^Package: | cut -f 2 -d ' ' >> kde.bin.00
 sort -u -o kde.00 kde.00
 ```
+
+### fast start
+
+`./backport.sh gnome trixie bullseye`
+
+or 
+
+`./backport.sh kde trixie bullseye`
 
 ### main loop binary packages
 
