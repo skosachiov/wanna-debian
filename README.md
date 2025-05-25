@@ -28,57 +28,44 @@ wget -O trixie_Sources.gz http://ftp.debian.org/debian/dists/trixie/main/source/
 
 ### select binary packages
 
-#### gnome backport example
+Get list of sections in "trixie":
+
+* https://packages.debian.org/source/trixie/
+
+or
 
 * https://people.debian.org/~fpeters/gnome/debian-gnome-48-status.html
 * https://wiki.debian.org/PkgQtKde/TrixieReleasePlans
 
-`echo gnome-core | python pre-dose.py -e trixie_Packages trixie_Sources | sort`
+`echo gnome-core | python pre-dose.py -e trixie_Packages trixie_Sources | sort -u > gnome.txt`
 
 or
 
 ```
-awk -v RS='\n\n' '/Version: 4[3-8]\..*GNOME Main/' trixie_Packages | grep ^Package: | cut -f 2 -d ' ' | sort -u > gnome.bin.00
+awk -v RS='\n\n' '/Version: 4[3-8]\..*GNOME Main/' trixie_Packages | grep ^Package: | cut -f 2 -d ' ' | sort -u > gnome.txt
 ```
 
-#### kde backport example
+or
 
 ```
-awk -v RS='\n\n' '/Version:.*6\.3\.4.*KDE Main/' trixie_Packages | grep ^Package: | cut -f 2 -d ' ' > kde.bin.00
-awk -v RS='\n\n' '/Version:.*24\.12.*KDE Main/' trixie_Packages | grep ^Package: | cut -f 2 -d ' ' >> kde.bin.00
-awk -v RS='\n\n' '/Version:.*25\.0.*KDE Main/' trixie_Packages | grep ^Package: | cut -f 2 -d ' ' >> kde.bin.00
-sort -u -o kde.00 kde.00
+awk -v RS='\n\n' '/Version:.*6\.3\.[4-5].*KDE Main/' trixie_Packages | grep ^Package: | cut -f 2 -d ' ' > kde.txt
+awk -v RS='\n\n' '/Version:.*24\.12.*KDE Main/' trixie_Packages | grep ^Package: | cut -f 2 -d ' ' >> kde.txt
+awk -v RS='\n\n' '/Version:.*25\.0.*KDE Main/' trixie_Packages | grep ^Package: | cut -f 2 -d ' ' >> kde.txt
+sort -u -o kde.txt kde.txt
 ```
 
-### fast start
+### run resolver
 
-`./backport.sh gnome trixie bullseye`
+`cat gnome.txt | ./backport.sh gnome trixie bullseye`
 
 or 
 
-`./backport.sh kde trixie bullseye`
+`cat kde.txt | ./backport.sh kde trixie bullseye`
 
-### main loop binary packages
+### view result
 
-`bash backport-bin.sh gnome.bin trixie bullseye 2> gnome.bin.log`
+`cat gnome.src.all`
 
-#### preparing the start file
+or
 
-`cat gnome.bin.[0-9]* | sort -u > gnome.src.00`
-
-### main loop sources
-
-```
-cat backport.00 | python3 pre-dose.py -p trixie_Packages trixie_Sources bullseye_Sources > modified_Sources
-
-dose-builddebcheck --deb-native-arch=amd64 -e -f bullseye_Packages modified_Sources | \
-    grep unsat-dep | awk '{print $2}' | cut -f 1 -d ":" | sort -u > backport.01
-```
-
-#### main loop automation
-
-`bash backport-src.sh gnome.src trixie bullseye 2> gnome.src.log`
-
-#### grep result
-
-`cat gnome.src.[0-9]* | sort -u | python3 pre-dose.py -a trixie_Packages trixie_Sources | cut -f 1 -d " " | sort -u > gnome.src.all`
+`cat kde.src.all`

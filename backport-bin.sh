@@ -1,8 +1,8 @@
 #!/bin/bash
 
 if [ -z "$1" ]; then
-    echo "Usage: $0 <base_filename>"
-    echo "Example: $0 example"
+    echo "Usage: $0 [basename.bin] [newer_suffix] [older_suffix]"
+    echo "Example: $0 gnome.bin trixie bullseye"
     exit 1
 fi
 
