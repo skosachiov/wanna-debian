@@ -34,8 +34,7 @@ Get list of sections in "trixie":
 
 or
 
-* https://people.debian.org/~fpeters/gnome/debian-gnome-48-status.html
-* https://wiki.debian.org/PkgQtKde/TrixieReleasePlans
+https://people.debian.org/~fpeters/gnome/debian-gnome-48-status.html
 
 `echo gnome-core | python pre-dose.py -e trixie_Packages trixie_Sources | sort -u > gnome.txt`
 
@@ -46,6 +45,8 @@ awk -v RS='\n\n' '/Version: 4[3-8]\..*GNOME Main/' trixie_Packages | grep ^Packa
 ```
 
 or
+
+https://wiki.debian.org/PkgQtKde/TrixieReleasePlans
 
 ```
 awk -v RS='\n\n' '/Version:.*6\.3\.[4-5].*KDE Main/' trixie_Packages | grep ^Package: | cut -f 2 -d ' ' > kde.txt
@@ -65,7 +66,5 @@ or
 ### view result
 
 `cat gnome.src.all`
-
-or
 
 `cat kde.src.all`
