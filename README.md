@@ -14,7 +14,7 @@ By combining dose-debcheck and dose-builddebcheck, Pre-doce ensures an efficient
 
 ### apt
 
-`apt install dose-distcheck dose-builddebcheck`
+`apt update && apt install dose-* wget vim git bash-com* man`
 
 ### get metadata
 
@@ -30,7 +30,7 @@ wget -O trixie_Sources.gz http://ftp.debian.org/debian/dists/trixie/main/source/
 
 Get list of sections in "trixie":
 
-* https://packages.debian.org/source/trixie/
+https://packages.debian.org/source/trixie/
 
 or
 
@@ -40,9 +40,7 @@ https://people.debian.org/~fpeters/gnome/debian-gnome-48-status.html
 
 or
 
-```
-awk -v RS='\n\n' '/Version: 4[3-8]\..*GNOME Main/' trixie_Packages | grep ^Package: | cut -f 2 -d ' ' | sort -u > gnome.txt
-```
+`awk -v RS='\n\n' '/Version: 4[3-8]\..*GNOME Main/' trixie_Packages | grep ^Package: | cut -f 2 -d ' ' | sort -u > gnome.txt`
 
 or
 
@@ -68,3 +66,19 @@ or
 `cat gnome.src.all`
 
 `cat kde.src.all`
+
+## man dose-ceve
+
+Find all the reverse binary dependencies of the package patchutils:
+```
+dose-ceve --deb-native-arch amd64 -r patchutils -T deb \
+        deb:///var/lib/apt/lists/*_dists_sid_main_binary-amd64_Packages \
+        | grep-dctrl -n -s Package '' | sort -u
+```
+Find all the source packages that (directly or indirectly) build depend on patchutils:
+```
+dose-ceve -T debsrc --deb-native-arch=amd64 -r patchutils \
+        debsrc:///var/lib/apt/lists/*_dists_sid_main_source_Sources \
+        deb:///var/lib/apt/lists/*_dists_sid_main_binary-amd64_Packages \
+        | grep-dctrl -n -s Package '' | sort -u
+```
