@@ -19,9 +19,9 @@ fi
 cat $filename | python3 pre-dose.py $2_Packages $3_Packages > modified_Packages
 
 if [ -e $3_Packages.broken.before ]; then
-    cat $3_Packages.broken.before \
-            | sort -u | python3 pre-dose.py -d $2_Packages modified_Packages > modified_Packages.tmp && \
-            mv -f modified_Packages.tmp modified_Packages    
+    cat $3_Packages.broken.before | sort -u \
+        | python3 pre-dose.py -d $2_Packages modified_Packages > modified_Packages.tmp && \
+        mv -f modified_Packages.tmp modified_Packages    
 fi
 
 while [ -s "$filename" ]; do

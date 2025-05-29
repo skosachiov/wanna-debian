@@ -19,8 +19,8 @@ fi
 cat $filename | python3 pre-dose.py $2_Sources $3_Sources > modified_Sources
 
 if [ -e $3_Sources.broken.before ]; then
-    cat $3_Sources.broken.before \
-        | sort -u | python3 pre-dose.py -d $2_Sources modified_Sources > modified_Sources.tmp && \
+    cat $3_Sources.broken.before | sort -u \
+        | python3 pre-dose.py -d $2_Sources modified_Sources > modified_Sources.tmp && \
         mv -f modified_Sources.tmp modified_Sources
 fi
 
