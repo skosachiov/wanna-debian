@@ -26,6 +26,19 @@ wget -O bullseye_Sources.gz http://ftp.debian.org/debian/dists/bullseye/main/sou
 wget -O trixie_Sources.gz http://ftp.debian.org/debian/dists/trixie/main/source/Sources.gz && gunzip trixie_Sources.gz
 ```
 
+### find unmet dependencies before metadata implantation
+
+```
+echo "" > nu.bin.00
+./backport-bin.sh nu.bin trixie bullseye
+mv nu.bin.all bullseye_Packages.broken.before
+```
+```
+echo "" > nu.src.00
+./backport-src.sh nu.src trixie bullseye
+mv nu.src.all bullseye_Sources.broken.before
+```
+
 ### select binary packages
 
 Get list of sections in "trixie":
@@ -81,4 +94,12 @@ dose-ceve -T debsrc --deb-native-arch=amd64 -r patchutils \
         debsrc:///var/lib/apt/lists/*_dists_sid_main_source_Sources \
         deb:///var/lib/apt/lists/*_dists_sid_main_binary-amd64_Packages \
         | grep-dctrl -n -s Package '' | sort -u
+```
+
+## sbuild test
+```
+podman run -v ~/sbuild:/root/.cache:z,exec,dev -it -e LANG=C.UTF8 debian:trixie /bin/bash -l
+apt update && apt -y upgrade
+apt install sbuild mmdebstrap uidmap
+sbuild --chroot-mode=plain ... package.dsc
 ```

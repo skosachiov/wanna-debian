@@ -18,12 +18,11 @@ fi
 
 cat $filename | python3 pre-dose.py $2_Sources $3_Sources > modified_Sources
 
-dose-builddebcheck --deb-native-arch=amd64 -e -f $3_Packages $3_Sources \
-    | grep unsat-dep | awk '{print $2}' | cut -f 1 -d ":" | sort -u > $base_name.broken.before
-
-cat $base_name.broken.before \
-    | sort -u | python3 pre-dose.py -d $2_Sources modified_Sources > modified_Sources.tmp && \
-    mv -f modified_Sources.tmp modified_Sources
+if [ -e $3_Sources.broken.before ]; then
+    cat $3_Sources.broken.before \
+        | sort -u | python3 pre-dose.py -d $2_Sources modified_Sources > modified_Sources.tmp && \
+        mv -f modified_Sources.tmp modified_Sources
+fi
 
 while [ -s "$filename" ]; do
     echo "Processing $filename"
