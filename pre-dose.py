@@ -36,7 +36,7 @@ def parse_local_packages(filepath, src_dict = None, prov_dict = None):
                             prov_dict[p] = pkg_name
                     if key == 'Version':
                         version = value.strip()
-                    if key == 'Depends':
+                    if key in ('Build-Depends', 'Build-Depends-Indep', 'Build-Depends-Arch', 'Depends'):
                         deps_pkgs = [p.strip() for p in value.split(',')]
                         for p in deps_pkgs:
                             depends.append(p)
@@ -65,8 +65,9 @@ if __name__ == "__main__":
     parser.add_argument('-d', '--delete-depends', action='store_true', help='delete from depends instead of replacing or adding')
     parser.add_argument('-n', '--dont-resolve', action='store_true', help='do not try to resolve the package name in the source repo')
     parser.add_argument('-p', '--provide', type=str, help="path to binary Packages to provide replacement")
-    parser.add_argument('-a', '--add-version', action='store_true', help='resolve source add version to package name and exit')
-    parser.add_argument('-e', '--depends', action='store_true', help='print repository dependencies and exit')    
+    parser.add_argument('-e', '--depends', action='store_true', help='print repository dependencies and exit')        
+    parser.add_argument('-s', '--resolve-source', action='store_true', help='resolve source package name and exit')    
+    parser.add_argument('-a', '--add-version', action='store_true', help='add version to source or binary package name and exit')        
     args = parser.parse_args()
 
     src_dict = {}
@@ -87,17 +88,25 @@ if __name__ == "__main__":
         for line in sys.stdin:
             if line[0] == "#": continue
             pkg_name = line.strip()
-            if args.add_version:
+            if args.add_version and not args.resolve_source:
                 if pkg_name in source:
                     print(f'{pkg_name}={source[pkg_name]["version"]}')
-                elif pkg_name in src_dict:
-                    print(f'{src_dict[pkg_name]}={source[src_dict[pkg_name]]["version"]}')
                 else:
-                    print(f'Resolve source package error: {pkg_name}', file=sys.stderr)
+                    print(f'Package name error: {pkg_name}', file=sys.stderr)
+            elif args.resolve_source:
+                if pkg_name in src_dict:
+                    if args.add_version:
+                        print(f'{src_dict[pkg_name]}={source[src_dict[pkg_name]]["version"]}')
+                    else:
+                        print(f'{src_dict[pkg_name]}')
+                else:
+                    print(f'Resolve source package error: {pkg_name}', file=sys.stderr)                    
             elif args.depends:
                 if pkg_name in source:
                     for p in source[pkg_name]["depends"]:
-                        print(p)                    
+                        print(p)
+                else:
+                    print(f'Package name error: {pkg_name}', file=sys.stderr)
             elif args.remove:
                 if pkg_name in target:
                     del target[pkg_name]
@@ -123,7 +132,7 @@ if __name__ == "__main__":
                     else:
                         print(f'Package name error: {pkg_name}', file=sys.stderr)
     
-    if not any((args.add_version, args.depends)):
+    if not any((args.add_version, args.depends, args.resolve_source)):
         for pkg in target.values():
             print(pkg['block'])
             print()
