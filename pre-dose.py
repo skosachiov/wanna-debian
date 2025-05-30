@@ -65,8 +65,8 @@ if __name__ == "__main__":
     parser.add_argument('-d', '--delete-depends', action='store_true', help='delete from depends instead of replacing or adding')
     parser.add_argument('-n', '--dont-resolve', action='store_true', help='do not try to resolve the package name in the source repo')
     parser.add_argument('-p', '--provide', type=str, help="path to binary Packages to provide replacement")
-    parser.add_argument('-a', '--add-version', action='store_true', help='add source repository version to package name and exit')
-    parser.add_argument('-e', '--depends', action='store_true', help='print source repository dependencies and exit')    
+    parser.add_argument('-a', '--add-version', action='store_true', help='resolve source add version to package name and exit')
+    parser.add_argument('-e', '--depends', action='store_true', help='print repository dependencies and exit')    
     args = parser.parse_args()
 
     src_dict = {}
@@ -92,6 +92,8 @@ if __name__ == "__main__":
                     print(f'{pkg_name}={source[pkg_name]["version"]}')
                 elif pkg_name in src_dict:
                     print(f'{src_dict[pkg_name]}={source[src_dict[pkg_name]]["version"]}')
+                else:
+                    print(f'Resolve source package error: {pkg_name}', file=sys.stderr)
             elif args.depends:
                 if pkg_name in source:
                     for p in source[pkg_name]["depends"]:

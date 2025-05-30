@@ -49,7 +49,7 @@ or
 
 https://people.debian.org/~fpeters/gnome/debian-gnome-48-status.html
 
-`echo gnome-core | python pre-dose.py -e trixie_Packages trixie_Sources | sort -u > gnome.txt`
+`echo gnome-core | python pre-dose.py -e trixie_Packages trixie_Sources | cut -f 1 -d ' ' | sort -u > gnome.txt`
 
 or
 
