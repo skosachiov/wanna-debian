@@ -44,106 +44,89 @@ def parse_local_packages(filepath, src_dict = None, prov_dict = None):
                 packages[pkg_name] = {'version': version, 'block': block, 'depends': depends}
     return packages
 
-def backport_version(source, target, name):
-    if name not in source:
-        print(f'Error: no name {name} in source', file=sys.stderr)
+def backport_version(origin, target, name):
+    if name not in origin:
+        print(f'Error: no name {name} in origin', file=sys.stderr)
         return False
     if name not in target:
-        target[name] = source[name]
+        target[name] = origin[name]
         return True
-    if target[name]['version'] != source[name]['version']:
-        target[name] = source[name]
+    if target[name]['version'] != origin[name]['version']:
+        target[name] = origin[name]
         return True
     return False
 
+def resolve_pkg_name(pkg_name, origin, src_dict, prov_dict):
+    if pkg_name in origin:
+        print(f'Name has not been changed: {pkg_name}', file=sys.stderr)
+        return pkg_name
+    elif pkg_name in src_dict:
+        print(f'Binary package {pkg_name} resolved to source: {src_dict[pkg_name]}', file=sys.stderr)
+        return src_dict[pkg_name]
+    elif pkg_name in prov_dict:
+        if prov_dict[pkg_name] in src_dict:
+            print(f'Binary package {pkg_name} provided by {prov_dict[pkg_name]} resolved to: {src_dict[prov_dict[pkg_name]]}', file=sys.stderr)
+            return src_dict[prov_dict[pkg_name]]
+        elif prov_dict[pkg_name] in origin:
+            print(f'Binary package {pkg_name} provided by: {prov_dict[pkg_name]}', file=sys.stderr)
+            return prov_dict[pkg_name]
+        else:
+            print(f'Resolve binary package error: {pkg_name}', file=sys.stderr)
+    else:
+        print(f'Package name error: {pkg_name}', file=sys.stderr)
+    return None
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Pre-dose script performs a targeted substitution of package \
-        information from a source repository to a target repository, only for packages specified in the stdin input list.')
-    parser.add_argument('source_repo', help='Newer repository Packages/Sources')
+        information from a origin repository to a target repository, only for packages specified in the stdin input list.')
+    parser.add_argument('origin_repo', help='Newer repository Packages/Sources')
     parser.add_argument('target_repo', help='Older repository Packages/Sources')
     parser.add_argument('-r', '--remove', action='store_true', help='remove instead of replacing or adding')
-    parser.add_argument('-d', '--delete-depends', action='store_true', help='delete from depends instead of replacing or adding')
-    parser.add_argument('-n', '--dont-resolve', action='store_true', help='do not try to resolve the package name in the source repo')
-    parser.add_argument('-p', '--provide', type=str, help="path to binary Packages to provide replacement")
-    parser.add_argument('-e', '--depends', action='store_true', help='print repository dependencies and exit')        
-    parser.add_argument('-s', '--resolve-source', action='store_true', help='resolve source package name and exit')    
-    parser.add_argument('-a', '--add-version', action='store_true', help='add version to source or binary package name and exit')        
+    parser.add_argument('-d', '--delete-depends', action='store_true', help='delete from dependencies instead of replacing or adding')
+    parser.add_argument('-p', '--provide', type=str, help="path to binary Packages to provide replacements for sources implantation")
+    parser.add_argument('-e', '--depends', action='store_true', help='print repository package dependencies and exit')        
+    parser.add_argument('-s', '--resolve', action='store_true', help='resolve name and exit')    
+    parser.add_argument('-a', '--add-version', action='store_true', help='add version and exit')        
     args = parser.parse_args()
 
     src_dict = {}
     prov_dict = {}
+    exclude_depends = []
 
-    source = parse_local_packages(args.source_repo, src_dict = src_dict)
+    origin = parse_local_packages(args.origin_repo, src_dict = src_dict, prov_dict = prov_dict)
     target = parse_local_packages(args.target_repo)
     if args.provide: parse_local_packages(args.provide, prov_dict = prov_dict)
 
-    if args.delete_depends:
-        exclude_depends = []
-        for line in sys.stdin:
-            if line[0] == "#": continue
+    for line in sys.stdin:
+        if line[0] == "#": continue
+        pkg_name = resolve_pkg_name(line.strip(), origin, src_dict, prov_dict)
+        if pkg_name == None: continue
+        if args.add_version:
+            print(f'{pkg_name}={origin[pkg_name]["version"]}')
+        elif args.resolve:
+            if args.add_version:
+                print(f'{pkg_name}={origin[pkg_name]["version"]}')
+            else:
+                print(f'{pkg_name}')
+        elif args.depends:
+            for p in origin[pkg_name]["depends"]:
+                print(p)
+        elif args.delete_depends:
             exclude_depends.append(line.strip())
+        elif args.remove:
+            if pkg_name in target:
+                del target[pkg_name]
+                print(f'Package removed: {pkg_name}', file=sys.stderr)
+            else:
+                print(f'Remove package error: {pkg_name}', file=sys.stderr)
+        else:
+            backport_version(origin, target, pkg_name)
+
+    if args.delete_depends:
         for v in target.values():
             v['block'] = delete_depends(v['block'], exclude_depends)
-    else:
-        for line in sys.stdin:
-            if line[0] == "#": continue
-            pkg_name = line.strip()
-            if args.add_version and not args.resolve_source:
-                if pkg_name in source:
-                    print(f'{pkg_name}={source[pkg_name]["version"]}')
-                else:
-                    print(f'Package name error: {pkg_name}', file=sys.stderr)
-            elif args.resolve_source:
-                if pkg_name in source:
-                    if args.add_version:
-                        print(f'{pkg_name}={source[pkg_name]["version"]}')
-                    else:
-                        print(f'{pkg_name}')
-                elif pkg_name in src_dict:
-                    if args.add_version:
-                        print(f'{src_dict[pkg_name]}={source[src_dict[pkg_name]]["version"]}')
-                    else:
-                        print(f'{src_dict[pkg_name]}')
-                elif pkg_name in prov_dict:
-                    if prov_dict[pkg_name] in src_dict:
-                        if args.add_version:
-                            print(f'{src_dict[prov_dict[pkg_name]]}={src_dict[prov_dict[pkg_name]]["version"]}')
-                        else:
-                            print(f'{src_dict[prov_dict[pkg_name]]}')
-                else:
-                    print(f'Resolve source package error: {pkg_name}', file=sys.stderr)                    
-            elif args.depends:
-                if pkg_name in source:
-                    for p in source[pkg_name]["depends"]:
-                        print(p)
-                else:
-                    print(f'Package name error: {pkg_name}', file=sys.stderr)
-            elif args.remove:
-                if pkg_name in target:
-                    del target[pkg_name]
-                    print(f'Package removed: {pkg_name}', file=sys.stderr)
-                else:
-                    print(f'Remove package error: {pkg_name}', file=sys.stderr)
-            else:
-                if pkg_name in source:
-                    if backport_version(source, target, pkg_name):
-                        print(f'Name has not been changed: {pkg_name}', file=sys.stderr)
-                else:
-                    if not args.dont_resolve:
-                        if pkg_name in src_dict:
-                            if backport_version(source, target, src_dict[pkg_name]):
-                                print(f'Binary package {pkg_name} resolved to: {src_dict[pkg_name]}', file=sys.stderr)
-                        elif pkg_name in prov_dict:
-                            if prov_dict[pkg_name] in src_dict:
-                                if backport_version(source, target, src_dict[prov_dict[pkg_name]]):
-                                    print(f'Binary package {pkg_name} provided by {prov_dict[pkg_name]} resolved to: {src_dict[prov_dict[pkg_name]]}',
-                                        file=sys.stderr)
-                        else:
-                            print(f'Resolve binary package error: {pkg_name}', file=sys.stderr)
-                    else:
-                        print(f'Package name error: {pkg_name}', file=sys.stderr)
-    
-    if not any((args.add_version, args.depends, args.resolve_source)):
+
+    if not any((args.add_version, args.depends)):
         for pkg in target.values():
             print(pkg['block'])
             print()
