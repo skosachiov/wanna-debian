@@ -94,11 +94,22 @@ if __name__ == "__main__":
                 else:
                     print(f'Package name error: {pkg_name}', file=sys.stderr)
             elif args.resolve_source:
-                if pkg_name in src_dict:
+                if pkg_name in source:
+                    if args.add_version:
+                        print(f'{pkg_name}={source[pkg_name]["version"]}')
+                    else:
+                        print(f'{pkg_name}')
+                elif pkg_name in src_dict:
                     if args.add_version:
                         print(f'{src_dict[pkg_name]}={source[src_dict[pkg_name]]["version"]}')
                     else:
                         print(f'{src_dict[pkg_name]}')
+                elif pkg_name in prov_dict:
+                    if prov_dict[pkg_name] in src_dict:
+                        if args.add_version:
+                            print(f'{src_dict[prov_dict[pkg_name]]}={src_dict[prov_dict[pkg_name]]["version"]}')
+                        else:
+                            print(f'{src_dict[prov_dict[pkg_name]]}')
                 else:
                     print(f'Resolve source package error: {pkg_name}', file=sys.stderr)                    
             elif args.depends:
