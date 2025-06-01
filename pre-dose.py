@@ -94,8 +94,8 @@ if __name__ == "__main__":
     parser.add_argument('-e', '--depends', action='store_true', help='print repository package dependencies and exit')        
     parser.add_argument('-s', '--resolve', action='store_true', help='resolve package name and exit')    
     parser.add_argument('-a', '--add-version', action='store_true', help='add version to package name and exit')
-    parser.add_argument('-l', '--log-level', default='INFO', choices=['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'], \
-                       help='set the logging level (default: INFO)')    
+    parser.add_argument('-l', '--log-level', default='DEBUG', choices=['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'], \
+                       help='set the logging level (default: DEBUG)')    
     parser.add_argument('--log-file', help="save logs to file (default: stderr)")
     args = parser.parse_args()
 
@@ -104,15 +104,19 @@ if __name__ == "__main__":
     else: handlers.append(logging.StreamHandler())
     logging.basicConfig(handlers=handlers, level=getattr(logging, args.log_level), format='%(asctime)s %(levelname)s %(message)s')
 
+    logging.debug(f'Pre-dose started with command line options: {args}')
+
     src_dict = {}
     prov_dict = {}
     exclude_depends = []
+    lines = []
 
     origin = parse_metadata(args.origin_repo, src_dict = src_dict, prov_dict = prov_dict)
     target = parse_metadata(args.target_repo)
     if args.provide: parse_metadata(args.provide, prov_dict = prov_dict)
 
     for line in sys.stdin:
+        lines.append(line.strip())
         if line[0] == "#": continue
         if line.strip() == "": continue
         pkg_name = resolve_pkg_name(line.strip(), origin, src_dict, prov_dict)
@@ -146,4 +150,6 @@ if __name__ == "__main__":
         for pkg in target.values():
             print(pkg['block'])
             print()
+
+    logging.debug(f'Pre-dose finished and the input stream was: {lines}')
     
