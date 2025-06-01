@@ -14,7 +14,7 @@ def delete_depends(block, exclude_list):
         result.append(line)
     return "\n".join(result)
 
-def parse_local_packages(filepath, src_dict = None, prov_dict = None):
+def parse_metadata(filepath, src_dict = None, prov_dict = None):
     packages = {}
     with open(filepath, 'rt', encoding='utf-8') as f:
         content = f.read()
@@ -65,7 +65,7 @@ def backport_version(origin, target, name):
 
 def resolve_pkg_name(pkg_name, origin, src_dict, prov_dict):
     if pkg_name in origin:
-        logging.info(f'Name has not been changed: {pkg_name}')
+        logging.info(f'Package name remained unchanged: {pkg_name}')
         return pkg_name
     elif pkg_name in src_dict:
         logging.info(f'Binary package {pkg_name} resolved to source: {src_dict[pkg_name]}')
@@ -96,24 +96,29 @@ if __name__ == "__main__":
     parser.add_argument('-a', '--add-version', action='store_true', help='add version to package name and exit')
     parser.add_argument('-l', '--log-level', default='INFO', choices=['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'], \
                        help='set the logging level (default: INFO)')    
+    parser.add_argument('--log-file', help="save logs to file (default: stderr)")
     args = parser.parse_args()
 
-    logging.basicConfig(level=getattr(logging, args.log_level))
+    handlers = []
+    if args.log_file: handlers.append(logging.FileHandler(args.log_file)) 
+    else: handlers.append(logging.StreamHandler())
+    logging.basicConfig(handlers=handlers, level=getattr(logging, args.log_level), format='%(asctime)s %(levelname)s %(message)s')
 
     src_dict = {}
     prov_dict = {}
     exclude_depends = []
 
-    origin = parse_local_packages(args.origin_repo, src_dict = src_dict, prov_dict = prov_dict)
-    target = parse_local_packages(args.target_repo)
-    if args.provide: parse_local_packages(args.provide, prov_dict = prov_dict)
+    origin = parse_metadata(args.origin_repo, src_dict = src_dict, prov_dict = prov_dict)
+    target = parse_metadata(args.target_repo)
+    if args.provide: parse_metadata(args.provide, prov_dict = prov_dict)
 
     for line in sys.stdin:
         if line[0] == "#": continue
+        if line.strip() == "": continue
         pkg_name = resolve_pkg_name(line.strip(), origin, src_dict, prov_dict)
         if pkg_name == None: continue
-        if args.add_version:
-            print(f'{pkg_name}={origin[pkg_name]["version"]}')
+        if args.add_version and not args.resolve:
+            print(f'{line.strip()}={origin[line.strip()]["version"]}')
         elif args.resolve:
             if args.add_version:
                 print(f'{pkg_name}={origin[pkg_name]["version"]}')
