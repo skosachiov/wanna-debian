@@ -102,5 +102,27 @@ dose-ceve -T debsrc --deb-native-arch=amd64 -r patchutils \
 podman run -v ~/sbuild:/root/.cache:z,exec,dev -it -e LANG=C.UTF8 debian:12 /bin/bash -l
 apt update && apt -y upgrade
 apt install sbuild mmdebstrap uidmap
-sbuild --chroot-mode=plain ... package.dsc
+mmdebstrap --include=ca-certificates --skip=check/signed-by --variant=buildd bookworm ~/.cache/sbuild
+chmod a+w /root/.cache/sbuild/dev/null 
+sbuild -d bookworm package.dsc
 ```
+
+```
+Types: deb-src
+URIs: http://deb.debian.org/debian
+Suites: trixie trixie-updates
+Components: main
+Signed-By: /usr/share/keyrings/debian-archive-keyring.gpg
+```
+
+```
+cat /etc/schroot/chroot.d/bookworm.conf 
+[bookworm]
+directory=/root/.cache/sbuild
+users=root
+groups=root,sbuild
+root-groups=root
+aliases=unstable,default
+```
+
+`cat build.txt | xargs -I {} apt source --download-only {}`

@@ -16,12 +16,12 @@ if [ ! -s "$filename" ]; then
     exit 1
 fi
 
-cat $filename | python3 pre-dose.py --log-file $base_name.log $2_Sources $3_Sources > ${base_name}_modified_Sources
+cat $filename | python3 pre-dose.py --log-file $base_name.log $2_Sources $3_Sources > ${base_name}_Sources
 
 if [ -e $3_Sources.broken.before ]; then
     cat $3_Sources.broken.before | sort -u \
-        | python3 pre-dose.py --log-file $base_name.log -d $2_Sources ${base_name}_modified_Sources > ${base_name}_modified_Sources.tmp && \
-        mv -f ${base_name}_modified_Sources.tmp ${base_name}_modified_Sources
+        | python3 pre-dose.py --log-file $base_name.log -d $2_Sources ${base_name}_Sources > ${base_name}_Sources.tmp && \
+        mv -f ${base_name}_Sources.tmp ${base_name}_Sources
 fi
 
 while [ -s "$filename" ]; do
@@ -29,9 +29,9 @@ while [ -s "$filename" ]; do
     ((counter++))
     next_filename=$(printf "%s.%02d" "$base_name" $counter)
     
-    dose-builddebcheck --deb-native-arch=amd64 -e -f $3_Packages ${base_name}_modified_Sources \
+    dose-builddebcheck --deb-native-arch=amd64 -e -f $3_Packages ${base_name}_Sources \
         | grep unsat-dep | awk '{print $2}' | cut -f 1 -d ":" | sort -u > $next_filename
-    cp -f ${base_name}_modified_Sources ${base_name}_modified_Sources.prev
+    cp -f ${base_name}_Sources ${base_name}_Sources.prev
 
     if cmp -s "$filename" "$next_filename"; then
         echo "Stopping: '$next_filename' has identical content to '$filename'"
@@ -39,12 +39,12 @@ while [ -s "$filename" ]; do
     fi
   
     comm -13 $filename $next_filename \
-        | python3 pre-dose.py --log-file $base_name.log -p $2_Packages $2_Sources ${base_name}_modified_Sources > ${base_name}_modified_Sources.tmp && \
-        mv -f ${base_name}_modified_Sources.tmp ${base_name}_modified_Sources
+        | python3 pre-dose.py --log-file $base_name.log -p $2_Packages $2_Sources ${base_name}_Sources > ${base_name}_Sources.tmp && \
+        mv -f ${base_name}_Sources.tmp ${base_name}_Sources
 
     cat $base_name.[0-9]* \
-        | sort -u | python3 pre-dose.py --log-file $base_name.log -d -p $2_Packages $2_Sources ${base_name}_modified_Sources > ${base_name}_modified_Sources.tmp && \
-        mv -f ${base_name}_modified_Sources.tmp ${base_name}_modified_Sources
+        | sort -u | python3 pre-dose.py --log-file $base_name.log -d -p $2_Packages $2_Sources ${base_name}_Sources > ${base_name}_Sources.tmp && \
+        mv -f ${base_name}_Sources.tmp ${base_name}_Sources
     
     filename="$next_filename"
 done
