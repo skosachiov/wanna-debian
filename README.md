@@ -4,7 +4,7 @@
 
 ### intro
 
-Pre-doce is a specialized workflow designed to analyze and backport Debian packages from newer releases, such as trixie, to older stable releases like bullseye. By automating dependency resolution and compatibility assessment, it efficiently identifies which packages can be cleanly backported and which cannot due to unsatisfied dependencies.
+Pre-doce is a specialized workflow designed to analyze and backport Debian packages from newer releases, such as trixie, to older stable releases like bookworm. By automating dependency resolution and compatibility assessment, it efficiently identifies which packages can be cleanly backported and which cannot due to unsatisfied dependencies.
 
 The workflow begins with binary dependency resolution, analyzing which packages can be migrated without conflicts. This initial assessment is then processed by dose-debcheck, which systematically verifies package installability against the target release’s repository. The output is fed into dose-builddebcheck, the core iterative engine that refines dependency resolution by cycling through source package metadata.
 
@@ -19,10 +19,10 @@ By combining dose-debcheck and dose-builddebcheck, Pre-doce ensures an efficient
 ### get metadata
 
 ```
-wget -O bullseye_Packages.gz http://ftp.debian.org/debian/dists/bullseye/main/binary-amd64/Packages.gz && gunzip bullseye_Packages.gz
+wget -O bookworm_Packages.gz http://ftp.debian.org/debian/dists/bookworm/main/binary-amd64/Packages.gz && gunzip bookworm_Packages.gz
 wget -O trixie_Packages.gz http://ftp.debian.org/debian/dists/trixie/main/binary-amd64/Packages.gz && gunzip trixie_Packages.gz
 
-wget -O bullseye_Sources.gz http://ftp.debian.org/debian/dists/bullseye/main/source/Sources.gz && gunzip bullseye_Sources.gz
+wget -O bookworm_Sources.gz http://ftp.debian.org/debian/dists/bookworm/main/source/Sources.gz && gunzip bookworm_Sources.gz
 wget -O trixie_Sources.gz http://ftp.debian.org/debian/dists/trixie/main/source/Sources.gz && gunzip trixie_Sources.gz
 ```
 
@@ -30,13 +30,13 @@ wget -O trixie_Sources.gz http://ftp.debian.org/debian/dists/trixie/main/source/
 
 ```
 echo "" > nu.bin.00
-./backport-bin.sh nu.bin trixie bullseye
-mv nu.bin.all bullseye_Packages.broken.before
+./backport-bin.sh nu.bin trixie bookworm
+mv nu.bin.all bookworm_Packages.broken.before
 ```
 ```
 echo "" > nu.src.00
-./backport-src.sh nu.src trixie bullseye
-mv nu.src.all bullseye_Sources.broken.before
+./backport-src.sh nu.src trixie bookworm
+mv nu.src.all bookworm_Sources.broken.before
 ```
 
 ### select binary packages
@@ -68,11 +68,11 @@ sort -u -o kde.txt kde.txt
 
 ### run resolver
 
-`cat gnome.txt | ./backport.sh gnome trixie bullseye`
+`cat gnome.txt | ./backport.sh gnome trixie bookworm`
 
 or 
 
-`cat kde.txt | ./backport.sh kde trixie bullseye`
+`cat kde.txt | ./backport.sh kde trixie bookworm`
 
 ### view result
 
@@ -99,7 +99,7 @@ dose-ceve -T debsrc --deb-native-arch=amd64 -r patchutils \
 ## sbuild test
 
 ```
-podman run -v ~/sbuild:/root/.cache:z,exec,dev -it -e LANG=C.UTF8 debian:trixie /bin/bash -l
+podman run -v ~/sbuild:/root/.cache:z,exec,dev -it -e LANG=C.UTF8 debian:12 /bin/bash -l
 apt update && apt -y upgrade
 apt install sbuild mmdebstrap uidmap
 sbuild --chroot-mode=plain ... package.dsc
