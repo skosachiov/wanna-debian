@@ -68,11 +68,11 @@ sort -u -o kde.txt kde.txt
 
 ### run resolver
 
-`cat gnome.txt | ./backport.sh gnome trixie bullseye`
+`cat gnome.txt | ./backport.sh gnome trixie bullseye 2> gnome.log`
 
 or 
 
-`cat kde.txt | ./backport.sh kde trixie bullseye`
+`cat kde.txt | ./backport.sh kde trixie bullseye 2> kde.log`
 
 ### view result
 
