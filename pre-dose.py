@@ -1,4 +1,4 @@
-import re, argparse, sys
+import re, argparse, sys, logging
 
 def delete_depends(block, exclude_list):
     result = []
@@ -9,6 +9,8 @@ def delete_depends(block, exclude_list):
                 packages = [p.strip() for p in value.split(',')]
                 filtered_packages = [p for p in packages if not any((p.startswith(name + " ") or p.startswith(name + ":") or p == name) for name in exclude_list)]
                 line = key + ": " + ', '.join(filtered_packages)
+                if len(packages) - len(filtered_packages) > 0:
+                    logging.debug(f'Dependencies were removed: {len(packages) - len(filtered_packages)}')
         result.append(line)
     return "\n".join(result)
 
@@ -42,38 +44,43 @@ def parse_local_packages(filepath, src_dict = None, prov_dict = None):
                             depends.append(p)
             if pkg_name != None and version != None:
                 packages[pkg_name] = {'version': version, 'block': block, 'depends': depends}
+    logging.debug(f'In the file {filepath} processed packets: {len(packages)}')
     return packages
 
 def backport_version(origin, target, name):
     if name not in origin:
-        print(f'Error: no name {name} in origin', file=sys.stderr)
+        logging.error(f'No package in origin: {name}')
         return False
     if name not in target:
         target[name] = origin[name]
+        logging.info(f'Add package to target: {name}')
         return True
     if target[name]['version'] != origin[name]['version']:
+        logging.info(f'Replace package in the target: {name}')
         target[name] = origin[name]
         return True
+    else:
+        logging.warning(f'Package version is already in the target: {name}')
     return False
 
 def resolve_pkg_name(pkg_name, origin, src_dict, prov_dict):
     if pkg_name in origin:
-        print(f'Name has not been changed: {pkg_name}', file=sys.stderr)
+        logging.info(f'Name has not been changed: {pkg_name}')
         return pkg_name
     elif pkg_name in src_dict:
-        print(f'Binary package {pkg_name} resolved to source: {src_dict[pkg_name]}', file=sys.stderr)
+        logging.info(f'Binary package {pkg_name} resolved to source: {src_dict[pkg_name]}')
         return src_dict[pkg_name]
     elif pkg_name in prov_dict:
         if prov_dict[pkg_name] in src_dict:
-            print(f'Binary package {pkg_name} provided by {prov_dict[pkg_name]} resolved to: {src_dict[prov_dict[pkg_name]]}', file=sys.stderr)
+            logging.info(f'Binary package {pkg_name} provided by {prov_dict[pkg_name]} resolved to: {src_dict[prov_dict[pkg_name]]}')
             return src_dict[prov_dict[pkg_name]]
         elif prov_dict[pkg_name] in origin:
-            print(f'Binary package {pkg_name} provided by: {prov_dict[pkg_name]}', file=sys.stderr)
+            logging.info(f'Binary package {pkg_name} provided by: {prov_dict[pkg_name]}')
             return prov_dict[pkg_name]
         else:
-            print(f'Resolve binary package error: {pkg_name}', file=sys.stderr)
+            logging.error(f'Resolve binary package: {pkg_name}')
     else:
-        print(f'Package name error: {pkg_name}', file=sys.stderr)
+        logging.warning(f'Package name not found: {pkg_name}')
     return None
 
 if __name__ == "__main__":
@@ -86,8 +93,12 @@ if __name__ == "__main__":
     parser.add_argument('-p', '--provide', type=str, help="path to binary Packages to provide replacements for sources implantation")
     parser.add_argument('-e', '--depends', action='store_true', help='print repository package dependencies and exit')        
     parser.add_argument('-s', '--resolve', action='store_true', help='resolve package name and exit')    
-    parser.add_argument('-a', '--add-version', action='store_true', help='add version to package name and exit')        
+    parser.add_argument('-a', '--add-version', action='store_true', help='add version to package name and exit')
+    parser.add_argument('-l', '--log-level', default='INFO', choices=['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'], \
+                       help='set the logging level (default: INFO)')    
     args = parser.parse_args()
+
+    logging.basicConfig(level=getattr(logging, args.log_level))
 
     src_dict = {}
     prov_dict = {}
@@ -116,9 +127,9 @@ if __name__ == "__main__":
         elif args.remove:
             if pkg_name in target:
                 del target[pkg_name]
-                print(f'Package removed: {pkg_name}', file=sys.stderr)
+                logging.info(f'Package removed: {pkg_name}')
             else:
-                print(f'Remove package error: {pkg_name}', file=sys.stderr)
+                logging.error(f'Package to be removed is not present in the target: {pkg_name}')
         else:
             backport_version(origin, target, pkg_name)
 
