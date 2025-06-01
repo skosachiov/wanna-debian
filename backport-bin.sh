@@ -43,7 +43,7 @@ while [ -s "$filename" ]; do
         mv -f modified_Packages.tmp modified_Packages
 
     cat $base_name.[0-9]* \
-        | sort -u | python3 pre-dose.py -d $2_Packages modified_Packages > modified_Packages.tmp && \
+        | sort -u | python3 pre-dose.py -d $2_Packages $2_Packages modified_Packages > modified_Packages.tmp && \
         mv -f modified_Packages.tmp modified_Packages
            
     filename="$next_filename"
