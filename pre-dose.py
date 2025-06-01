@@ -79,14 +79,14 @@ def resolve_pkg_name(pkg_name, origin, src_dict, prov_dict):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Pre-dose script performs a targeted substitution of package \
         information from a origin repository to a target repository, only for packages specified in the stdin input list.')
-    parser.add_argument('origin_repo', help='Newer repository Packages/Sources')
-    parser.add_argument('target_repo', help='Older repository Packages/Sources')
+    parser.add_argument('origin_repo', help='newer repository Packages/Sources')
+    parser.add_argument('target_repo', help='older repository Packages/Sources')
     parser.add_argument('-r', '--remove', action='store_true', help='remove instead of replacing or adding')
     parser.add_argument('-d', '--delete-depends', action='store_true', help='delete from dependencies instead of replacing or adding')
     parser.add_argument('-p', '--provide', type=str, help="path to binary Packages to provide replacements for sources implantation")
     parser.add_argument('-e', '--depends', action='store_true', help='print repository package dependencies and exit')        
-    parser.add_argument('-s', '--resolve', action='store_true', help='resolve name and exit')    
-    parser.add_argument('-a', '--add-version', action='store_true', help='add version and exit')        
+    parser.add_argument('-s', '--resolve', action='store_true', help='resolve package name and exit')    
+    parser.add_argument('-a', '--add-version', action='store_true', help='add version to package name and exit')        
     args = parser.parse_args()
 
     src_dict = {}
@@ -126,7 +126,7 @@ if __name__ == "__main__":
         for v in target.values():
             v['block'] = delete_depends(v['block'], exclude_depends)
 
-    if not any((args.add_version, args.depends)):
+    if not any((args.add_version, args.depends, args.resolve)):
         for pkg in target.values():
             print(pkg['block'])
             print()
