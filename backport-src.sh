@@ -20,7 +20,7 @@ cat $filename | python3 pre-dose.py --log-file $base_name.log $2_Sources $3_Sour
 
 if [ -e $3_Sources.broken.before ]; then
     cat $3_Sources.broken.before | sort -u \
-        | python3 pre-dose.py --log-file $base_name.log -d $2_Sources ${base_name}_Sources > ${base_name}_Sources.tmp && \
+        | python3 pre-dose.py --log-file $base_name.log -d -p $2_Packages $2_Sources ${base_name}_Sources > ${base_name}_Sources.tmp && \
         mv -f ${base_name}_Sources.tmp ${base_name}_Sources
 fi
 
