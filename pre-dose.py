@@ -1,6 +1,6 @@
 import re, argparse, sys, logging
 
-def delete_depends(block, exclude_list):
+def delete_depends(pkg_name, block, exclude_list):
     result = []
     for line in block.splitlines():
         if ':' in line:
@@ -10,7 +10,7 @@ def delete_depends(block, exclude_list):
                 filtered_packages = [p for p in packages if not any((p.startswith(name + " ") or p.startswith(name + ":") or p == name) for name in exclude_list)]
                 line = key + ": " + ', '.join(filtered_packages)
                 if len(packages) - len(filtered_packages) > 0:
-                    logging.debug(f'Dependencies were removed: {len(packages) - len(filtered_packages)}')
+                    logging.debug(f'Removed {len(packages) - len(filtered_packages)} dependencies from package: {pkg_name}')
         result.append(line)
     return "\n".join(result)
 
@@ -142,9 +142,10 @@ if __name__ == "__main__":
             backport_version(origin, target, pkg_name)
         else:
             logging.error(f'No deletion request and package name is not resolved: {line.strip()}')
+
     if args.delete_depends:
-        for v in target.values():
-            v['block'] = delete_depends(v['block'], exclude_depends)
+        for k, v in target.items():
+            v['block'] = delete_depends(k, v['block'], exclude_depends)
 
     if not any((args.add_version, args.depends, args.resolve)):
         for pkg in target.values():
