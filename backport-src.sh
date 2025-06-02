@@ -39,11 +39,11 @@ while [ -s "$filename" ]; do
     fi
   
     comm -13 $filename $next_filename \
-        | python3 pre-dose.py --log-file $base_name.log -p $3_Packages $2_Sources ${base_name}_Sources > ${base_name}_Sources.tmp && \
+        | python3 pre-dose.py --log-file $base_name.log -p $2_Packages $2_Sources ${base_name}_Sources > ${base_name}_Sources.tmp && \
         mv -f ${base_name}_Sources.tmp ${base_name}_Sources
 
     cat $base_name.[0-9]* \
-        | sort -u | python3 pre-dose.py --log-file $base_name.log -d -p $3_Packages $2_Sources ${base_name}_Sources > ${base_name}_Sources.tmp && \
+        | sort -u | python3 pre-dose.py --log-file $base_name.log -d -p $2_Packages $2_Sources ${base_name}_Sources > ${base_name}_Sources.tmp && \
         mv -f ${base_name}_Sources.tmp ${base_name}_Sources
     
     filename="$next_filename"
