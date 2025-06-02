@@ -120,28 +120,28 @@ if __name__ == "__main__":
         if line[0] == "#": continue
         if line.strip() == "": continue
         pkg_name = resolve_pkg_name(line.strip(), origin, src_dict, prov_dict)
-        if pkg_name == None: continue
-        if args.add_version and not args.resolve:
+        if args.add_version and not args.resolve and pkg_name != None:
             print(f'{line.strip()}={origin[line.strip()]["version"]}')
-        elif args.resolve:
+        elif args.resolve and pkg_name != None:
             if args.add_version:
                 print(f'{pkg_name}={origin[pkg_name]["version"]}')
             else:
                 print(f'{pkg_name}')
-        elif args.depends:
+        elif args.depends and pkg_name != None:
             for p in origin[pkg_name]["depends"]:
                 print(p)
         elif args.delete_depends:
             exclude_depends.append(line.strip())
-        elif args.remove:
+        elif args.remove and pkg_name != None:
             if pkg_name in target:
                 del target[pkg_name]
                 logging.info(f'Package removed: {pkg_name}')
             else:
                 logging.error(f'Package to be removed is not present in the target: {pkg_name}')
-        else:
+        elif pkg_name != None:
             backport_version(origin, target, pkg_name)
-
+        else:
+            logging.error(f'No deletion request and package name is not resolved: {line.strip()}')
     if args.delete_depends:
         for v in target.values():
             v['block'] = delete_depends(v['block'], exclude_depends)
