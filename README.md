@@ -101,8 +101,9 @@ dose-ceve -T debsrc --deb-native-arch=amd64 -r patchutils \
 ```
 podman run -v ~/sbuild:/root/.cache:z,exec,dev -it -e LANG=C.UTF8 debian:12 /bin/bash -l
 apt update && apt -y upgrade
-apt install sbuild mmdebstrap uidmap
-mmdebstrap --include=ca-certificates --skip=check/signed-by --variant=buildd bookworm ~/.cache/sbuild
+apt install sbuild mmdebstrap uidmap devscripts
+apt install vim
+mmdebstrap --include=ca-certificates --variant=buildd bookworm ~/.cache/sbuild
 chmod a+w /root/.cache/sbuild/dev/null 
 sbuild -d bookworm package.dsc
 ```
