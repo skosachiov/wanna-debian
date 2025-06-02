@@ -2,7 +2,6 @@ import re, argparse, sys, logging
 
 def delete_depends(block, exclude_list):
     result = []
-    stat_counter = stat_deps = 0
     for line in block.splitlines():
         if ':' in line:
             key, value = line.split(':', 1)
@@ -11,10 +10,8 @@ def delete_depends(block, exclude_list):
                 filtered_packages = [p for p in packages if not any((p.startswith(name + " ") or p.startswith(name + ":") or p == name) for name in exclude_list)]
                 line = key + ": " + ', '.join(filtered_packages)
                 if len(packages) - len(filtered_packages) > 0:
-                    stat_counter += 1
-                    stat_deps += len(packages) - len(filtered_packages)
+                    logging.debug(f'Dependencies were removed: {len(packages) - len(filtered_packages)}')
         result.append(line)
-    logging.debug(f'Removed {stat_deps} dependencies in packages: {stat_counter}')        
     return "\n".join(result)
 
 def parse_metadata(filepath, src_dict = None, prov_dict = None):
