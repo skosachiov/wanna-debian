@@ -180,7 +180,7 @@ if __name__ == "__main__":
             if p not in graph: graph[p] = set()
             for d in origin[p]['depends']:
                 pkg_name = resolve_pkg_name(d, origin, src_dict, prov_dict)
-                if pkg_name != None:
+                if pkg_name in packages:
                     graph[p].add(pkg_name)
                     if pkg_name not in graph: graph[pkg_name] = set()
         for p in topological_sort(graph):
