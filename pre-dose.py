@@ -99,7 +99,12 @@ def topological_sort(graph):
             if in_degree[neighbor] == 0:
                 queue.append(neighbor)
     if len(topo_order) != len(graph):
-        logging.error(f'Topological cycle detected: {len(topo_order) - len(graph)}')
+        cyclic_nodes = set(graph.keys()) - set(topo_order)
+        logging.error(f'Topological cycle detected involving {len(cyclic_nodes)} nodes: {sorted(cyclic_nodes)}')
+        for node in cyclic_nodes:
+            cyclic_deps = [n for n in graph[node] if n in cyclic_nodes]
+            if cyclic_deps:
+                logging.debug(f'Cyclic dependency: {node} -> {cyclic_deps}')
         return []
     return topo_order
 
