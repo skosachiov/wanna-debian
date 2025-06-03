@@ -100,7 +100,7 @@ def topological_sort(graph):
                 queue.append(neighbor)
     if len(topo_order) != len(graph):
         logging.error(f'Topological cycle detected: {len(topo_order) - len(graph)}')
-        return None
+        return []
     return topo_order
 
 if __name__ == "__main__":
