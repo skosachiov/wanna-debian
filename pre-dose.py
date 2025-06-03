@@ -184,7 +184,10 @@ if __name__ == "__main__":
                     graph[p].add(pkg_name)
                     if pkg_name not in graph: graph[pkg_name] = set()
         for p in topological_sort(graph):
-            print(p)
+            if args.add_version:
+                print(f'{p}={origin[p]["version"]}')
+            else:
+                print(f'{p}')
 
     if not any((args.add_version, args.depends, args.resolve, args.topo_sort)):
         for pkg in target.values():
