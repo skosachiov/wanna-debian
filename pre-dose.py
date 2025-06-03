@@ -1,4 +1,5 @@
 import re, argparse, sys, logging
+from collections import deque
 
 def delete_depends(pkg_name, block, exclude_list):
     result = []
@@ -83,6 +84,25 @@ def resolve_pkg_name(pkg_name, origin, src_dict, prov_dict):
         logging.warning(f'Package name not found: {pkg_name}')
     return None
 
+def topological_sort(graph):
+    in_degree = {node: 0 for node in graph}
+    for node in graph:
+        for neighbor in graph[node]:
+            in_degree[neighbor] += 1
+    queue = deque([node for node in in_degree if in_degree[node] == 0])
+    topo_order = []
+    while queue:
+        current = queue.popleft()
+        topo_order.append(current)
+        for neighbor in graph[current]:
+            in_degree[neighbor] -= 1
+            if in_degree[neighbor] == 0:
+                queue.append(neighbor)
+    if len(topo_order) != len(graph):
+        logging.error(f'Topological cycle detected: {len(topo_order) - len(graph)}')
+        return None
+    return topo_order
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Pre-dose script performs a targeted substitution of package \
         information from a origin repository to a target repository, only for packages specified in the stdin input list.')
@@ -92,7 +112,8 @@ if __name__ == "__main__":
     parser.add_argument('-d', '--delete-depends', action='store_true', help='delete from dependencies instead of replacing or adding')
     parser.add_argument('-p', '--provide', type=str, help="path to binary Packages to provide replacements for sources implantation")
     parser.add_argument('-e', '--depends', action='store_true', help='print repository package dependencies and exit')        
-    parser.add_argument('-s', '--resolve', action='store_true', help='resolve package name and exit')    
+    parser.add_argument('-s', '--resolve', action='store_true', help='resolve package names and exit')
+    parser.add_argument('-t', '--topo-sort', action='store_true', help='perform topological sort on origin and exit')    
     parser.add_argument('-a', '--add-version', action='store_true', help='add version to package name and exit')
     parser.add_argument('-l', '--log-level', default='DEBUG', choices=['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'], \
                        help='set the logging level (default: DEBUG)')    
@@ -110,16 +131,17 @@ if __name__ == "__main__":
     prov_dict = {}
     exclude_depends = []
     lines = []
+    packages = set()
 
     origin = parse_metadata(args.origin_repo, src_dict = src_dict, prov_dict = prov_dict)
     target = parse_metadata(args.target_repo)
     if args.provide: parse_metadata(args.provide, prov_dict = prov_dict)
 
     for line in sys.stdin:
-        lines.append(line.strip())
-        if line[0] == "#": continue
-        if line.strip() == "": continue
+        if line[0] == "#" or line.strip() == "": continue
+        lines.append(line.strip())        
         pkg_name = resolve_pkg_name(line.strip(), origin, src_dict, prov_dict)
+        packages.add(pkg_name)
         if args.add_version and not args.resolve and pkg_name != None:
             print(f'{line.strip()}={origin[line.strip()]["version"]}')
         elif args.resolve and pkg_name != None:
@@ -146,8 +168,20 @@ if __name__ == "__main__":
     if args.delete_depends:
         for k, v in target.items():
             v['block'] = delete_depends(k, v['block'], exclude_depends)
+    
+    if args.topo_sort:
+        graph = {}
+        for p in packages:
+            if p not in graph: graph[p] = set()
+            for d in origin[p]['depends']:
+                pkg_name = resolve_pkg_name(d, origin, src_dict, prov_dict)
+                if pkg_name != None:
+                    graph[p].add(pkg_name)
+                    if pkg_name not in graph: graph[pkg_name] = set()
+        for p in topological_sort(graph):
+            print(p)
 
-    if not any((args.add_version, args.depends, args.resolve)):
+    if not any((args.add_version, args.depends, args.resolve, args.topo_sort)):
         for pkg in target.values():
             print(pkg['block'])
             print()

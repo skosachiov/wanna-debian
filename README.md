@@ -80,9 +80,14 @@ or
 
 `cat kde.src.all`
 
+### topological sort result
+
+`cat gnome.src.all | python3 pre-dose.py -t trixie_Sources bookworm_Sources 2> /dev/null`
+
 ## man dose-ceve
 
 Find all the reverse binary dependencies of the package patchutils:
+
 ```
 dose-ceve --deb-native-arch amd64 -r patchutils -T deb \
         deb:///var/lib/apt/lists/*_dists_sid_main_binary-amd64_Packages \
