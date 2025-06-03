@@ -141,7 +141,7 @@ if __name__ == "__main__":
         if line[0] == "#" or line.strip() == "": continue
         lines.append(line.strip())        
         pkg_name = resolve_pkg_name(line.strip(), origin, src_dict, prov_dict)
-        packages.add(pkg_name)
+        if pkg_name != None: packages.add(pkg_name)
         if args.add_version and not args.resolve and pkg_name != None:
             print(f'{line.strip()}={origin[line.strip()]["version"]}')
         elif args.resolve and pkg_name != None:
