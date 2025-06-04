@@ -29,7 +29,7 @@ while [ -s "$filename" ]; do
     ((counter++))
     next_filename=$(printf "%s.%02d" "$base_name" $counter)
     
-    dose-debcheck --deb-native-arch=amd64 -e -f ${base_name}_Packages \
+    dose-debcheck --latest 1 --deb-native-arch=amd64 -e -f ${base_name}_Packages \
         | grep unsat-dep | awk '{print $2}' | cut -f 1 -d ":" | sort -u > $next_filename
     cp -f ${base_name}_Packages ${base_name}_Packages.prev
 
