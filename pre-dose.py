@@ -48,7 +48,7 @@ def parse_metadata(filepath, src_dict = None, prov_dict = None):
     logging.debug(f'In the file {filepath} processed packets: {len(packages)}')
     return packages
 
-def backport_version(origin, target, name):
+def backport_version(origin, target, name, missing_only = False):
     if name not in origin:
         logging.error(f'No package in origin: {name}')
         return False
@@ -56,7 +56,7 @@ def backport_version(origin, target, name):
         target[name] = origin[name]
         logging.info(f'Add package to target: {name}')
         return True
-    if target[name]['version'] != origin[name]['version']:
+    if target[name]['version'] != origin[name]['version'] and not missing_only:
         logging.info(f'Replace package in the target: {name}')
         target[name] = origin[name]
         return True
@@ -85,34 +85,45 @@ def resolve_pkg_name(pkg_name, origin, src_dict, prov_dict):
     return None
 
 def topological_sort(graph):
+    if not graph:
+        return []
     in_degree = {node: 0 for node in graph}
     for node in graph:
         for neighbor in graph[node]:
             in_degree[neighbor] += 1
-    queue = deque([node for node in in_degree if in_degree[node] == 0])
-    topo_order = []
+    queue = deque([(node, 0) for node in in_degree if in_degree[node] == 0])
+    topo_order_with_level = []    
     while queue:
-        current = queue.popleft()
-        topo_order.append(current)
+        current, level = queue.popleft()
+        topo_order_with_level.append((current, level))
         for neighbor in graph[current]:
             in_degree[neighbor] -= 1
             if in_degree[neighbor] == 0:
-                queue.append(neighbor)
-    if len(topo_order) != len(graph):
-        cyclic_nodes = set(graph.keys()) - set(topo_order)
+                queue.append((neighbor, level + 1))
+    if len(topo_order_with_level) != len(graph):
+        topo_nodes = {node for node, _ in topo_order_with_level}
+        cyclic_nodes = set(graph.keys()) - topo_nodes
         logging.error(f'Topological cycle detected involving {len(cyclic_nodes)} nodes: {sorted(cyclic_nodes)}')
         for node in cyclic_nodes:
             cyclic_deps = [n for n in graph[node] if n in cyclic_nodes]
             if cyclic_deps:
                 logging.debug(f'Cyclic dependency: {node} -> {cyclic_deps}')
         return []
-    return topo_order
+    return topo_order_with_level    
+
+def reverse_graph(graph):
+    reversed_graph = {node: set() for node in graph}
+    for node, neighbors in graph.items():
+        for neighbor in neighbors:
+            reversed_graph[neighbor].add(node)
+    return reversed_graph
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Pre-dose script performs a targeted substitution of package \
         information from a origin repository to a target repository, only for packages specified in the stdin input list.')
     parser.add_argument('origin_repo', help='newer repository Packages/Sources')
     parser.add_argument('target_repo', help='older repository Packages/Sources')
+    parser.add_argument('-m', '--add-missing', action='store_true', help='add missing packages do not change versions')
     parser.add_argument('-r', '--remove', action='store_true', help='remove instead of replacing or adding')
     parser.add_argument('-d', '--delete-depends', action='store_true', help='delete from dependencies instead of replacing or adding')
     parser.add_argument('-p', '--provide', type=str, help="path to binary Packages to provide replacements for sources implantation")
@@ -169,7 +180,7 @@ if __name__ == "__main__":
             else:
                 logging.error(f'Package to be removed is not present in the target: {pkg_name}')
         elif pkg_name != None:
-            backport_version(origin, target, pkg_name)
+            backport_version(origin, target, pkg_name, args.missing_only)
         else:
             logging.error(f'No deletion request and package name is not resolved: {line.strip()}')
 
@@ -186,7 +197,7 @@ if __name__ == "__main__":
                 if pkg_name in packages:
                     graph[p].add(pkg_name)
                     if pkg_name not in graph: graph[pkg_name] = set()
-        for p in topological_sort(graph):
+        for p in topological_sort(reverse_graph(graph)):
             if args.add_version:
                 print(f'{p}={origin[p]["version"]}')
             else:
