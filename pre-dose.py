@@ -48,7 +48,7 @@ def parse_metadata(filepath, src_dict = None, prov_dict = None):
     logging.debug(f'In the file {filepath} processed packets: {len(packages)}')
     return packages
 
-def backport_version(origin, target, name, missing_only = False):
+def backport_version(origin, target, name, add_missing = False):
     if name not in origin:
         logging.error(f'No package in origin: {name}')
         return False
@@ -56,7 +56,7 @@ def backport_version(origin, target, name, missing_only = False):
         target[name] = origin[name]
         logging.info(f'Add package to target: {name}')
         return True
-    if target[name]['version'] != origin[name]['version'] and not missing_only:
+    if target[name]['version'] != origin[name]['version'] and not add_missing:
         logging.info(f'Replace package in the target: {name}')
         target[name] = origin[name]
         return True
@@ -180,7 +180,7 @@ if __name__ == "__main__":
             else:
                 logging.error(f'Package to be removed is not present in the target: {pkg_name}')
         elif pkg_name != None:
-            backport_version(origin, target, pkg_name, args.missing_only)
+            backport_version(origin, target, pkg_name, args.add_missing)
         else:
             logging.error(f'No deletion request and package name is not resolved: {line.strip()}')
 
@@ -193,7 +193,7 @@ if __name__ == "__main__":
         for p in packages:
             if p not in graph: graph[p] = set()
             for d in origin[p]['depends']:
-                pkg_name = resolve_pkg_name(d, origin, src_dict, prov_dict)
+                pkg_name = resolve_pkg_name(d.split()[0], origin, src_dict, prov_dict)
                 if pkg_name in packages:
                     graph[p].add(pkg_name)
                     if pkg_name not in graph: graph[pkg_name] = set()
