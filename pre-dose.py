@@ -1,5 +1,5 @@
 import re, argparse, sys, logging
-from collections import deque
+import networkx as nx
 
 def delete_depends(pkg_name, block, exclude_list):
     result = []
@@ -34,13 +34,13 @@ def parse_metadata(filepath, src_dict = None, prov_dict = None):
                         for p in bin_pkgs:
                             src_dict[p] = pkg_name
                     if key == 'Provides' and prov_dict != None:
-                        prov_pkgs = [p.strip().split()[0] for p in value.split(',')]
+                        prov_pkgs = [p.strip().split()[0] for p in value.split(',') if "default-dev" not in p]
                         for p in prov_pkgs:
                             prov_dict[p] = pkg_name
                     if key == 'Version':
                         version = value.strip()
                     if key in ('Build-Depends', 'Build-Depends-Indep', 'Build-Depends-Arch', 'Depends'):
-                        deps_pkgs = [p.strip() for p in value.split(',')]
+                        deps_pkgs = [p.strip().split(":")[0] for p in value.split(',')]
                         for p in deps_pkgs:
                             depends.append(p)
             if pkg_name != None and version != None:
@@ -83,33 +83,6 @@ def resolve_pkg_name(pkg_name, origin, src_dict, prov_dict):
     else:
         logging.warning(f'Package name not found: {pkg_name}')
     return None
-
-def topological_sort(graph):
-    if not graph:
-        return []
-    in_degree = {node: 0 for node in graph}
-    for node in graph:
-        for neighbor in graph[node]:
-            in_degree[neighbor] += 1
-    queue = deque([(node, 0) for node in in_degree if in_degree[node] == 0])
-    topo_order_with_level = []    
-    while queue:
-        current, level = queue.popleft()
-        topo_order_with_level.append((current, level))
-        for neighbor in graph[current]:
-            in_degree[neighbor] -= 1
-            if in_degree[neighbor] == 0:
-                queue.append((neighbor, level + 1))
-    if len(topo_order_with_level) != len(graph):
-        topo_nodes = {node for node, _ in topo_order_with_level}
-        cyclic_nodes = set(graph.keys()) - topo_nodes
-        logging.error(f'Topological cycle detected involving {len(cyclic_nodes)} nodes: {sorted(cyclic_nodes)}')
-        for node in cyclic_nodes:
-            cyclic_deps = [n for n in graph[node] if n in cyclic_nodes]
-            if cyclic_deps:
-                logging.debug(f'Cyclic dependency: {node} -> {cyclic_deps}')
-        return []
-    return topo_order_with_level    
 
 def reverse_graph(graph):
     reversed_graph = {node: set() for node in graph}
@@ -197,11 +170,23 @@ if __name__ == "__main__":
                 if pkg_name in packages:
                     graph[p].add(pkg_name)
                     if pkg_name not in graph: graph[pkg_name] = set()
-        for p in topological_sort(reverse_graph(graph)):
-            if args.add_version:
-                print(f'{p}={origin[p]["version"]}')
-            else:
-                print(f'{p}')
+        G = nx.DiGraph(graph).reverse()
+        logging.info(f'Search for cycles started, number of graph edges: {G.number_of_edges()}')
+        cycles = nx.recursive_simple_cycles(G)
+        if cycles:
+            logging.error(f'Cycles detected: {len(cycles)}')
+            for cycle in cycles:
+                logging.debug(f"Remove first edge of cycle: {' -> '.join(map(str, cycle))}")
+                try:
+                    edge = (cycle[0], cycle[0]) if len(cycle) < 2 else (cycle[0], cycle[1])
+                    G.remove_edge(*edge)
+                except nx.NetworkXError as e:
+                    logging.warning(f'{e}')
+        logging.info(f'Topological sort started, number of graph edges: {G.number_of_edges()}')                    
+        topological_levels = list(nx.topological_generations(G))
+        topo_levels = [(level, node) for level, nodes in enumerate(topological_levels) for node in nodes]
+        for tl in topo_levels:
+            print(tl)
 
     if not any((args.add_version, args.depends, args.resolve, args.topo_sort)):
         for pkg in target.values():
