@@ -12,6 +12,8 @@ During each iteration, unsatisfied dependencies are stripped from the metadata, 
 
 By combining dose-debcheck and dose-builddebcheck, Pre-doce ensures an efficient and reliable backporting process. It reduces manual effort, precisely pinpoints problematic dependencies, and automates the end-to-end workflow, making it an indispensable tool for Debian maintainers and developers.
 
+In the context of package backporting, Pre-doce employs topological sorting to determine the optimal build order for source packages, ensuring that dependencies are available at each step of the compilation process. Since Debian packages often depend on one another in complex ways, a correct build sequence is essential to avoid failures due to missing build-dependencies.
+
 ### apt
 
 `apt update && apt install dose-* wget vim git bash-com* man`
