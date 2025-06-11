@@ -1,12 +1,6 @@
 from toposort import *
 import random
 
-class Node:
-    def __init__(self, name):
-        self.name = name
-        self.index = -1  # Will be set during sorting
-        self.edges = []   # Will store other Node objects
-
 # Example graph represented as a dictionary of sets
 graph_dict = {
     "main": {"a4", "a1", "b2"},
@@ -51,10 +45,7 @@ def create_node_list(graph_dict):
 nodes = create_node_list(graph_dict)
 
 # Perform stable topological sort
-StableTopoSort.stable_topo_sort(nodes)
-
 sorted_nodes_with_levels = StableTopoSort.stable_topo_sort(nodes)
 print("Sorted Nodes with Levels:")
 for level, node in sorted_nodes_with_levels:
     print(f"Level {level}: Node {node.name}")
-

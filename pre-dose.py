@@ -1,5 +1,5 @@
 import re, argparse, sys, logging
-import networkx as nx
+from toposort import *
 
 def delete_depends(pkg_name, block, exclude_list):
     result = []
@@ -170,23 +170,20 @@ if __name__ == "__main__":
                 if pkg_name in packages:
                     graph[p].add(pkg_name)
                     if pkg_name not in graph: graph[pkg_name] = set()
-        G = nx.DiGraph(graph).reverse()
-        logging.info(f'Search for cycles started, number of graph edges: {G.number_of_edges()}')
-        cycles = nx.recursive_simple_cycles(G)
-        if cycles:
-            logging.error(f'Cycles detected: {len(cycles)}')
-            for cycle in cycles:
-                logging.debug(f"Remove first edge of cycle: {' -> '.join(map(str, cycle))}")
-                try:
-                    edge = (cycle[0], cycle[0]) if len(cycle) < 2 else (cycle[0], cycle[1])
-                    G.remove_edge(*edge)
-                except nx.NetworkXError as e:
-                    logging.warning(f'{e}')
-        logging.info(f'Topological sort started, number of graph edges: {G.number_of_edges()}')                    
-        topological_levels = list(nx.topological_generations(G))
-        topo_levels = [(level, node) for level, nodes in enumerate(topological_levels) for node in nodes]
-        for tl in topo_levels:
-            print(tl)
+        graph_dict = reverse_graph(graph)
+        nodes = {name: Node(name) for name in graph_dict}
+        for name, edges in graph_dict.items():
+            node = nodes[name]
+            for edge_name in edges:
+                node.edges.append(nodes[edge_name])
+        nodes = list(nodes.values())
+        logging.debug(f'Stable topological sort started, number of edges: {len(edges)}')
+        sorted_nodes_with_levels = StableTopoSort.stable_topo_sort(nodes)
+        tl = []
+        for level, node in sorted_nodes_with_levels:
+            tl.append((level, node.name))
+        for t in sorted(tl, key=lambda x: x[0]):
+            print(t)
 
     if not any((args.add_version, args.depends, args.resolve, args.topo_sort)):
         for pkg in target.values():

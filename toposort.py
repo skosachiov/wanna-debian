@@ -1,3 +1,9 @@
+class Node:
+    def __init__(self, name):
+        self.name = name
+        self.index = -1  # Will be set during sorting
+        self.edges = []   # Will store other Node objects
+
 class StableTopoSort:
     @staticmethod
     def stable_topo_sort(nodes):
