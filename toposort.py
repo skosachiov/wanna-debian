@@ -150,7 +150,7 @@ class StableTopoSort:
             comp = rindex[i]
             if comp not in components:
                 components[comp] = []
-            components[comp].append(node)
+            components[comp].append(node.name)
         
         # Filter components with more than one node (these contain cycles)
         cycles = [comp for comp in components.values() if len(comp) > 1]
