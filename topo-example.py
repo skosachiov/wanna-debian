@@ -53,7 +53,8 @@ nodes = create_node_list(graph_dict)
 # Perform stable topological sort
 StableTopoSort.stable_topo_sort(nodes)
 
-# Print the result
-print("Stable topological order:")
-for node in nodes:
-    print(node.name)
+sorted_nodes_with_levels = StableTopoSort.stable_topo_sort(nodes)
+print("Sorted Nodes with Levels:")
+for level, node in sorted_nodes_with_levels:
+    print(f"Level {level}: Node {node.name}")
+

@@ -16,6 +16,17 @@ class StableTopoSort:
         # 3. Perform *reverse* counting sort
         StableTopoSort.reverse_counting_sort(nodes, scc.rindex)
 
+        # 4. Compute levels for each node
+        levels = [0] * len(nodes)
+        for node in nodes:
+            for edge in node.edges:
+                neighbor = edge.index
+                if levels[neighbor] < levels[node.index] + 1:
+                    levels[neighbor] = levels[node.index] + 1
+
+        # 5. Pair each node with its level and return as list of tuples
+        return [(levels[node.index], node) for node in nodes]
+
     class PeaSCC:
         def __init__(self, g):
             self.graph = g
