@@ -174,5 +174,3 @@ class StableTopoSort:
         def push_back(self, item):
             self.bp -= 1
             self.items[self.bp] = item
-
-    empty_nodes = []
