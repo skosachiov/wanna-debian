@@ -172,12 +172,14 @@ if __name__ == "__main__":
                     if pkg_name not in graph: graph[pkg_name] = set()
         graph_dict = reverse_graph(graph)
         nodes = {name: Node(name) for name in graph_dict}
+        edges_counter = 0
         for name, edges in graph_dict.items():
             node = nodes[name]
+            edges_counter += len(edges)
             for edge_name in edges:
                 node.edges.append(nodes[edge_name])
         nodes = list(nodes.values())
-        logging.debug(f'Stable topological sort started, number of edges: {len(edges)}')
+        logging.debug(f'Stable topological sort started, number of edges: {edges_counter}')
         sorted_nodes_with_levels = StableTopoSort.stable_topo_sort(nodes)
         tl = []
         for level, node in sorted_nodes_with_levels:
