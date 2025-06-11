@@ -185,7 +185,7 @@ if __name__ == "__main__":
         tl = []
         for level, node in sorted_nodes_with_levels:
             tl.append((level, node.name))
-        for t in sorted(tl, key=lambda x: x[0]):
+        for t in sorted(tl):
             print(t)
 
     if not any((args.add_version, args.depends, args.resolve, args.topo_sort)):
