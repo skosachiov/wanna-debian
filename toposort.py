@@ -18,6 +18,8 @@ class StableTopoSort:
         # 2. Perform Tarjan SCC
         scc = StableTopoSort.PeaSCC(nodes)
         scc.visit()
+        import logging
+        logging.debug(f'Tarjan SCC cycles: {StableTopoSort.extract_cycles(nodes, scc.rindex)}')
 
         # 3. Perform *reverse* counting sort
         StableTopoSort.reverse_counting_sort(nodes, scc.rindex)
@@ -139,6 +141,24 @@ class StableTopoSort:
             count[cindex] -= 1
 
         nodes[:] = output[:]
+
+    @staticmethod
+    def extract_cycles(nodes, rindex):
+        # Group nodes by their component index
+        components = {}
+        for i, node in enumerate(nodes):
+            comp = rindex[i]
+            if comp not in components:
+                components[comp] = []
+            components[comp].append(node)
+        
+        # Filter components with more than one node (these contain cycles)
+        cycles = [comp for comp in components.values() if len(comp) > 1]
+        
+        return {
+            'cycle_count': len(cycles),
+            'cycles': cycles
+        }
 
     class DoubleStack:
         def __init__(self, capacity):
