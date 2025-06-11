@@ -34,7 +34,8 @@ def parse_metadata(filepath, src_dict = None, prov_dict = None):
                         for p in bin_pkgs:
                             src_dict[p] = pkg_name
                     if key == 'Provides' and prov_dict != None:
-                        prov_pkgs = [p.strip().split()[0] for p in value.split(',') if "default-dev" not in p]
+                        prov_pkgs = [p.strip().split()[0] for p in value.split(',') \
+                            if "default-dev" not in p and "divert-dev" not in p]
                         for p in prov_pkgs:
                             prov_dict[p] = pkg_name
                     if key == 'Version':
