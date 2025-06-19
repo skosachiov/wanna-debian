@@ -170,6 +170,8 @@ if __name__ == "__main__":
         elif args.depends and pkg_name != None:
             for p in origin[pkg_name]["depends"]:
                 print(p)
+        elif args.topo_sort:
+            pass
         elif args.delete_depends:
             exclude_depends.append(line.strip())
         elif args.remove and pkg_name != None:
