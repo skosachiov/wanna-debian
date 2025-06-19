@@ -16,7 +16,7 @@ In the context of package backporting, Pre-doce employs topological sorting to d
 
 ### apt
 
-`apt update && apt install dose-* wget vim git bash-com* man`
+`apt update && apt install python3-apt dose-* wget vim git bash-com* man`
 
 ### get metadata
 

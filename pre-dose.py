@@ -1,6 +1,9 @@
 import re, argparse, sys, logging
 from toposort import *
 
+import apt_pkg
+apt_pkg.init_system()
+
 # Remove specified dependencies from a package's metadata block
 def delete_depends(pkg_name, block, exclude_list):
     result = []
@@ -56,7 +59,10 @@ def parse_metadata(filepath, src_dict = None, prov_dict = None):
                             depends.append(p)
             # Store package metadata if valid
             if pkg_name != None and version != None:
-                packages[pkg_name] = {'version': version, 'block': block, 'depends': depends}
+                if pkg_name not in packages or apt_pkg.version_compare(version, packages[pkg_name]['version']) > 0:
+                    packages[pkg_name] = {'version': version, 'block': block, 'depends': depends}
+                else:
+                    logging.warning(f'A new version package already in the list: {pkg_name}')                
     logging.debug(f'In the file {filepath} processed packets: {len(packages)}')
     return packages
 

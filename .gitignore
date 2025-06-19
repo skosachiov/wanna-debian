@@ -9,3 +9,5 @@ Sources
 *.[0-9][0-9]
 *.log
 *.txt
+*.prev
+*.tmp
