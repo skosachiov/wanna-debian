@@ -84,7 +84,7 @@ or
 
 ### topological sort result
 
-`cat gnome.src.all | python3 pre-dose.py -t trixie_Sources bookworm_Sources 2> /dev/null`
+`cat gnome.src.all | python3 pre-dose.py --log-file gnome.src.log -t trixie_Sources bookworm_Sources > gnome.src.toposort`
 
 ## man dose-ceve
 
