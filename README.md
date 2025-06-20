@@ -88,18 +88,15 @@ or
 
 ## man dose-ceve
 
-Find all the reverse binary dependencies of the package patchutils:
-
+Find all the source packages that (directly or indirectly) build depend on patchutils (depth 2):
 ```
-dose-ceve --deb-native-arch amd64 -r patchutils -T deb \
-        deb:///var/lib/apt/lists/*_dists_sid_main_binary-amd64_Packages \
+dose-ceve --deb-native-arch=amd64 -r patchutils -T debsrc --depth 2 debsrc://trixie_Sources deb://trixie_Packages \
         | grep-dctrl -n -s Package '' | sort -u
 ```
-Find all the source packages that (directly or indirectly) build depend on patchutils:
+
+Find all the reverse binary dependencies of the package patchutils:
 ```
-dose-ceve -T debsrc --deb-native-arch=amd64 -r patchutils \
-        debsrc:///var/lib/apt/lists/*_dists_sid_main_source_Sources \
-        deb:///var/lib/apt/lists/*_dists_sid_main_binary-amd64_Packages \
+dose-ceve --deb-native-arch amd64 -r patchutils -T deb --depth 2 deb://trixie_Packages \
         | grep-dctrl -n -s Package '' | sort -u
 ```
 
