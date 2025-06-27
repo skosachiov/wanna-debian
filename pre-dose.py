@@ -31,7 +31,14 @@ def parse_metadata(filepath, src_dict = None, prov_dict = None):
         for block in package_blocks:
             pkg_name = version = None
             depends = []
+            block_list = []
             for line in block.splitlines():
+                if len(block_list) > 0 and block_list[-1][-1] == ',':
+                    block_list[-1] = "".join((block_list[-1], line.rstrip()))
+                else:
+                    if line:
+                        block_list.append(line.rstrip())
+            for line in block_list:
                 if not line or line[0].isspace(): continue
                 if ':' in line:
                     key, value = line.split(':', 1)
@@ -53,8 +60,8 @@ def parse_metadata(filepath, src_dict = None, prov_dict = None):
                     if key == 'Version':
                         version = value.strip()
                     # Collect dependencies
-                    if key in ('Build-Depends', 'Build-Depends-Indep', 'Build-Depends-Arch', 'Depends'):
-                        deps_pkgs = [p.strip().split(":")[0] for p in value.split(',')]
+                    if key in ('Build-Depends', 'Build-Depends-Indep', 'Build-Depends-Arch', 'Depends', 'Pre-Depends'):
+                        deps_pkgs = [p.strip().split()[0].split(":")[0] for p in value.split(',')]
                         for p in deps_pkgs:
                             depends.append(p)
             # Store package metadata if valid
