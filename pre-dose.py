@@ -33,8 +33,8 @@ def parse_metadata(filepath, src_dict = None, prov_dict = None):
             depends = []
             block_list = []
             for line in block.splitlines():
-                if len(block_list) > 0 and block_list[-1][-1] == ',':
-                    block_list[-1] = "".join((block_list[-1], line.rstrip()))
+                if len(block_list) > 0 and block_list[-1][-1] == ',' and line[0].isspace():
+                    block_list[-1] += line.rstrip()
                 else:
                     if line:
                         block_list.append(line.rstrip())
@@ -133,7 +133,7 @@ if __name__ == "__main__":
     parser.add_argument('-r', '--remove', action='store_true', help='remove instead of replacing or adding')
     parser.add_argument('-d', '--delete-depends', action='store_true', help='delete from dependencies instead of replacing or adding')
     parser.add_argument('-p', '--provide', type=str, help="path to binary Packages to provide replacements for sources implantation")
-    parser.add_argument('-e', '--depends', action='store_true', help='print repository package dependencies and exit')        
+    parser.add_argument('-e', '--depends', type=int, nargs='?', metavar='DEPTH', const=1, default=None, help='print repository package dependencies and exit, default depth 1')        
     parser.add_argument('-s', '--resolve', action='store_true', help='resolve package names and exit')
     parser.add_argument('-t', '--topo-sort', action='store_true', help='perform topological sort on origin and exit')    
     parser.add_argument('-a', '--add-version', action='store_true', help='add version to package name and exit')
@@ -156,6 +156,7 @@ if __name__ == "__main__":
     exclude_depends = []
     lines = []
     packages = set()
+    depends_set = set()
 
     # Parse repository metadata
     origin = parse_metadata(args.origin_repo, src_dict = src_dict, prov_dict = prov_dict)
@@ -181,8 +182,13 @@ if __name__ == "__main__":
             else:
                 print(f'{pkg_name}')
         elif args.depends and pkg_name != None:
-            for p in origin[pkg_name]["depends"]:
-                print(p)
+            depends_set.add(pkg_name)
+            for i in range(args.depends):
+                for p in set(depends_set):
+                    p_src = resolve_pkg_name(p, origin, src_dict, prov_dict)
+                    if p_src:
+                        for pd in origin[p_src]["depends"]:
+                            depends_set.add(pd)
         elif args.topo_sort:
             pass
         elif args.delete_depends:
@@ -202,7 +208,11 @@ if __name__ == "__main__":
     if args.delete_depends:
         for k, v in target.items():
             v['block'] = delete_depends(k, v['block'], exclude_depends)
-    
+
+    # Process dependency resolve requested
+    for p in depends_set:
+        print(p)
+
     # Perform topological sort if requested
     if args.topo_sort:
         graph = {}
