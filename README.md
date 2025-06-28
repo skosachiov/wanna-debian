@@ -102,7 +102,7 @@ dose-ceve --deb-native-arch amd64 -r patchutils -T deb --depth 2 deb://trixie_Pa
 
 Find all build deps for build-essential:
 ```
-dose-ceve --deb-native-arch=amd64 -c build-essential -T deb --depth 10 \
+dose-ceve --deb-native-arch=amd64 -r build-essential -T deb --depth 1 \
     debsrc://trixie_Sources deb://trixie_Packages | grep-dctrl -n -s Package '' | sort -u 
 ```
 
