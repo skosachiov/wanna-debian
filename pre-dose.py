@@ -156,7 +156,7 @@ if __name__ == "__main__":
     exclude_depends = []
     lines = []
     packages = set()
-    depends_set = set()
+    depends_set = {} # Ordered dict
 
     # Parse repository metadata
     origin = parse_metadata(args.origin_repo, src_dict = src_dict, prov_dict = prov_dict)
@@ -182,13 +182,19 @@ if __name__ == "__main__":
             else:
                 print(f'{pkg_name}')
         elif args.depends and pkg_name != None:
-            depends_set.add(pkg_name)
+            depends_set[pkg_name] = None # Set
             for i in range(args.depends):
-                for p in set(depends_set):
+                set_len = len(depends_set)
+                for p in dict(depends_set).keys():
                     p_src = resolve_pkg_name(p, origin, src_dict, prov_dict)
                     if p_src:
                         for pd in origin[p_src]["depends"]:
-                            depends_set.add(pd)
+                            depends_set[pd] = None
+                if set_len == len(depends_set):
+                    logging.info(f'Dependency search completed at iteration: {i + 1}')
+                    break
+            else:
+                logging.warning(f'Dependency search did not reach all leaf nodes, number of iteration: {args.depends}')
         elif args.topo_sort:
             pass
         elif args.delete_depends:
@@ -210,7 +216,7 @@ if __name__ == "__main__":
             v['block'] = delete_depends(k, v['block'], exclude_depends)
 
     # Process dependency resolve requested
-    for p in depends_set:
+    for p in depends_set.keys():
         print(p)
 
     # Perform topological sort if requested
