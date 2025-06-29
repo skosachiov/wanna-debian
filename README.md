@@ -106,6 +106,14 @@ dose-ceve --deb-native-arch=amd64 -r build-essential -T deb --depth 1 \
     debsrc://trixie_Sources deb://trixie_Packages | grep-dctrl -n -s Package '' | sort -u 
 ```
 
+## sources toposort with dot graph
+
+`echo build-essential | python3 pre-dose.py --log-file build-essential.log -e 2 trixie_Sources bookworm_Sources > build-essential.src.txt`
+
+`tac build-essential.src.txt | python3 pre-dose.py --log-file build-essential.log -t --dot build-essential.dot trixie_Sources bookworm_Sources > build-essential.toposort.txt`
+
+`xdot build-essential.dot`
+
 ## sbuild test
 
 ```
