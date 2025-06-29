@@ -123,6 +123,18 @@ def reverse_graph(graph):
             reversed_graph[neighbor].add(node)
     return reversed_graph
 
+def dict_to_dot(d, graph_name='G'):
+    lines = [f"digraph {graph_name} {{"]
+    for key, values in d.items():
+        if not isinstance(values, (set, list, tuple)):
+            values = [values]
+        lines.append(f'    "{key}";')
+        for value in values:
+            lines.append(f'    "{value}";')
+            lines.append(f'    "{key}" -> "{value}";')
+    lines.append("}")
+    return '\n'.join(lines)    
+
 if __name__ == "__main__":
     # Setup command line argument parser
     parser = argparse.ArgumentParser(description='Pre-dose script performs a targeted substitution of package \
@@ -135,7 +147,8 @@ if __name__ == "__main__":
     parser.add_argument('-p', '--provide', type=str, help="path to binary Packages to provide replacements for sources implantation")
     parser.add_argument('-e', '--depends', type=int, nargs='?', metavar='DEPTH', const=1, default=None, help='print repository package dependencies and exit, default depth 1')        
     parser.add_argument('-s', '--resolve', action='store_true', help='resolve package names and exit')
-    parser.add_argument('-t', '--topo-sort', action='store_true', help='perform topological sort on origin and exit')    
+    parser.add_argument('-t', '--topo-sort', action='store_true', help='perform topological sort on origin and exit')   
+    parser.add_argument('-g', '--dot', type=str, help="save graph to dot file")
     parser.add_argument('-a', '--add-version', action='store_true', help='add version to package name and exit')
     parser.add_argument('-l', '--log-level', default='DEBUG', choices=['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'], \
                        help='set the logging level (default: DEBUG)')    
@@ -189,7 +202,9 @@ if __name__ == "__main__":
                     p_src = resolve_pkg_name(p, origin, src_dict, prov_dict)
                     if p_src:
                         for pd in origin[p_src]["depends"]:
-                            depends_set[pd] = None
+                            pd_src = resolve_pkg_name(pd, origin, src_dict, prov_dict)
+                            if pd_src:
+                                depends_set[pd_src] = None
                 if set_len == len(depends_set):
                     logging.info(f'Dependency search completed at iteration: {i + 1}')
                     break
@@ -230,6 +245,10 @@ if __name__ == "__main__":
                 if pkg_name in packages:
                     graph[p].add(pkg_name)
                     if pkg_name not in graph: graph[pkg_name] = set()
+        # Save graph to dot file
+        if args.dot: 
+            with open(args.dot, 'w') as f:
+                f.write(dict_to_dot(graph))
         # Prepare graph for topological sort
         graph_dict = reverse_graph(graph)
         nodes = {name: Node(name) for name in graph_dict}
