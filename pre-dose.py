@@ -63,6 +63,10 @@ def parse_metadata(filepath, src_dict = None, prov_dict = None):
                     if key in ('Build-Depends', 'Build-Depends-Indep', 'Build-Depends-Arch', 'Depends', 'Pre-Depends'):
                         deps_pkgs = [p.strip().split()[0].split(":")[0] for p in value.split(',') if p.strip() and '<!' not in p]
                         for p in deps_pkgs:
+                            if p == pkg_name:
+                                logging.warning(f'package depends on itself, '
+                                    f'package name is excluded from dependencies: {pkg_name}')
+                                continue       
                             depends.append(p)
             # Store package metadata if valid
             if pkg_name != None and version != None:
