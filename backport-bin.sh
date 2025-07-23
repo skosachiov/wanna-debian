@@ -6,6 +6,11 @@ if [ -z "$1" ]; then
     exit 1
 fi
 
+if ! dpkg -l | grep -q 'dose-debcheck'; then
+    echo "Warning: dose-debcheck package is not installed. Exiting."
+    exit 1
+fi
+
 base_name="$1"
 counter=0
 
