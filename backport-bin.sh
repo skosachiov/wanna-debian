@@ -6,8 +6,8 @@ if [ -z "$1" ]; then
     exit 1
 fi
 
-if ! dpkg -l | grep -q 'dose-debcheck'; then
-    echo "Warning: dose-debcheck package is not installed. Exiting."
+if ! dpkg -l | grep -q 'dose-distcheck'; then
+    echo "Warning: dose-distcheck package is not installed. Exiting."
     exit 1
 fi
 
