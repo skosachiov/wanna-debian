@@ -14,7 +14,7 @@ fi
 base_name="$1"
 counter=0
 
-filename=$(printf "%s.%02d" "$base_name" $counter)
+filename=$(printf "%s.%03d" "$base_name" $counter)
 
 if [ ! -s "$filename" ]; then
     echo "Error: Initial file '$filename' is empty or doesn't exist"
@@ -32,7 +32,7 @@ fi
 while [ -s "$filename" ]; do
     echo "Processing $filename"
     ((counter++))
-    next_filename=$(printf "%s.%02d" "$base_name" $counter)
+    next_filename=$(printf "%s.%03d" "$base_name" $counter)
     
     dose-debcheck --latest 1 --deb-native-arch=amd64 -e -f ${base_name}_Packages \
         | grep unsat-dep | awk '{print $2}' | cut -f 1 -d ":" | sort -u > $next_filename

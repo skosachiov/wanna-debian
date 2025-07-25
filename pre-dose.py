@@ -22,7 +22,7 @@ def delete_depends(pkg_name, block, exclude_list):
     return "\n".join(result)
 
 # Parse package metadata from repository file
-def parse_metadata(filepath, src_dict = None, prov_dict = None):
+def parse_metadata(filepath, src_dict = None, prov_dict = None, bin_dict = None):
     packages = {}
     with open(filepath, 'rt', encoding='utf-8') as f:
         content = f.read()
@@ -48,6 +48,7 @@ def parse_metadata(filepath, src_dict = None, prov_dict = None):
                     # Build binary-to-source mapping if requested
                     if key == 'Binary' and src_dict != None:
                         bin_pkgs = [p.strip() for p in value.split(',')]
+                        if bin_dict != None: bin_dict[pkg_name] = bin_pkgs
                         for p in bin_pkgs:
                             src_dict[p] = pkg_name
                     # Build provides mapping if requested
@@ -150,7 +151,8 @@ if __name__ == "__main__":
     parser.add_argument('-d', '--delete-depends', action='store_true', help='delete from dependencies instead of replacing or adding')
     parser.add_argument('-p', '--provide', type=str, help="path to binary Packages metadata to provide replacements for sources implantation")
     parser.add_argument('-e', '--depends', type=int, nargs='?', metavar='DEPTH', const=1, default=None, help='print repository package dependencies and exit, default depth 1')        
-    parser.add_argument('-s', '--resolve', action='store_true', help='resolve source code package names and exit')
+    parser.add_argument('-s', '--resolve-src', action='store_true', help='resolve source code package names and exit')
+    parser.add_argument('-b', '--resolve-bin', action='store_true', help='resolve binary package names and exit')
     parser.add_argument('-t', '--topo-sort', action='store_true', help='perform topological sort on origin and exit')   
     parser.add_argument('-g', '--dot', type=str, help="save graph to dot file")
     parser.add_argument('-a', '--add-version', action='store_true', help='add version to package name and exit')
@@ -169,6 +171,7 @@ if __name__ == "__main__":
 
     # Initialize data structures
     src_dict = {}
+    bin_dict = {}
     prov_dict = {}
     exclude_depends = []
     lines = []
@@ -176,7 +179,7 @@ if __name__ == "__main__":
     depends_set = {} # Ordered dict
 
     # Parse repository metadata
-    origin = parse_metadata(args.origin_repo, src_dict = src_dict, prov_dict = prov_dict)
+    origin = parse_metadata(args.origin_repo, src_dict = src_dict, prov_dict = prov_dict, bin_dict = bin_dict if args.resolve_bin != None else None)
     target = parse_metadata(args.target_repo)
     if args.provide: parse_metadata(args.provide, prov_dict = prov_dict)
 
@@ -188,16 +191,19 @@ if __name__ == "__main__":
         if pkg_name != None: packages.add(pkg_name)
         
         # Handle different operation modes
-        if args.add_version and not args.resolve and pkg_name != None:
+        if args.add_version and not (args.resolve_src or args.resolve_bin) and pkg_name != None:
             if line.strip() in origin:
                 print(f'{line.strip()}={origin[line.strip()]["version"]}')
             else:
                 logging.error(f'Package without resolve operation not found: {line.strip()}')
-        elif args.resolve and pkg_name != None:
+        elif args.resolve_src and pkg_name != None:
             if args.add_version:
                 print(f'{pkg_name}={origin[pkg_name]["version"]}')
             else:
                 print(f'{pkg_name}')
+        elif args.resolve_bin and pkg_name != None:
+            for p in bin_dict[pkg_name]:
+                print(p)
         elif args.depends and pkg_name != None:
             depends_set[pkg_name] = None # Set
             for i in range(args.depends):
@@ -273,7 +279,7 @@ if __name__ == "__main__":
             print(t)
 
     # Output modified package metadata if not in special mode
-    if not any((args.add_version, args.depends, args.resolve, args.topo_sort)):
+    if not any((args.add_version, args.depends, args.resolve_src, args.resolve_bin, args.topo_sort)):
         for pkg in target.values():
             print(pkg['block'])
             print()
