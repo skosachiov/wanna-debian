@@ -47,7 +47,7 @@ while [[ -s "$filename.bin" && -s "$filename.src"  ]]; do
     cat $next_filename.bin | python3 pre-dose.py --log-file $base_name.log -s $2_Sources ${base_name}_Sources | sort -u > $next_filename.src    
 
     # src-src implantation
-    cat $next_filename.src | python3 pre-dose.py --log-file $base_name.log $2_Sources ${base_name}_Sources > ${base_name}_Sources.tmp && \
+    cat $next_filename.src | python3 pre-dose.py --log-file $base_name.log -p $2_Packages $2_Sources ${base_name}_Sources > ${base_name}_Sources.tmp && \
         mv -f ${base_name}_Sources.tmp ${base_name}_Sources
 
     # src-bin implantation
