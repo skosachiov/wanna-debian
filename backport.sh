@@ -39,12 +39,9 @@ while [[ -s "$filename.bin" && -s "$filename.src"  ]]; do
     # bin-bin implantation
     cat $filename.bin | python3 pre-dose.py --log-file $base_name.log $2_Packages ${base_name}_Packages > ${base_name}_Packages.tmp && \
         mv -f ${base_name}_Packages.tmp ${base_name}_Packages
-    # check bin
-    dose-debcheck --latest 1 --deb-native-arch=amd64 -e -f ${base_name}_Packages \
-        | grep "unsat-" | awk '{print $2}' | cut -f 1 -d ":" | sort -u > $next_filename.bin
 
     # convert bin to src
-    cat $next_filename.bin | python3 pre-dose.py --log-file $base_name.log -s $2_Sources ${base_name}_Sources | sort -u > $next_filename.src    
+    cat $filename.bin | python3 pre-dose.py --log-file $base_name.log -s $2_Sources ${base_name}_Sources | sort -u > $next_filename.src    
 
     # src-src implantation
     cat $next_filename.src | python3 pre-dose.py --log-file $base_name.log -p $2_Packages $2_Sources ${base_name}_Sources > ${base_name}_Sources.tmp && \
@@ -55,17 +52,21 @@ while [[ -s "$filename.bin" && -s "$filename.src"  ]]; do
         | python3 pre-dose.py --log-file $base_name.log $2_Packages ${base_name}_Packages > ${base_name}_Packages.tmp && \
         mv -f ${base_name}_Packages.tmp ${base_name}_Packages
 
+    # check bin
+    dose-debcheck --latest 1 --deb-native-arch=amd64 -e -f ${base_name}_Packages \
+        | grep "unsat-" | awk '{print $2}' | cut -f 1 -d ":" | sort -u > $next_filename.bin
+
     # check src and append to bin
     dose-builddebcheck --latest 1 --deb-native-arch=amd64 -e -f ${base_name}_Packages ${base_name}_Sources \
         | grep "unsat-" | awk '{print $2}' | cut -f 1 -d ":" | sort -u >> $next_filename.bin
 
     if cmp -s "$filename.bin" "$next_filename.bin"; then
         echo "Stopping: '$next_filename.bin' has identical content to '$filename.bin'"
-        break
+        exit 0
     fi
     if cmp -s "$filename.src" "$next_filename.src"; then
         echo "Stopping: '$next_filename.src' has identical content to '$filename.src'"
-        break
+        exit 0
     fi    
 
     cp -f ${base_name}_Sources ${base_name}_Sources.prev
