@@ -25,11 +25,11 @@ counter=0
 filename=$(printf "%s.%03d" "$base_name" $counter)
 
 cat > $filename.bin
-echo "" > $filename.src
 
-#cat $filename.bin | python3 pre-dose.py --log-file $base_name.log $2_Packages $3_Packages > ${base_name}_Packages
-#cat $filename.bin | python3 pre-dose.py --log-file $base_name.log -s $2_Sources $3_Sources | sort -u > $filename.src
-#cat $filename.src | python3 pre-dose.py --log-file $base_name.log $2_Sources $3_Sources > ${base_name}_Sources
+cat $filename.bin | python3 pre-dose.py --log-file $base_name.log $2_Packages $3_Packages > ${base_name}_Packages
+cat $filename.bin | python3 pre-dose.py --log-file $base_name.log -s $2_Sources $3_Sources | sort -u > $filename.src
+cat $filename.src | python3 pre-dose.py --log-file $base_name.log $2_Sources $3_Sources > ${base_name}_Sources
+echo "" > $filename.src
 
 while [[ -s "$filename.bin" && -s "$filename.src"  ]]; do
 
