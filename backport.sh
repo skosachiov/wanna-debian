@@ -1,18 +1,77 @@
 #!/bin/bash
 
+# print help
 if [ -z "$1" ]; then
     echo "Usage: cat [pkgs_list] | $0 [basename] [newer_suffix] [older_suffix]"
-    echo "Example: echo gnome-core | $0 gnome trixie bullseye"
-    echo "Example: cat gnome.txt | $0 gnome trixie bullseye"
+    echo "Example: echo gnome-core | $0 gnome-core sid trixie"
+    echo "Example: cat debootstrap.list | $0 minimal sid empty"
     exit 0
 fi
 
-cat > $1.bin.00
+# warning if not installed
+if ! dpkg -l | grep -q 'dose-distcheck'; then
+    echo "Warning: dose-distcheck package is not installed. Exiting."
+    exit 1
+fi
 
-./backport-bin.sh $1.bin $2 $3
+if ! dpkg -l | grep -q 'dose-builddebcheck'; then
+    echo "Warning: dose-builddebcheck package is not installed. Exiting."
+    exit 1
+fi
 
-cat $1.bin.[0-9]* | sort -u > $1.src.00
+base_name="$1"
+counter=0
 
-./backport-src.sh $1.src $2 $3
+filename=$(printf "%s.%03d" "$base_name" $counter)
 
-cat $1.src.[0-9]* | sort -u | python3 pre-dose.py -a -s -p $2_Packages $2_Packages $2_Sources | cut -f 1 -d " " | sort -u > $1.src.all
+cat > $filename.bin
+
+cat $filename.bin | python3 pre-dose.py --log-file $base_name.log $2_Packages $3_Packages > ${base_name}_Packages
+cat $filename.bin | python3 pre-dose.py --log-file $base_name.log -s $2_Sources $3_Sources | sort -u > $filename.src
+cat $filename.src | python3 pre-dose.py --log-file $base_name.log $2_Sources $3_Sources > ${base_name}_Sources
+
+while [[ -s "$filename.bin" && -s "$filename.src"  ]]; do
+
+    echo "Processing $filename"
+    ((counter++))
+    next_filename=$(printf "%s.%03d" "$base_name" $counter)
+
+    # bin-bin implantation
+    cat $filename.bin | python3 pre-dose.py --log-file $base_name.log $2_Packages ${base_name}_Packages > ${base_name}_Packages.tmp && \
+        mv -f ${base_name}_Packages.tmp ${base_name}_Packages
+    # check bin
+    dose-debcheck --latest 1 --deb-native-arch=amd64 -e -f ${base_name}_Packages \
+        | grep unsat-dep | awk '{print $2}' | cut -f 1 -d ":" | sort -u > $next_filename.bin
+
+    # convert bin to src
+    cat $next_filename.bin | python3 pre-dose.py --log-file $base_name.log -s $2_Sources ${base_name}_Sources | sort -u > $next_filename.src    
+
+    # src-src implantation
+    cat $next_filename.src | python3 pre-dose.py --log-file $base_name.log $2_Sources ${base_name}_Sources > ${base_name}_Sources.tmp && \
+        mv -f ${base_name}_Sources.tmp ${base_name}_Sources
+
+    # src-bin implantation
+    cat $filename.src | python3 pre-dose.py --log-file $base_name.log -b $2_Sources ${base_name}_Sources \
+        | python3 pre-dose.py --log-file $base_name.log $2_Packages ${base_name}_Packages > ${base_name}_Packages.tmp && \
+        mv -f ${base_name}_Packages.tmp ${base_name}_Packages
+
+    # check src and append to bin
+    dose-builddebcheck --latest 1 --deb-native-arch=amd64 -e -f ${base_name}_Packages ${base_name}_Sources \
+        | grep unsat-dep | awk '{print $2}' | cut -f 1 -d ":" | sort -u >> $next_filename.bin
+
+    if cmp -s "$filename.bin" "$next_filename.bin"; then
+        echo "Stopping: '$next_filename.bin' has identical content to '$filename.bin'"
+        break
+    fi
+    if cmp -s "$filename.src" "$next_filename.src"; then
+        echo "Stopping: '$next_filename.src' has identical content to '$filename.src'"
+        break
+    fi    
+
+    cp -f ${base_name}_Sources ${base_name}_Sources.prev
+    cp -f ${base_name}_Packages ${base_name}_Packages.prev
+           
+    filename="$next_filename"
+done
+
+echo "Stopping: '$filename.bin' or '$filename.src' is empty"

@@ -13,3 +13,5 @@ Sources
 *.prev
 *.tmp
 *.dot
+*.bin
+*.src
