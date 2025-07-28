@@ -25,10 +25,11 @@ counter=0
 filename=$(printf "%s.%03d" "$base_name" $counter)
 
 cat > $filename.bin
+echo "" > $filename.src
 
-cat $filename.bin | python3 pre-dose.py --log-file $base_name.log $2_Packages $3_Packages > ${base_name}_Packages
-cat $filename.bin | python3 pre-dose.py --log-file $base_name.log -s $2_Sources $3_Sources | sort -u > $filename.src
-cat $filename.src | python3 pre-dose.py --log-file $base_name.log $2_Sources $3_Sources > ${base_name}_Sources
+#cat $filename.bin | python3 pre-dose.py --log-file $base_name.log $2_Packages $3_Packages > ${base_name}_Packages
+#cat $filename.bin | python3 pre-dose.py --log-file $base_name.log -s $2_Sources $3_Sources | sort -u > $filename.src
+#cat $filename.src | python3 pre-dose.py --log-file $base_name.log $2_Sources $3_Sources > ${base_name}_Sources
 
 while [[ -s "$filename.bin" && -s "$filename.src"  ]]; do
 
@@ -56,7 +57,7 @@ while [[ -s "$filename.bin" && -s "$filename.src"  ]]; do
     dose-debcheck --latest 1 --deb-native-arch=amd64 -e -f ${base_name}_Packages \
         | grep "unsat-" | awk '{print $2}' | cut -f 1 -d ":" | sort -u > $next_filename.bin
 
-    # check binary packages that depend on
+    # check binary packages that broken due to low dependent versions
     dose-debcheck --latest 1 --deb-native-arch=amd64 -e -f ${base_name}_Packages \
         | grep -B 3 -P "^\s{6}unsat-.*\((<|=)" | grep -e package: | awk '{print $2}' | sort -u >> $next_filename.bin
 
