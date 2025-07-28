@@ -51,7 +51,7 @@ while [[ -s "$filename.bin" && -s "$filename.src"  ]]; do
         mv -f ${base_name}_Sources.tmp ${base_name}_Sources
 
     # src-bin implantation
-    cat $filename.src | python3 pre-dose.py --log-file $base_name.log -b $2_Sources ${base_name}_Sources \
+    cat $next_filename.src | python3 pre-dose.py --log-file $base_name.log -b $2_Sources ${base_name}_Sources \
         | python3 pre-dose.py --log-file $base_name.log $2_Packages ${base_name}_Packages > ${base_name}_Packages.tmp && \
         mv -f ${base_name}_Packages.tmp ${base_name}_Packages
 
