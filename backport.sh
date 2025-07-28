@@ -52,9 +52,13 @@ while [[ -s "$filename.bin" && -s "$filename.src"  ]]; do
         | python3 pre-dose.py --log-file $base_name.log $2_Packages ${base_name}_Packages > ${base_name}_Packages.tmp && \
         mv -f ${base_name}_Packages.tmp ${base_name}_Packages
 
-    # check bin
+    # check binary packages in dependencies
     dose-debcheck --latest 1 --deb-native-arch=amd64 -e -f ${base_name}_Packages \
         | grep "unsat-" | awk '{print $2}' | cut -f 1 -d ":" | sort -u > $next_filename.bin
+
+    # check binary packages that depend on
+    dose-debcheck --latest 1 --deb-native-arch=amd64 -e -f ${base_name}_Packages \
+        | grep -B 3 -P "^\s{6}unsat-.*\((<|=)" | grep -e package: | awk '{print $2}' | sort -u >> $next_filename.bin
 
     # check src and append to bin
     dose-builddebcheck --latest 1 --deb-native-arch=amd64 -e -f ${base_name}_Packages ${base_name}_Sources \
