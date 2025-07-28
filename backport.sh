@@ -41,7 +41,7 @@ while [[ -s "$filename.bin" && -s "$filename.src"  ]]; do
         mv -f ${base_name}_Packages.tmp ${base_name}_Packages
     # check bin
     dose-debcheck --latest 1 --deb-native-arch=amd64 -e -f ${base_name}_Packages \
-        | grep unsat-dep | awk '{print $2}' | cut -f 1 -d ":" | sort -u > $next_filename.bin
+        | grep "unsat-" | awk '{print $2}' | cut -f 1 -d ":" | sort -u > $next_filename.bin
 
     # convert bin to src
     cat $next_filename.bin | python3 pre-dose.py --log-file $base_name.log -s $2_Sources ${base_name}_Sources | sort -u > $next_filename.src    
@@ -57,7 +57,7 @@ while [[ -s "$filename.bin" && -s "$filename.src"  ]]; do
 
     # check src and append to bin
     dose-builddebcheck --latest 1 --deb-native-arch=amd64 -e -f ${base_name}_Packages ${base_name}_Sources \
-        | grep unsat-dep | awk '{print $2}' | cut -f 1 -d ":" | sort -u >> $next_filename.bin
+        | grep "unsat-" | awk '{print $2}' | cut -f 1 -d ":" | sort -u >> $next_filename.bin
 
     if cmp -s "$filename.bin" "$next_filename.bin"; then
         echo "Stopping: '$next_filename.bin' has identical content to '$filename.bin'"
