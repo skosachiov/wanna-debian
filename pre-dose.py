@@ -213,9 +213,10 @@ if __name__ == "__main__":
         elif args.resolve_bin and pkg_name != None:
             for p in bin_dict[pkg_name]:
                 print(p)
-        elif args.resolve_group and pkg_name != None:      
-            for p in group_dict[target[pkg_name]['source']]:
-                print(p)                
+        elif args.resolve_group and pkg_name != None:
+            if target[pkg_name]["source"] != None:  
+                for p in group_dict[target[pkg_name]["source"]]:
+                    print(p)                
         elif args.depends and pkg_name != None:
             depends_set[pkg_name] = None # Set
             for i in range(args.depends):
