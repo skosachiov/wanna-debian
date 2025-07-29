@@ -211,8 +211,11 @@ if __name__ == "__main__":
             else:
                 print(f'{pkg_name}')
         elif args.resolve_bin and pkg_name != None:
-            for p in bin_dict[pkg_name]:
-                print(p)
+            if pkg_name in bin_dict:
+                for p in bin_dict[pkg_name]:
+                    print(p)
+            else:
+                logging.error(f'Can not resolve the source package to binary because the name was not found: {pkg_name}')
         elif args.resolve_group and pkg_name != None:
             if pkg_name in target and target[pkg_name]["source"] != None:  
                 for p in group_dict[target[pkg_name]["source"]]:
