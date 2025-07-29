@@ -58,9 +58,9 @@ while [[ -s "$filename.bin" && -s "$filename.src"  ]]; do
     dose-debcheck --latest 1 --deb-native-arch=amd64 -e -f ${base_name}_Packages \
         | grep "unsat-" | awk '{print $2}' | cut -f 1 -d ":" | sort -u > $next_filename.bin
 
-    # check binary packages that broken due to low dependent versions
-    dose-debcheck --latest 1 --deb-native-arch=amd64 -e -f ${base_name}_Packages \
-        | grep -B 3 -P "^\s{6}unsat-.*\((<|=)" | grep -e package: | awk '{print $2}' | sort -u >> $next_filename.bin
+    # # check binary packages that broken due to low dependent versions
+    # dose-debcheck --latest 1 --deb-native-arch=amd64 -e -f ${base_name}_Packages \
+    #     | grep -B 3 -P "^\s{6}unsat-.*\((<|=)" | grep -e package: | awk '{print $2}' | sort -u >> $next_filename.bin
 
     # check src and append to bin
     dose-builddebcheck --latest 1 --deb-native-arch=amd64 -e -f ${base_name}_Packages ${base_name}_Sources \
