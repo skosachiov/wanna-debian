@@ -37,8 +37,9 @@ while [[ -s "$filename.bin" && -s "$filename.src"  ]]; do
     ((counter++))
     next_filename=$(printf "%s.%03d" "$base_name" $counter)
 
-    # bin-bin implantation
-    cat $filename.bin | python3 pre-dose.py --log-file $base_name.log $2_Packages ${base_name}_Packages > ${base_name}_Packages.tmp && \
+    # remove bin target groups
+    cat $filename.bin | python3 pre-dose.py --log-file $base_name.log -o $2_Packages ${base_name}_Packages \
+        | python3 pre-dose.py --log-file $base_name.log -r $2_Packages ${base_name}_Packages > ${base_name}_Packages.tmp && \
         mv -f ${base_name}_Packages.tmp ${base_name}_Packages
 
     # convert bin to src
@@ -69,6 +70,7 @@ while [[ -s "$filename.bin" && -s "$filename.src"  ]]; do
         echo "Stopping: '$next_filename.bin' has identical content to '$filename.bin'"
         exit 0
     fi
+    
     if cmp -s "$filename.src" "$next_filename.src"; then
         echo "Stopping: '$next_filename.src' has identical content to '$filename.src'"
         exit 0

@@ -29,7 +29,7 @@ def parse_metadata(filepath, src_dict = None, prov_dict = None, bin_dict = None)
         # Split into individual package blocks
         package_blocks = re.split(r'\n\n+', content.strip())
         for block in package_blocks:
-            pkg_name = version = None
+            pkg_name = version = source = None
             depends = []
             block_list = []
             for line in block.splitlines():
@@ -45,12 +45,19 @@ def parse_metadata(filepath, src_dict = None, prov_dict = None, bin_dict = None)
                     # Extract package name
                     if key == 'Package':
                         pkg_name = value.strip()
-                    # Build binary-to-source mapping if requested
+                    # Build binary-to-source mapping for source metadata if requested
                     if key == 'Binary' and src_dict != None:
                         bin_pkgs = [p.strip() for p in value.split(',')]
                         if bin_dict != None: bin_dict[pkg_name] = bin_pkgs
                         for p in bin_pkgs:
                             src_dict[p] = pkg_name
+                    # Build binary-to-source mapping for binary metadata if requested
+                    if key == 'Source' and bin_dict != None:
+                        source = value.strip().split()[0]
+                        if source not in bin_dict:
+                            bin_dict[source] = [pkg_name]
+                        else:
+                            bin_dict[source].append(pkg_name)
                     # Build provides mapping if requested
                     if key == 'Provides' and prov_dict != None:
                         prov_pkgs = [p.strip().split()[0] for p in value.split(',') \
@@ -72,7 +79,7 @@ def parse_metadata(filepath, src_dict = None, prov_dict = None, bin_dict = None)
             # Store package metadata if valid
             if pkg_name != None and version != None:
                 if pkg_name not in packages or apt_pkg.version_compare(version, packages[pkg_name]['version']) > 0:
-                    packages[pkg_name] = {'version': version, 'block': block, 'depends': depends}
+                    packages[pkg_name] = {'version': version, 'block': block, 'depends': depends, 'source': source}
                 else:
                     logging.warning(f'A new version package already in the list: {pkg_name}')                
     logging.debug(f'In the file {filepath} processed packets: {len(packages)}')
@@ -153,6 +160,7 @@ if __name__ == "__main__":
     parser.add_argument('-e', '--depends', type=int, nargs='?', metavar='DEPTH', const=1, default=None, help='print repository package dependencies and exit, default depth 1')        
     parser.add_argument('-s', '--resolve-src', action='store_true', help='resolve source code package names and exit')
     parser.add_argument('-b', '--resolve-bin', action='store_true', help='resolve binary package names and exit')
+    parser.add_argument('-o', '--resolve-group', action='store_true', help='resolve target binary group and exit')
     parser.add_argument('-t', '--topo-sort', action='store_true', help='perform topological sort on origin and exit')   
     parser.add_argument('-g', '--dot', type=str, help="save graph to dot file")
     parser.add_argument('-a', '--add-version', action='store_true', help='add version to package name and exit')
@@ -172,6 +180,7 @@ if __name__ == "__main__":
     # Initialize data structures
     src_dict = {}
     bin_dict = {}
+    group_dict = {}
     prov_dict = {}
     exclude_depends = []
     lines = []
@@ -180,7 +189,7 @@ if __name__ == "__main__":
 
     # Parse repository metadata
     origin = parse_metadata(args.origin_repo, src_dict = src_dict, prov_dict = prov_dict, bin_dict = bin_dict if args.resolve_bin != None else None)
-    target = parse_metadata(args.target_repo)
+    target = parse_metadata(args.target_repo, bin_dict = group_dict)
     if args.provide: parse_metadata(args.provide, prov_dict = prov_dict)
 
     # Process input packages from stdin
@@ -191,7 +200,7 @@ if __name__ == "__main__":
         if pkg_name != None: packages.add(pkg_name)
         
         # Handle different operation modes
-        if args.add_version and not (args.resolve_src or args.resolve_bin) and pkg_name != None:
+        if args.add_version and not (args.resolve_src or args.resolve_bin or args.resolve_group) and pkg_name != None:
             if line.strip() in origin:
                 print(f'{line.strip()}={origin[line.strip()]["version"]}')
             else:
@@ -204,6 +213,9 @@ if __name__ == "__main__":
         elif args.resolve_bin and pkg_name != None:
             for p in bin_dict[pkg_name]:
                 print(p)
+        elif args.resolve_group and pkg_name != None:      
+            for p in group_dict[target[pkg_name]['source']]:
+                print(p)                
         elif args.depends and pkg_name != None:
             depends_set[pkg_name] = None # Set
             for i in range(args.depends):
@@ -279,7 +291,7 @@ if __name__ == "__main__":
             print(t)
 
     # Output modified package metadata if not in special mode
-    if not any((args.add_version, args.depends, args.resolve_src, args.resolve_bin, args.topo_sort)):
+    if not any((args.add_version, args.depends, args.resolve_src, args.resolve_bin, args.resolve_group, args.topo_sort)):
         for pkg in target.values():
             print(pkg['block'])
             print()
