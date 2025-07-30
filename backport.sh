@@ -66,17 +66,17 @@ while [[ -s "$filename.bin" && -s "$filename.src"  ]]; do
     dose-builddebcheck --latest 1 --deb-native-arch=amd64 -e -f ${base_name}_Packages ${base_name}_Sources \
         | grep "unsat-" | awk '{print $2}' | cut -f 1 -d ":" | sort -u >> $next_filename.bin
 
-    if cmp -s "$filename.bin" "$next_filename.bin" && cmp -s "$filename.src" "$next_filename.src"; then
-        echo "Stopping: '$next_filename' has identical content to '$filename'"
-        exit 0
-    fi
-
     sort -u -o "$next_filename.bin" "$next_filename.bin"
     sort -u -o "$next_filename.src" "$next_filename.src"
 
     cp -f ${base_name}_Sources ${base_name}_Sources.prev
     cp -f ${base_name}_Packages ${base_name}_Packages.prev
-           
+
+    if cmp -s "$filename.bin" "$next_filename.bin" && cmp -s "$filename.src" "$next_filename.src"; then
+        echo "Stopping: '$next_filename' has identical content to '$filename'"
+        exit 0
+    fi
+
     filename="$next_filename"
 done
 
