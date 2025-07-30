@@ -2,7 +2,7 @@
 
 # print help
 if [ -z "$1" ]; then
-    echo "Usage: cat [pkgs_list] | $0 [basename] [newer_suffix] [older_suffix]"
+    echo "Usage: cat <pkgs_list> | $0 <basename> <newer_suffix> <older_suffix>"
     echo "Example: echo gnome-core | $0 gnome-core sid trixie"
     echo "Example: cat debootstrap.list | $0 minimal sid empty"
     exit 0

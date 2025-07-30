@@ -8,7 +8,7 @@ Pre-doce is a specialized workflow designed to analyze and backport Debian packa
 
 The workflow begins with binary dependency resolution, analyzing which packages can be migrated without conflicts. This initial assessment is then processed by dose-debcheck, which systematically verifies package installability against the target release’s repository. The output is fed into dose-builddebcheck, the core iterative engine that refines dependency resolution by cycling through source package metadata.
 
-During each iteration, unsatisfied dependencies are stripped from the metadata, and the verification process repeats with the updated constraints. Since the package databases may already contain unresolvable dependencies such as missing or incompatible libraries these are preemptively filtered out before processing. This step minimizes redundant checks and accelerates convergence toward a viable solution.
+During each iteration, unsatisfied dependencies are implanted into the metadata, and the verification process repeats. Since the package databases may already contain unresolvable dependencies such as missing or incompatible libraries these are preemptively filtered out before processing. This step minimizes redundant checks and accelerates convergence toward a viable solution.
 
 By combining dose-debcheck and dose-builddebcheck, Pre-doce ensures an efficient and reliable backporting process. It reduces manual effort, precisely pinpoints problematic dependencies, and automates the end-to-end workflow, making it an indispensable tool for Debian maintainers and developers.
 
@@ -50,40 +50,40 @@ or
 
 https://people.debian.org/~fpeters/gnome/debian-gnome-48-status.html
 
-`echo gnome-core | python pre-dose.py -e sid_Packages sid_Sources | cut -f 1 -d ' ' | sort -u > gnome.txt`
+`echo gnome-core | python pre-dose.py -e 1 sid_Packages sid_Sources | cut -f 1 -d ' ' | sort -u > gnome.list`
 
 or
 
-`awk -v RS='\n\n' '/Version: 4[3-8]\..*GNOME Main/' sid_Packages | grep ^Package: | cut -f 2 -d ' ' | sort -u > gnome.txt`
+`awk -v RS='\n\n' '/Version: 4[3-8]\..*GNOME Main/' sid_Packages | grep ^Package: | cut -f 2 -d ' ' | sort -u > gnome.list`
 
 or
 
 https://wiki.debian.org/PkgQtKde/TrixieReleasePlans
 
 ```
-awk -v RS='\n\n' '/Version:.*6\.3\.[4-5].*KDE Main/' trixie_Packages | grep ^Package: | cut -f 2 -d ' ' > kde.txt
-awk -v RS='\n\n' '/Version:.*24\.12.*KDE Main/' trixie_Packages | grep ^Package: | cut -f 2 -d ' ' >> kde.txt
-awk -v RS='\n\n' '/Version:.*25\.0.*KDE Main/' trixie_Packages | grep ^Package: | cut -f 2 -d ' ' >> kde.txt
-sort -u -o kde.txt kde.txt
+awk -v RS='\n\n' '/Version:.*6\.3\.[4-5].*KDE Main/' trixie_Packages | grep ^Package: | cut -f 2 -d ' ' > kde.list
+awk -v RS='\n\n' '/Version:.*24\.12.*KDE Main/' trixie_Packages | grep ^Package: | cut -f 2 -d ' ' >> kde.list
+awk -v RS='\n\n' '/Version:.*25\.0.*KDE Main/' trixie_Packages | grep ^Package: | cut -f 2 -d ' ' >> kde.list
+sort -u -o kde.list kde.list
 ```
 
 ### run resolver
 
-`cat gnome.txt | ./backport.sh gnome sid trixie`
+`cat gnome.list | ./backport.sh gnome sid trixie`
 
 or 
 
-`cat kde.txt | ./backport.sh kde sid trixie`
+`cat kde.list | ./backport.sh kde sid trixie`
 
 ### view result
 
-`cat gnome.src.all`
+`cat gnome.*.src | sort -u`
 
-`cat kde.src.all`
+`cat kde.*.src | sort -u`
 
 ### topological sort result
 
-`cat gnome.src.all | python3 pre-dose.py --log-file gnome.src.log -t sid_Sources trixie_Sources > gnome.src.toposort`
+`cat gnome.*.src | sort -u | python3 pre-dose.py --log-file gnome.log -t sid_Sources trixie_Sources > gnome.toposort.src`
 
 ## man dose-ceve
 
@@ -107,9 +107,9 @@ dose-ceve --deb-native-arch=amd64 -r build-essential -T deb --depth 1 \
 
 ## sources toposort with dot graph
 
-`echo build-essential | python3 pre-dose.py --log-file build-essential.log -e 2 sid_Sources trixie_Sources > build-essential.src.txt`
+`echo build-essential | python3 pre-dose.py --log-file build-essential.log -e 2 sid_Sources trixie_Sources > build-essential.list`
 
-`tac build-essential.src.txt | python3 pre-dose.py --log-file build-essential.log -t --dot build-essential.dot sid_Sources trixie_Sources > build-essential.toposort.txt`
+`tac build-essential.list | python3 pre-dose.py --log-file build-essential.log -t --dot build-essential.dot sid_Sources trixie_Sources > build-essential.toposort`
 
 `xdot build-essential.dot`
 
@@ -143,7 +143,7 @@ root-groups=root
 aliases=unstable,default
 ```
 
-`cat build.txt | xargs -I {} apt source --download-only {}`
+`cat build.list | xargs -I {} apt source --download-only {}`
 
 ## debootstrap repo example
 
