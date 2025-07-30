@@ -156,4 +156,8 @@ echo "" > target_Packages
 cat bootstrap.src.list | python3 pre-dose.py -b trixie_Sources trixie_Sources \
         | python3 pre-dose.py trixie_Packages target_Packages > target_Packages.tmp
 mv target_Packages.tmp target_Packages
-dose-builddebcheck --latest 1 --deb-native-arch=amd64 -e -f target_Packages target_Sources 
+dose-builddebcheck --latest 1 --deb-native-arch=amd64 -e -f target_Packages target_Sources
+
+### debootstrap repo calculation
+
+`cat /tmp/bootstrap.list  | ./backport.sh  bootstrap trixie empty &`
