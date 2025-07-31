@@ -198,4 +198,4 @@ dose-builddebcheck --latest 1 --deb-native-arch=amd64 -e -f target_Packages targ
 
 ### debootstrap repo calculation
 
-`cat /tmp/bootstrap.list  | ./backport.sh  bootstrap trixie empty &`
+`cat /tmp/bootstrap.list | ./backport.sh bootstrap trixie empty &`
