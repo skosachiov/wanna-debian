@@ -1,18 +1,53 @@
 # wanna-debian
 
-## pre-dose workflow
+## pre-dose
 
-### intro
+Pre-dose is a small set of Python and Bash scripts designed for analyzing and backporting Debian packages from
+newer releases (e.g., Sid) to older stable versions (e.g., Trixie or Bookworm).
 
-Pre-dose is a specialized workflow designed to analyze and backport Debian packages from newer releases, such as sid, to older stable releases like trixie or bookworm. By automating dependency resolution and compatibility assessment, it efficiently identifies which packages can be cleanly backported and which cannot due to unsatisfied dependencies.
+Pre-dose iteratively attempts to solve some limitations of Debian's standard metadata analyzers—dose-distcheck and dose-builddebcheck—specifically:
+* Termination of dose scanning after the first unresolved dependency
+* Lack of topological sorting in dependency output
+* No built-in mechanism for easy metadata backporting
 
-The workflow begins with binary dependency resolution, analyzing which packages can be migrated without conflicts. This initial assessment is then processed by dose-debcheck, which systematically verifies package installability against the target release’s repository. The output is fed into dose-builddebcheck, the core iterative engine that refines dependency resolution by cycling through source package metadata.
+Given the following inputs:
+* A list of packages to backport
+* Metadata from the newer repository
+* Metadata from the target old repository (can be empty)
+pre-dose automatically generates the following artifacts without manual intervention:
+* An expanded list of source packages (with resolved dependencies) for backporting
+* An expanded list of binary packages for backporting
+* Updated and consistent build metadata for the target repository
+* Updated and consistent binary package metadata for the target repository
 
-During each iteration, unsatisfied dependencies are implanted into the metadata, and the verification process repeats. Since the package databases may already contain unresolvable dependencies such as missing or incompatible libraries these are preemptively filtered out before processing. This step minimizes redundant checks and accelerates convergence toward a viable solution.
+Determining the full list may require up to 100 iterations, with each dose check taking up to 2 minutes.
 
-By combining dose-debcheck and dose-builddebcheck, Pre-doce ensures an efficient and reliable backporting process. It reduces manual effort, precisely pinpoints problematic dependencies, and automates the end-to-end workflow, making it an indispensable tool for Debian maintainers and developers.
+### important notes
 
-In the context of package backporting, Pre-doce employs topological sorting to determine the optimal build order for source packages, ensuring that dependencies are available at each step of the compilation process. Since Debian packages often depend on one another in complex ways, a correct build sequence is essential to avoid failures due to missing build-dependencies.
+The build metadata of the target repository may have unresolved dependencies before backport emulation via metadata substitution. To identify these, it is necessary to first compute broken dependencies without any backport list (using an empty backport set). This allows comparing two sets:
+* Packages to backport
+* Packages needed to repair the target repository
+
+If the user provides a list of source packages (e.g., from a Debian software section like packages.debian.org/trixie/), they must first be converted to binary packages before processing.
+
+### workflow of backport.sh
+
+The backport.sh script assumes that the input consists of binary package names.
+
+The provided binary packages must replace their counterparts in the target repository. This means that the existing versions of these packages must first be removed.
+Their "siblings" (all binary packages built from the same source in the target repository) must also be removed.
+
+Next, the new packages (both source and binary) are extracted from the source repository and implanted into the respective metadata of the target repository.
+
+The process then enters a verification phase using dose-debcheck and dose-builddebcheck, which assess whether the packages can be installed and built in the target repository. A new list of binary packages is accumulated to satisfy dependencies.
+
+If the list is non-empty, the cycle repeats. If an iteration returns an empty list, the process stops.
+
+### conclusion
+
+By combining dose-debcheck and dose-builddebcheck, Pre-dose provides an efficient and reliable backporting process. It reduces manual effort, accurately identifies problematic dependencies, and automates the entire workflow, making it an indispensable tool for Debian developers and maintainers.
+
+## pre-dose examples
 
 ### apt
 
