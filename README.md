@@ -5,7 +5,7 @@
 Pre-dose is a small set of Python and Bash scripts designed for analyzing and backporting Debian packages from
 newer releases (e.g., Sid) to older stable versions (e.g., Trixie or Bookworm).
 
-Pre-dose iteratively attempts to solve some limitations of Debian's standard metadata analyzers—dose-distcheck and dose-builddebcheck—specifically:
+Pre-dose iteratively attempts to solve some limitations of Debian's standard metadata analyzers - dose-distcheck and dose-builddebcheck, specifically:
 * Termination of dose scanning after the first unresolved dependency
 * Lack of topological sorting in dependency output
 * No built-in mechanism for easy metadata backporting
@@ -182,6 +182,7 @@ aliases=unstable,default
 
 ## debootstrap repo example
 
+```
 debootstrap --print-debs trixie /tmp/trixie-chroot 2> /dev/null | tr " " "\n" > bootstrap.bin.list
 cat bootstrap.bin.list | python3 pre-dose.py -s -p trixie_Packages trixie_Sources trixie_Sources 2> /dev/null | sort -u > bootstrap.src.list
 echo "" > target_Sources
@@ -192,6 +193,7 @@ cat bootstrap.src.list | python3 pre-dose.py -b trixie_Sources trixie_Sources \
         | python3 pre-dose.py trixie_Packages target_Packages > target_Packages.tmp
 mv target_Packages.tmp target_Packages
 dose-builddebcheck --latest 1 --deb-native-arch=amd64 -e -f target_Packages target_Sources
+```
 
 ### debootstrap repo calculation
 
