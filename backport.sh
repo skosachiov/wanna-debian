@@ -6,7 +6,7 @@ if [ -z "$1" ]; then
     echo ""
     echo "The script $0 expects to find the following metadata files in the current directory:"
     echo "newerprefix_Packages, newerprefix_Sources, olderprefix_Packages, olderprefix_Sources"
-    echoi ""
+    echo ""
     echo "Example: echo gnome-core | $0 gnome-core sid trixie"
     echo "Example: cat debootstrap.list | $0 minimal sid empty"
     exit 0
