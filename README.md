@@ -181,21 +181,17 @@ aliases=unstable,default
 
 `cat build.list | xargs -I {} apt source --download-only {}`
 
-## debootstrap repo example
+### debootstrap repo example
 
 ```
-debootstrap --print-debs trixie /tmp/trixie-chroot 2> /dev/null | tr " " "\n" > bootstrap.bin.list
-cat bootstrap.bin.list | python3 pre-dose.py -s -p trixie_Packages trixie_Sources trixie_Sources 2> /dev/null | sort -u > bootstrap.src.list
-echo "" > target_Sources
-cat bootstrap.src.list | python3 pre-dose.py trixie_Sources target_Sources > target_Sources.tmp
-mv target_Sources.tmp target_Sources
-echo "" > target_Packages
-cat bootstrap.src.list | python3 pre-dose.py -b trixie_Sources trixie_Sources \
-        | python3 pre-dose.py trixie_Packages target_Packages > target_Packages.tmp
-mv target_Packages.tmp target_Packages
-dose-builddebcheck --latest 1 --deb-native-arch=amd64 -e -f target_Packages target_Sources
+debootstrap --print-debs trixie /tmp/trixie-chroot | tr " " "\n" > /tmp/bootstrap.list
+
+echo "" > empty_Packages
+echo "" > empty_Sources
+
+cat /tmp/bootstrap.list | ./backport.sh bootstrap trixie empty
 ```
 
-### debootstrap repo calculation
+#### final check
 
-`cat /tmp/bootstrap.list | ./backport.sh bootstrap trixie empty &`
+`dose-builddebcheck --latest 1 --deb-native-arch=amd64 -e -f bootstrap_Packages bootstrap_Sources`
