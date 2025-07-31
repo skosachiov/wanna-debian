@@ -1,5 +1,7 @@
 #!/bin/bash
 
+SD="$(dirname "${BASH_SOURCE[0]}")"
+
 # print help
 if [ -z "$1" ]; then
     echo "Usage: cat <pkgslist> | $0 <basename> <newerprefix> <olderprefix>"
@@ -30,9 +32,9 @@ filename=$(printf "%s.%03d" "$base_name" $counter)
 
 cat > $filename.bin
 
-cat $filename.bin | python3 pre-dose.py --log-file $base_name.log $2_Packages $3_Packages > ${base_name}_Packages
-cat $filename.bin | python3 pre-dose.py --log-file $base_name.log -s $2_Sources $3_Sources | sort -u > $filename.src
-cat $filename.src | python3 pre-dose.py --log-file $base_name.log $2_Sources $3_Sources > ${base_name}_Sources
+cat $filename.bin | python3 $SD/pre-dose.py --log-file $base_name.log $2_Packages $3_Packages > ${base_name}_Packages
+cat $filename.bin | python3 $SD/pre-dose.py --log-file $base_name.log -s $2_Sources $3_Sources | sort -u > $filename.src
+cat $filename.src | python3 $SD/pre-dose.py --log-file $base_name.log $2_Sources $3_Sources > ${base_name}_Sources
 echo "" > $filename.src
 
 while [[ -s "$filename.bin" && -s "$filename.src"  ]]; do
@@ -43,24 +45,24 @@ while [[ -s "$filename.bin" && -s "$filename.src"  ]]; do
 
     # remove bin target groups
     cat $filename.bin \
-        | python3 pre-dose.py --log-file $base_name.log --resolve-group $2_Packages ${base_name}_Packages \
-        | python3 pre-dose.py --log-file $base_name.log -r $2_Packages ${base_name}_Packages > ${base_name}_Packages.tmp && \
+        | python3 $SD/pre-dose.py --log-file $base_name.log --resolve-group $2_Packages ${base_name}_Packages \
+        | python3 $SD/pre-dose.py --log-file $base_name.log -r $2_Packages ${base_name}_Packages > ${base_name}_Packages.tmp && \
         mv -f ${base_name}_Packages.tmp ${base_name}_Packages
 
     # convert bin to src
     cat $filename.bin \
-        | python3 pre-dose.py --log-file $base_name.log --resolve-src --provide $2_Packages $2_Sources ${base_name}_Sources \
+        | python3 $SD/pre-dose.py --log-file $base_name.log --resolve-src --provide $2_Packages $2_Sources ${base_name}_Sources \
         | sort -u > $next_filename.src    
 
     # src-src implantation
     cat $next_filename.src \
-        | python3 pre-dose.py --log-file $base_name.log --provide $2_Packages $2_Sources ${base_name}_Sources > ${base_name}_Sources.tmp && \
+        | python3 $SD/pre-dose.py --log-file $base_name.log --provide $2_Packages $2_Sources ${base_name}_Sources > ${base_name}_Sources.tmp && \
         mv -f ${base_name}_Sources.tmp ${base_name}_Sources
 
     # src-bin implantation
     cat $next_filename.src \
-        | python3 pre-dose.py --log-file $base_name.log --resolve-bin $2_Sources ${base_name}_Sources \
-        | python3 pre-dose.py --log-file $base_name.log $2_Packages ${base_name}_Packages > ${base_name}_Packages.tmp && \
+        | python3 $SD/pre-dose.py --log-file $base_name.log --resolve-bin $2_Sources ${base_name}_Sources \
+        | python3 $SD/pre-dose.py --log-file $base_name.log $2_Packages ${base_name}_Packages > ${base_name}_Packages.tmp && \
         mv -f ${base_name}_Packages.tmp ${base_name}_Packages
 
     # check binary packages in dependencies
