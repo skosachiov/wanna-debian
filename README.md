@@ -14,6 +14,7 @@ Given the following inputs:
 * A list of packages to backport
 * Metadata from the newer repository
 * Metadata from the target old repository (can be empty)
+
 pre-dose automatically generates the following artifacts without manual intervention:
 * An expanded list of source packages (with resolved dependencies) for backporting
 * An expanded list of binary packages for backporting
