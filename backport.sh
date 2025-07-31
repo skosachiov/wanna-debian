@@ -2,7 +2,11 @@
 
 # print help
 if [ -z "$1" ]; then
-    echo "Usage: cat <pkgs_list> | $0 <basename> <newer_suffix> <older_suffix>"
+    echo "Usage: cat <pkgslist> | $0 <basename> <newerprefix> <olderprefix>"
+    echo ""
+    echo "The script $0 expects to find the following metadata files in the current directory:"
+    echo "newerprefix_Packages, newerprefix_Sources, olderprefix_Packages, olderprefix_Sources"
+    echoi ""
     echo "Example: echo gnome-core | $0 gnome-core sid trixie"
     echo "Example: cat debootstrap.list | $0 minimal sid empty"
     exit 0
@@ -38,19 +42,24 @@ while [[ -s "$filename.bin" && -s "$filename.src"  ]]; do
     next_filename=$(printf "%s.%03d" "$base_name" $counter)
 
     # remove bin target groups
-    cat $filename.bin | python3 pre-dose.py --log-file $base_name.log -o $2_Packages ${base_name}_Packages \
+    cat $filename.bin \
+        | python3 pre-dose.py --log-file $base_name.log --resolve-group $2_Packages ${base_name}_Packages \
         | python3 pre-dose.py --log-file $base_name.log -r $2_Packages ${base_name}_Packages > ${base_name}_Packages.tmp && \
         mv -f ${base_name}_Packages.tmp ${base_name}_Packages
 
     # convert bin to src
-    cat $filename.bin | python3 pre-dose.py --log-file $base_name.log -s -p $2_Packages $2_Sources ${base_name}_Sources | sort -u > $next_filename.src    
+    cat $filename.bin \
+        | python3 pre-dose.py --log-file $base_name.log --resolve-src --provide $2_Packages $2_Sources ${base_name}_Sources \
+        | sort -u > $next_filename.src    
 
     # src-src implantation
-    cat $next_filename.src | python3 pre-dose.py --log-file $base_name.log -p $2_Packages $2_Sources ${base_name}_Sources > ${base_name}_Sources.tmp && \
+    cat $next_filename.src \
+        | python3 pre-dose.py --log-file $base_name.log --provide $2_Packages $2_Sources ${base_name}_Sources > ${base_name}_Sources.tmp && \
         mv -f ${base_name}_Sources.tmp ${base_name}_Sources
 
     # src-bin implantation
-    cat $next_filename.src | python3 pre-dose.py --log-file $base_name.log -b $2_Sources ${base_name}_Sources \
+    cat $next_filename.src \
+        | python3 pre-dose.py --log-file $base_name.log --resolve-bin $2_Sources ${base_name}_Sources \
         | python3 pre-dose.py --log-file $base_name.log $2_Packages ${base_name}_Packages > ${base_name}_Packages.tmp && \
         mv -f ${base_name}_Packages.tmp ${base_name}_Packages
 

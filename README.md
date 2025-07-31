@@ -4,7 +4,7 @@
 
 ### intro
 
-Pre-doce is a specialized workflow designed to analyze and backport Debian packages from newer releases, such as sid, to older stable releases like trixie or bookworm. By automating dependency resolution and compatibility assessment, it efficiently identifies which packages can be cleanly backported and which cannot due to unsatisfied dependencies.
+Pre-dose is a specialized workflow designed to analyze and backport Debian packages from newer releases, such as sid, to older stable releases like trixie or bookworm. By automating dependency resolution and compatibility assessment, it efficiently identifies which packages can be cleanly backported and which cannot due to unsatisfied dependencies.
 
 The workflow begins with binary dependency resolution, analyzing which packages can be migrated without conflicts. This initial assessment is then processed by dose-debcheck, which systematically verifies package installability against the target release’s repository. The output is fed into dose-builddebcheck, the core iterative engine that refines dependency resolution by cycling through source package metadata.
 
