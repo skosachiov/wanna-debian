@@ -77,6 +77,10 @@ while [[ -s "$filename.bin" || -s "$filename.src"  ]]; do
     dose-builddebcheck --latest 1 --deb-native-arch=amd64 -e -f ${base_name}_Packages ${base_name}_Sources \
         | grep "unsat-" | awk '{print $2}' | cut -f 1 -d ":" | sort -u >> $next_filename.bin
 
+    # check source packages that broken due to low dependent versions
+    dose-builddebcheck --latest 1 --deb-native-arch=amd64 -e -f ${base_name}_Packages ${base_name}_Sources \
+        | grep -B 4 -P "^\s{6}unsat-.*\((<|=)" | grep -e package: | awk '{print $2}' | sort -u >> $next_filename.bin
+
     sort -u -o "$next_filename.bin" "$next_filename.bin"
     sort -u -o "$next_filename.src" "$next_filename.src"
 
