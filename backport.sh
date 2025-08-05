@@ -65,7 +65,7 @@ while [[ -s "$filename.bin" || -s "$filename.src"  ]]; do
         | python3 $SD/pre-dose.py --log-file $base_name.log $2_Packages ${base_name}_Packages > ${base_name}_Packages.tmp && \
         mv -f ${base_name}_Packages.tmp ${base_name}_Packages
 
-    echo "" > $next_filename.bin
+    echo -n > $next_filename.bin
 
     # check binary packages in dependencies, broken due to low dependent versions
     dose-debcheck --latest 1 --deb-native-arch=amd64 -e -f ${base_name}_Packages | tee \
