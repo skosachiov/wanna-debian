@@ -70,14 +70,14 @@ while [[ -s "$filename.bin" || -s "$filename.src"  ]]; do
     # check binary packages in dependencies, broken due to low dependent versions
     dose-debcheck --latest 1 --deb-native-arch=amd64 -e -f ${base_name}_Packages | tee \
         >(grep -oE 'unsat-.*: [^|]*(|.*)?' | tr '|' '\n' | grep -oE '\b[a-zA-Z][a-zA-Z0-9_.+-]+:[a-zA-Z0-9_]+\b' | cut -d: -f1 | sort -u >> $next_filename.bin) \
-        >(grep -B 4 -P "^\s{6}unsat-.*\((<|=)" | grep -e package: | awk '{print $2}' | sort -u >> $next_filename.bin) &
+        >(grep -B 4 -P "^\s{6}unsat-.*\((<|=)" | grep -e package: | awk '{print $2}' | sort -u >> $next_filename.bin) > ${base_name}.debcheck.log &
     
     pid=$!
 
     # check src and append to bin, broken due to low dependent versions
     dose-builddebcheck --latest 1 --deb-native-arch=amd64 -e -f ${base_name}_Packages ${base_name}_Sources | tee \
         >(grep "unsat-" | awk '{print $2}' | cut -f 1 -d ":" | sort -u >> $next_filename.bin) \
-        >(grep -B 4 -P "^\s{6}unsat-.*\((<|=)" | grep -e package: | awk '{print $2}' | sort -u >> $next_filename.bin)
+        >(grep -B 4 -P "^\s{6}unsat-.*\((<|=)" | grep -e package: | awk '{print $2}' | sort -u >> $next_filename.bin) > ${base_name}.builddebcheck.log
 
     wait $pid
 
