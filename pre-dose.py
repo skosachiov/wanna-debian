@@ -195,16 +195,17 @@ if __name__ == "__main__":
     # Process input packages from stdin
     for line in sys.stdin:
         if line[0] == "#" or line.strip() == "": continue
-        lines.append(line.strip())        
-        pkg_name = resolve_pkg_name(line.strip(), origin, src_dict, prov_dict)
+        line_left_side = line.strip().split("=")[0] # Package name
+        lines.append(line_left_side)
+        pkg_name = resolve_pkg_name(line_left_side, origin, src_dict, prov_dict)
         if pkg_name != None: packages.add(pkg_name)
         
         # Handle different operation modes
         if args.add_version and not (args.resolve_src or args.resolve_bin or args.resolve_group) and pkg_name != None:
-            if line.strip() in origin:
-                print(f'{line.strip()}={origin[line.strip()]["version"]}')
+            if line_left_side in origin:
+                print(f'{line_left_side}={origin[line_left_side]["version"]}')
             else:
-                logging.error(f'Package without resolve operation not found: {line.strip()}')
+                logging.error(f'Package without resolve operation not found: {line_left_side}')
         elif args.resolve_src and pkg_name != None:
             if args.add_version:
                 print(f'{pkg_name}={origin[pkg_name]["version"]}')
@@ -239,7 +240,7 @@ if __name__ == "__main__":
         elif args.topo_sort:
             pass
         elif args.delete_depends:
-            exclude_depends.append(line.strip())
+            exclude_depends.append(line_left_side)
         elif args.remove and pkg_name != None:
             if pkg_name in target:
                 del target[pkg_name]
@@ -249,7 +250,7 @@ if __name__ == "__main__":
         elif pkg_name != None:
             backport_version(origin, target, pkg_name, args.add_missing)
         else:
-            logging.error(f'No deletion request and package name is not resolved: {line.strip()}')
+            logging.error(f'No deletion request and package name is not resolved: {line_left_side}')
 
     # Process dependency deletion if requested
     if args.delete_depends:
