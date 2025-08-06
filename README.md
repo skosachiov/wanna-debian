@@ -201,3 +201,5 @@ cat /tmp/bootstrap.list | ./backport.sh bootstrap trixie empty
 dose-debcheck --latest 1 --deb-native-arch=amd64 -e -f bootstrap_Packages | grep -B 3 -P "^\s{6}unsat-" \
         | grep -e package: | awk '{print $2}' | sort -u > to-backport.list
 ```
+
+`grep-dctrl -n -s Package,Version -P '' bootstrap_Sources | tr -s "\n" | paste -d = - - | sort -u`
