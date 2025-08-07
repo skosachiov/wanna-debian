@@ -160,6 +160,7 @@ if __name__ == "__main__":
     parser.add_argument('-e', '--depends', type=int, metavar='DEPTH', help='print repository package dependencies and exit')        
     parser.add_argument('-s', '--resolve-src', action='store_true', help='resolve source code package names and exit')
     parser.add_argument('-b', '--resolve-bin', action='store_true', help='resolve binary package names by original source metadata and exit')
+    parser.add_argument('-u', '--resolve-up', action='store_true', help='resolve the target dependent package if the package name is not found and exit')    
     parser.add_argument('-o', '--resolve-group', action='store_true', help='resolve target binary group and exit')
     parser.add_argument('-t', '--topo-sort', action='store_true', help='perform topological sort on origin and exit')   
     parser.add_argument('-g', '--dot', type=str, help="save toposort graph to dot file")
@@ -170,10 +171,8 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     # Check args
-    if args.remove and args.origin_repo != None:
-        parser.error("-r or --remove does not require ORIGIN_REPO")
-    if args.remove and args.origin_repo != None:
-        parser.error("-r or --remove does not require ORIGIN_REPO")        
+    if (args.remove or args.resolve_up) and args.origin_repo != None:
+        parser.error("option does not require ORIGIN_REPO")
 
     # Configure logging system
     handlers = []
@@ -191,7 +190,9 @@ if __name__ == "__main__":
     exclude_depends = []
     lines = []
     packages = set()
-    depends_set = {} # Ordered dict
+    # Ordered sets
+    depends_set = {}
+    dependent_set = {}
 
     # Parse repository metadata
     origin = parse_metadata(args.origin_repo if not args.remove else args.target_repo, \
@@ -208,7 +209,7 @@ if __name__ == "__main__":
         if pkg_name != None: packages.add(pkg_name)
         
         # Handle different operation modes
-        if args.add_version and not (args.resolve_src or args.resolve_bin or args.resolve_group) and pkg_name != None:
+        if args.add_version and not (args.resolve_src or args.resolve_bin or args.resolve_group or args.resolve_up) and pkg_name != None:
             if line_left_side in origin:
                 print(f'{line_left_side}={origin[line_left_side]["version"]}')
             else:
@@ -227,7 +228,14 @@ if __name__ == "__main__":
         elif args.resolve_group and pkg_name != None:
             if pkg_name in target and target[pkg_name]["source"] != None:  
                 for p in group_dict[target[pkg_name]["source"]]:
-                    print(p)                
+                    print(p)
+        elif args.resolve_up and pkg_name == None:
+            dependent_found = False
+            for key, value in target.items():
+                if line_left_side in value['depends']:
+                    dependent_set[key] = None
+                    dependent_found = True
+            if not dependent_found: logging.error(f'Can not resolve the target dependent package for: {line_left_side}')                       
         elif args.depends and pkg_name != None:
             depends_set[pkg_name] = None # Set
             for i in range(args.depends):
@@ -268,6 +276,10 @@ if __name__ == "__main__":
     for p in depends_set.keys():
         print(p)
 
+    # Process target dependent requested
+    for p in dependent_set.keys():
+        print(p)      
+
     # Perform topological sort if requested
     if args.topo_sort:
         graph = {}
@@ -303,7 +315,7 @@ if __name__ == "__main__":
             print(t)
 
     # Output modified package metadata if not in special mode
-    if not any((args.add_version, args.depends, args.resolve_src, args.resolve_bin, args.resolve_group, args.topo_sort)):
+    if not any((args.add_version, args.depends, args.resolve_src, args.resolve_bin, args.resolve_group, args.topo_sort, args.resolve_up)):
         for pkg in target.values():
             print(pkg['block'])
             print()
