@@ -171,7 +171,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     # Check args
-    if any(args.remove, args.resolve_up) and args.origin_repo != None:
+    if any((args.remove, args.resolve_up)) and args.origin_repo != None:
         parser.error("option does not require ORIGIN_REPO")
 
     # Configure logging system
@@ -209,7 +209,7 @@ if __name__ == "__main__":
         if pkg_name != None: packages.add(pkg_name)
         
         # Handle different operation modes
-        if args.add_version and not any(args.resolve_src, args.resolve_bin, args.resolve_group, args.resolve_up) and pkg_name != None:
+        if args.add_version and not any((args.resolve_src, args.resolve_bin, args.resolve_group, args.resolve_up)) and pkg_name != None:
             if line_left_side in origin:
                 print(f'{line_left_side}={origin[line_left_side]["version"]}')
             else:
