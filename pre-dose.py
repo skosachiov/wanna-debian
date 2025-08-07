@@ -186,7 +186,8 @@ if __name__ == "__main__":
     exclude_depends = []
     lines = []
     packages = set()
-    depends_set = {} # Ordered dict
+    depends_set = {}
+    dependent_set = {}
 
     # Parse repository metadata
     origin = parse_metadata(args.origin_repo, src_dict = src_dict, prov_dict = prov_dict, bin_dict = bin_dict if args.resolve_bin != None else None)
@@ -223,14 +224,12 @@ if __name__ == "__main__":
                 for p in group_dict[target[pkg_name]["source"]]:
                     print(p)                
         elif args.resolve_up and pkg_name == None:
-            pkgs_up = []
+            dependent_found = False
             for key, value in target.items():
                 if line_left_side in value['depends']:
-                    pkgs_up.append(key)
-            for p in pkgs_up:
-                print(p)
-            if not pkgs_up:
-                logging.error(f'Can not resolve the target dependent package for: {line_left_side}')
+                    dependent_set.add(key)
+                    dependent_found = True
+            if not dependent_found: logging.error(f'Can not resolve the target dependent package for: {line_left_side}')
         elif args.depends and pkg_name != None:
             depends_set[pkg_name] = None # Set
             for i in range(args.depends):
@@ -269,6 +268,10 @@ if __name__ == "__main__":
 
     # Process dependency resolve requested
     for p in depends_set.keys():
+        print(p)
+
+    # Process target dependent requested
+    for p in dependent_set.keys():
         print(p)
 
     # Perform topological sort if requested
