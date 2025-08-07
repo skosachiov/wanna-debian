@@ -171,7 +171,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     # Check args
-    if (args.remove or args.resolve_up) and args.origin_repo != None:
+    if any(args.remove, args.resolve_up) and args.origin_repo != None:
         parser.error("option does not require ORIGIN_REPO")
 
     # Configure logging system
@@ -195,7 +195,7 @@ if __name__ == "__main__":
     dependent_set = {}
 
     # Parse repository metadata
-    origin = parse_metadata(args.origin_repo if not args.remove else args.target_repo, \
+    origin = parse_metadata(args.origin_repo if not any(args.remove, args.resolve_up) else args.target_repo, \
         src_dict = src_dict, prov_dict = prov_dict, bin_dict = bin_dict if args.resolve_bin != None else None)
     target = parse_metadata(args.target_repo, bin_dict = group_dict)
     if args.provide: parse_metadata(args.provide, prov_dict = prov_dict)
@@ -209,7 +209,7 @@ if __name__ == "__main__":
         if pkg_name != None: packages.add(pkg_name)
         
         # Handle different operation modes
-        if args.add_version and not (args.resolve_src or args.resolve_bin or args.resolve_group or args.resolve_up) and pkg_name != None:
+        if args.add_version and not any(args.resolve_src, args.resolve_bin, args.resolve_group, args.resolve_up) and pkg_name != None:
             if line_left_side in origin:
                 print(f'{line_left_side}={origin[line_left_side]["version"]}')
             else:
