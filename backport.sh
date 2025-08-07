@@ -43,16 +43,21 @@ while [[ -s "$filename.bin" || -s "$filename.src"  ]]; do
     ((counter++))
     next_filename=$(printf "%s.%03d" "$base_name" $counter)
 
+    # convert bin to src
+    cat $filename.bin \
+        | python3 $SD/pre-dose.py --log-file $base_name.log --resolve-src --provide $2_Packages $2_Sources ${base_name}_Sources \
+        | sort -u > $next_filename.src    
+
     # remove bin target groups
     cat $filename.bin \
         | python3 $SD/pre-dose.py --log-file $base_name.log --resolve-group $2_Packages ${base_name}_Packages \
         | python3 $SD/pre-dose.py --log-file $base_name.log -r $2_Packages ${base_name}_Packages > ${base_name}_Packages.tmp && \
         mv -f ${base_name}_Packages.tmp ${base_name}_Packages
 
-    # convert bin to src
-    cat $filename.bin \
-        | python3 $SD/pre-dose.py --log-file $base_name.log --resolve-src --provide $2_Packages $2_Sources ${base_name}_Sources \
-        | sort -u > $next_filename.src    
+    # remove src packets
+    cat $next_filename.src \
+        | python3 $SD/pre-dose.py --log-file $base_name.log -r $2_Sources ${base_name}_Sources > ${base_name}_Sources.tmp && \
+        mv -f ${base_name}_Sources.tmp ${base_name}_Sources
 
     # src-src implantation
     cat $next_filename.src \
@@ -83,10 +88,10 @@ while [[ -s "$filename.bin" || -s "$filename.src"  ]]; do
 
     wait $pid
 
-    # target dependent packages enrichment
-    cat $next_filename.bin \
-        | python3 $SD/pre-dose.py --log-file $base_name.log --resolve-up $2_Packages $3_Packages > $next_filename.bin.tmp && \
-        cat $next_filename.bin.tmp >> $next_filename.bin && rm -f $next_filename.bin.tmp
+    # # target dependent packages enrichment
+    # cat $next_filename.bin \
+    #     | python3 $SD/pre-dose.py --log-file $base_name.log --resolve-up $2_Packages ${base_name}_Packages > $next_filename.bin.tmp && \
+    #     cat $next_filename.bin.tmp >> $next_filename.bin && rm -f $next_filename.bin.tmp
 
     sort -u -o "$next_filename.bin" "$next_filename.bin"
     sort -u -o "$next_filename.src" "$next_filename.src"
