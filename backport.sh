@@ -43,11 +43,6 @@ while [[ -s "$filename.bin" || -s "$filename.src"  ]]; do
     ((counter++))
     next_filename=$(printf "%s.%03d" "$base_name" $counter)
 
-    # target dependent packages enrichment
-    cat $filename.bin \
-        | python3 $SD/pre-dose.py --log-file $base_name.log --resolve-up $2_Packages ${base_name}_Packages > $filename.bin.tmp && \
-        cat $filename.bin.tmp >> $filename.bin && rm -f $filename.bin.tmp
-
     # remove bin target groups
     cat $filename.bin \
         | python3 $SD/pre-dose.py --log-file $base_name.log --resolve-group $2_Packages ${base_name}_Packages \
@@ -87,6 +82,11 @@ while [[ -s "$filename.bin" || -s "$filename.src"  ]]; do
         >> ${base_name}.builddebcheck.log
 
     wait $pid
+
+    # target dependent packages enrichment
+    cat $next_filename.bin \
+        | python3 $SD/pre-dose.py --log-file $base_name.log --resolve-up $2_Packages $3_Packages > $next_filename.bin.tmp && \
+        cat $next_filename.bin.tmp >> $next_filename.bin && rm -f $next_filename.bin.tmp
 
     sort -u -o "$next_filename.bin" "$next_filename.bin"
     sort -u -o "$next_filename.src" "$next_filename.src"
