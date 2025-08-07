@@ -51,12 +51,12 @@ while [[ -s "$filename.bin" || -s "$filename.src"  ]]; do
     # remove bin target groups
     cat $filename.bin \
         | python3 $SD/pre-dose.py --log-file $base_name.log --resolve-group $2_Packages ${base_name}_Packages \
-        | python3 $SD/pre-dose.py --log-file $base_name.log -r $2_Packages ${base_name}_Packages > ${base_name}_Packages.tmp && \
+        | python3 $SD/pre-dose.py --log-file $base_name.log -remove $2_Packages ${base_name}_Packages > ${base_name}_Packages.tmp && \
         mv -f ${base_name}_Packages.tmp ${base_name}_Packages
 
     # remove src packets
     cat $next_filename.src \
-        | python3 $SD/pre-dose.py --log-file $base_name.log -r $2_Sources ${base_name}_Sources > ${base_name}_Sources.tmp && \
+        | python3 $SD/pre-dose.py --log-file $base_name.log -remove $2_Sources ${base_name}_Sources > ${base_name}_Sources.tmp && \
         mv -f ${base_name}_Sources.tmp ${base_name}_Sources
 
     # src-src implantation
