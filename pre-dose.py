@@ -151,8 +151,8 @@ if __name__ == "__main__":
     # Setup command line argument parser
     parser = argparse.ArgumentParser(description='Pre-dose script performs a targeted substitution of package \
         information from a origin repository to a target repository, only for packages specified in the stdin input list.')
-    parser.add_argument('origin_repo', help='newer repository Packages/Sources')
-    parser.add_argument('target_repo', help='older repository Packages/Sources')
+    parser.add_argument('origin_repo', metavar='ORIGIN_REPO', nargs='?', help='newer repository Packages/Sources')
+    parser.add_argument('target_repo', metavar='TARGET_REPO', help='older repository Packages/Sources')
     parser.add_argument('-m', '--add-missing', action='store_true', help='add missing packages do not change versions')
     parser.add_argument('-r', '--remove', action='store_true', help='remove packages instead of replacing or adding')
     parser.add_argument('-d', '--delete-depends', action='store_true', help='delete from dependencies instead of replacing or adding')
@@ -168,6 +168,12 @@ if __name__ == "__main__":
                        help='set the logging level (default: DEBUG)')    
     parser.add_argument('--log-file', help="save logs to file (default: stderr)")
     args = parser.parse_args()
+
+    # Check args
+    if args.remove and args.origin_repo != None:
+        parser.error("-r or --remove does not require ORIGIN_REPO")
+    if args.remove and args.origin_repo != None:
+        parser.error("-r or --remove does not require ORIGIN_REPO")        
 
     # Configure logging system
     handlers = []
@@ -188,7 +194,8 @@ if __name__ == "__main__":
     depends_set = {} # Ordered dict
 
     # Parse repository metadata
-    origin = parse_metadata(args.origin_repo, src_dict = src_dict, prov_dict = prov_dict, bin_dict = bin_dict if args.resolve_bin != None else None)
+    origin = parse_metadata(args.origin_repo if not args.remove else args.target_repo, \
+        src_dict = src_dict, prov_dict = prov_dict, bin_dict = bin_dict if args.resolve_bin != None else None)
     target = parse_metadata(args.target_repo, bin_dict = group_dict)
     if args.provide: parse_metadata(args.provide, prov_dict = prov_dict)
 
