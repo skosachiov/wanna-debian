@@ -43,6 +43,11 @@ while [[ -s "$filename.bin" || -s "$filename.src"  ]]; do
     ((counter++))
     next_filename=$(printf "%s.%03d" "$base_name" $counter)
 
+    # target dependent packages enrichment
+    cat $filename.bin \
+        | python3 $SD/pre-dose.py --log-file $base_name.log --resolve-up $2_Packages ${base_name}_Packages > $filename.bin.tmp && \
+        cat $filename.bin.tmp >> $filename.bin && rm -f $filename.bin.tmp
+
     # remove bin target groups
     cat $filename.bin \
         | python3 $SD/pre-dose.py --log-file $base_name.log --resolve-group $2_Packages ${base_name}_Packages \
