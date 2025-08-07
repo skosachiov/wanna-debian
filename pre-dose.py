@@ -186,6 +186,7 @@ if __name__ == "__main__":
     exclude_depends = []
     lines = []
     packages = set()
+    # Ordered sets
     depends_set = {}
     dependent_set = {}
 
@@ -227,7 +228,7 @@ if __name__ == "__main__":
             dependent_found = False
             for key, value in target.items():
                 if line_left_side in value['depends']:
-                    dependent_set.add(key)
+                    dependent_set[key] = None
                     dependent_found = True
             if not dependent_found: logging.error(f'Can not resolve the target dependent package for: {line_left_side}')
         elif args.depends and pkg_name != None:
