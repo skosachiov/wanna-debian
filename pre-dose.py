@@ -161,6 +161,7 @@ if __name__ == "__main__":
     parser.add_argument('-s', '--resolve-src', action='store_true', help='resolve source code package names and exit')
     parser.add_argument('-b', '--resolve-bin', action='store_true', help='resolve binary package names by original source metadata and exit')
     parser.add_argument('-o', '--resolve-group', action='store_true', help='resolve target binary group and exit')
+    parser.add_argument('-u', '--resolve-up', action='store_true', help='resolve to the target dependent package if the package name is not found and exit')
     parser.add_argument('-t', '--topo-sort', action='store_true', help='perform topological sort on origin and exit')   
     parser.add_argument('-g', '--dot', type=str, help="save toposort graph to dot file")
     parser.add_argument('-a', '--add-version', action='store_true', help='add version to package name and exit')
@@ -201,7 +202,7 @@ if __name__ == "__main__":
         if pkg_name != None: packages.add(pkg_name)
         
         # Handle different operation modes
-        if args.add_version and not (args.resolve_src or args.resolve_bin or args.resolve_group) and pkg_name != None:
+        if args.add_version and not (args.resolve_src or args.resolve_bin or args.resolve_group or args.resolve_up) and pkg_name != None:
             if line_left_side in origin:
                 print(f'{line_left_side}={origin[line_left_side]["version"]}')
             else:
@@ -221,6 +222,15 @@ if __name__ == "__main__":
             if pkg_name in target and target[pkg_name]["source"] != None:  
                 for p in group_dict[target[pkg_name]["source"]]:
                     print(p)                
+        elif args.resolve_up and pkg_name == None:
+            pkgs_up = []
+            for key, value in target.items():
+                if line_left_side in value['depends']:
+                    pkgs_up.append(key)
+            for p in pkgs_up:
+                print(p)
+            if not pkgs_up:
+                logging.error(f'Can not resolve the target dependent package for: {line_left_side}')
         elif args.depends and pkg_name != None:
             depends_set[pkg_name] = None # Set
             for i in range(args.depends):
@@ -296,7 +306,7 @@ if __name__ == "__main__":
             print(t)
 
     # Output modified package metadata if not in special mode
-    if not any((args.add_version, args.depends, args.resolve_src, args.resolve_bin, args.resolve_group, args.topo_sort)):
+    if not any((args.add_version, args.depends, args.resolve_src, args.resolve_bin, args.resolve_group, args.resolve_up, args.topo_sort)):
         for pkg in target.values():
             print(pkg['block'])
             print()
