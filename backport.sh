@@ -61,6 +61,10 @@ while [[ -s "$filename.bin" || -s "$filename.src"  ]]; do
         | python3 $SD/pre-dose.py --log-file $base_name.log --resolve-src --provide $3_Packages $3_Sources ${base_name}_Sources \
         | python3 $SD/pre-dose.py --log-file $base_name.log --remove ${base_name}_Sources > ${base_name}_Sources.tmp && \
         mv -f ${base_name}_Sources.tmp ${base_name}_Sources
+    cat $filename.bin \
+        | python3 $SD/pre-dose.py --log-file $base_name.log --resolve-up $2_Sources ${base_name}_Sources \
+        | python3 $SD/pre-dose.py --log-file $base_name.log --remove ${base_name}_Sources > ${base_name}_Sources.tmp && \
+        mv -f ${base_name}_Sources.tmp ${base_name}_Sources
 
     # convert bin to src
     cat $filename.bin \
@@ -117,6 +121,11 @@ while [[ -s "$filename.bin" || -s "$filename.src"  ]]; do
     if cmp -s "$filename.bin" "$next_filename.bin" && cmp -s "$filename.src" "$next_filename.src"; then
         echo "Stopping: '$next_filename' has identical content to '$filename'"
         exit 0
+    fi
+
+    if [ $counter -ge 999 ]; then
+        echo "Iteration limit reached"
+        exit 1
     fi
 
     filename="$next_filename"
