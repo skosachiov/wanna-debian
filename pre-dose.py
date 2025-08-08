@@ -96,8 +96,8 @@ def backport_version(origin, target, name, add_missing = False):
         logging.info(f'Add package to target: {name}')
         return True
     # Update existing package version
-    if target[name]['version'] != origin[name]['version'] and not add_missing:
-        logging.info(f'Replace package in the target: {name}')
+    if (origin[name]['version'] == None or target[name]['version'] != origin[name]['version']) and not add_missing:
+        logging.info(f'Replace package in the target, new package: {name}={origin[name]["version"]}')
         target[name] = origin[name]
         return True
     else:
