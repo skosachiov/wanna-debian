@@ -80,7 +80,7 @@ while [[ -s "$filename.bin" || -s "$filename.src"  ]]; do
 
     # src-src dependent implantation if dep not found
     cat $filename.bin \
-        | python3 $SD/pre-dose.py --log-file $base_name.log --resolve-up $2_Source ${base_name}_Sources \
+        | python3 $SD/pre-dose.py --log-file $base_name.log --resolve-up $2_Sources ${base_name}_Sources \
         | python3 $SD/pre-dose.py --log-file $base_name.log --provide $2_Packages $2_Sources ${base_name}_Sources > ${base_name}_Sources.tmp && \
         mv -f ${base_name}_Sources.tmp ${base_name}_Sources
 
