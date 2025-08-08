@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import re, argparse, sys, logging
 from toposort import *
 
