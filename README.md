@@ -113,13 +113,20 @@ or
 
 ### view result
 
-`cat gnome.*.src | sort -u`
-
-`cat kde.*.src | sort -u`
+#### to remove from older repo
+```
+comm -13 <(grep-dctrl -n -s Package,Version -P '' gnome_Sources | tr -s "\n" \
+| paste -d = - - | sort -u) <(grep-dctrl -n -s Package,Version -P '' trixie_Sources | tr -s "\n" | paste -d = - - | sort -u) > gnome.remove.list
+```
+#### to add to older repo
+```
+comm -23 <(grep-dctrl -n -s Package,Version -P '' gnome_Sources | tr -s "\n" \
+| paste -d = - - | sort -u) <(grep-dctrl -n -s Package,Version -P '' trixie_Sources | tr -s "\n" | paste -d = - - | sort -u) > gnome.backport.list
+```
 
 ### topological sort result
 
-`cat gnome.*.src | sort -u | python3 pre-dose.py --log-file gnome.log -t sid_Sources trixie_Sources > gnome.toposort.src`
+`cat gnome.backport.list | sort -u | python3 pre-dose.py --log-file gnome.log -t sid_Sources trixie_Sources > gnome.toposort.src`
 
 ## man dose-ceve
 
@@ -192,10 +199,9 @@ echo "" > empty_Sources
 cat /tmp/bootstrap.list | ./backport.sh bootstrap trixie empty
 ```
 
-#### final check
+#### debootstrap final check
 
 `dose-builddebcheck --latest 1 --deb-native-arch=amd64 -e -f bootstrap_Packages bootstrap_Sources`
-
 
 ```
 dose-debcheck --latest 1 --deb-native-arch=amd64 -e -f bootstrap_Packages | grep -B 3 -P "^\s{6}unsat-" \
@@ -203,3 +209,43 @@ dose-debcheck --latest 1 --deb-native-arch=amd64 -e -f bootstrap_Packages | grep
 ```
 
 `grep-dctrl -n -s Package,Version -P '' bootstrap_Sources | tr -s "\n" | paste -d = - - | sort -u`
+
+### backport gnome-core full example
+
+from trixie (newer) to trixie snapshot 2025.01 (older)
+
+#### wget metadata
+```
+wget -O trixie_Sources.gz http://ftp.debian.org/debian/dists/trixie/main/source/Sources.gz && gunzip trixie_Sources.gz
+wget -O trixie_Packages.gz http://ftp.debian.org/debian/dists/trixie/main/binary-amd64/Packages.gz && gunzip trixie_Packages.gz
+
+wget -O t202501_Sourcess.gz https://snapshot.debian.org/archive/debian/20250114T204503Z/dists/trixie/main/source/Sources.gz && gunzip t202501_Sourcess.gz
+wget -O t202501_Packages.gz https://snapshot.debian.org/archive/debian/20250114T204503Z/dists/trixie/main/binary-amd64/Packages.gz && gunzip t202501_Packages.gz
+```
+
+#### iterate pre-dose and dose with backport script
+
+it takes about 30 min ...
+
+`echo gnome-core | ./backport.sh gnome-core trixie t202501 &`
+
+#### remove from snapshot source repo 
+```
+comm -13 <(grep-dctrl -n -s Package,Version -P '' gnome-core_Sources | tr -s "\n" \
+| paste -d = - - | sort -u) <(grep-dctrl -n -s Package,Version -P '' t202501_Sources | tr -s "\n" | paste -d = - - | sort -u)
+```
+#### remove from snapshot binary repo 
+```
+comm -13 <(grep-dctrl -n -s Package,Version -P '' gnome-core_Packages | tr -s "\n" \
+| paste -d = - - | sort -u) <(grep-dctrl -n -s Package,Version -P '' t202501_Packages | tr -s "\n" | paste -d = - - | sort -u)
+```
+#### add to snapshot source repo 
+```
+comm -23 <(grep-dctrl -n -s Package,Version -P '' gnome-core_Sources | tr -s "\n" \
+| paste -d = - - | sort -u) <(grep-dctrl -n -s Package,Version -P '' t202501_Sources | tr -s "\n" | paste -d = - - | sort -u)
+```
+#### add to snapshot binary repo 
+```
+comm -23 <(grep-dctrl -n -s Package,Version -P '' gnome-core_Packages | tr -s "\n" \
+| paste -d = - - | sort -u) <(grep-dctrl -n -s Package,Version -P '' t202501_Packages | tr -s "\n" | paste -d = - - | sort -u)
+```
