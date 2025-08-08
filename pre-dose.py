@@ -171,7 +171,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     # Check args
-    if any((args.remove)) and args.origin_repo != None:
+    if any((args.remove, )) and args.origin_repo != None:
         parser.error("option does not require ORIGIN_REPO")
 
     # Configure logging system
@@ -195,7 +195,7 @@ if __name__ == "__main__":
     dependent_set = {}
 
     # Parse repository metadata
-    origin = parse_metadata(args.origin_repo if not any((args.remove)) else args.target_repo, \
+    origin = parse_metadata(args.origin_repo if not any((args.remove, )) else args.target_repo, \
         src_dict = src_dict, prov_dict = prov_dict, bin_dict = bin_dict if args.resolve_bin != None else None)
     target = parse_metadata(args.target_repo, bin_dict = group_dict)
     if args.provide: parse_metadata(args.provide, prov_dict = prov_dict)
