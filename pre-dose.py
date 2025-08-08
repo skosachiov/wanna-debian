@@ -77,7 +77,7 @@ def parse_metadata(filepath, src_dict = None, prov_dict = None, bin_dict = None)
                                 continue       
                             depends.append(p)
             # Store package metadata if valid
-            if pkg_name != None and version != None:
+            if pkg_name != None:
                 if pkg_name not in packages or apt_pkg.version_compare(version, packages[pkg_name]['version']) > 0:
                     packages[pkg_name] = {'version': version, 'block': block, 'depends': depends, 'source': source}
                 else:
