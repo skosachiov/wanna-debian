@@ -69,7 +69,8 @@ def parse_metadata(filepath, src_dict = None, prov_dict = None, bin_dict = None)
                         version = value.strip()
                     # Collect dependencies
                     if key in ('Build-Depends', 'Build-Depends-Indep', 'Build-Depends-Arch', 'Depends', 'Pre-Depends'):
-                        deps_pkgs = [p.strip().split()[0].split(":")[0] for p in value.split(',') if p.strip() and '<!' not in p]
+                        # deps_pkgs = [p.strip().split()[0].split(":")[0] for p in value.split(',') if p.strip() and '<!' not in p]
+                        deps_pkgs = [p.strip().split()[0].split(":")[0] for p in value.split(',') if p.strip()]
                         for p in deps_pkgs:
                             if p == pkg_name:
                                 logging.warning(f'package depends on itself, '
