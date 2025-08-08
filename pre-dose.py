@@ -13,7 +13,7 @@ def delete_depends(pkg_name, block, exclude_list):
         if ':' in line:
             key, value = line.split(':', 1)
             # Process dependency fields
-            if key in ('Build-Depends', 'Build-Depends-Indep', 'Build-Depends-Arch', 'Depends'):
+            if key in ('Build-Depends', 'Build-Depends-Indep', 'Build-Depends-Arch', 'Depends', 'Pre-Depends'):
                 packages = [p.strip() for p in value.split(',')]
                 # Filter out excluded packages
                 filtered_packages = [p for p in packages if not any((p.startswith(name + " ") or p.startswith(name + ":") or p == name) for name in exclude_list)]
@@ -62,7 +62,6 @@ def parse_metadata(filepath, src_dict = None, prov_dict = None, bin_dict = None)
                             bin_dict[source].append(pkg_name)
                     # Build provides mapping if requested
                     if key == 'Provides' and prov_dict != None:
-                        # prov_pkgs = [p.strip().split()[0] for p in value.split(',') if "default-dev" not in p and "divert-dev" not in p]
                         prov_pkgs = [p.strip().split()[0] for p in value.split(',')]
                         for p in prov_pkgs:
                             prov_dict[p] = pkg_name
@@ -71,7 +70,6 @@ def parse_metadata(filepath, src_dict = None, prov_dict = None, bin_dict = None)
                         version = value.strip()
                     # Collect dependencies
                     if key in ('Build-Depends', 'Build-Depends-Indep', 'Build-Depends-Arch', 'Depends', 'Pre-Depends'):
-                        # deps_pkgs = [p.strip().split()[0].split(":")[0] for p in value.split(',') if p.strip() and '<!' not in p]
                         deps_pkgs = [p.strip().split()[0].split(":")[0] for p in value.split(',') if p.strip()]
                         for p in deps_pkgs:
                             if p == pkg_name:
