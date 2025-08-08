@@ -160,7 +160,7 @@ if __name__ == "__main__":
     parser.add_argument('-e', '--depends', type=int, metavar='DEPTH', help='print repository package dependencies and exit')        
     parser.add_argument('-s', '--resolve-src', action='store_true', help='resolve source code package names and exit')
     parser.add_argument('-b', '--resolve-bin', action='store_true', help='resolve binary package names by original source metadata and exit')
-    parser.add_argument('-u', '--resolve-up', action='store_true', help='resolve the target dependent package if the package name is not found and exit')    
+    parser.add_argument('-u', '--resolve-up', action='store_true', help='resolve the target dependent package if the package name is not found in origin and exit')    
     parser.add_argument('-o', '--resolve-group', action='store_true', help='resolve target binary group and exit')
     parser.add_argument('-t', '--topo-sort', action='store_true', help='perform topological sort on origin and exit')   
     parser.add_argument('-g', '--dot', type=str, help="save toposort graph to dot file")
@@ -171,7 +171,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     # Check args
-    if any((args.remove, args.resolve_up)) and args.origin_repo != None:
+    if any((args.remove)) and args.origin_repo != None:
         parser.error("option does not require ORIGIN_REPO")
 
     # Configure logging system
@@ -195,7 +195,7 @@ if __name__ == "__main__":
     dependent_set = {}
 
     # Parse repository metadata
-    origin = parse_metadata(args.origin_repo if not any((args.remove, args.resolve_up)) else args.target_repo, \
+    origin = parse_metadata(args.origin_repo if not any((args.remove)) else args.target_repo, \
         src_dict = src_dict, prov_dict = prov_dict, bin_dict = bin_dict if args.resolve_bin != None else None)
     target = parse_metadata(args.target_repo, bin_dict = group_dict)
     if args.provide: parse_metadata(args.provide, prov_dict = prov_dict)
