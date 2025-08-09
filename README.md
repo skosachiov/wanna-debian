@@ -70,13 +70,11 @@ wget -O unstable_Sources.gz http://ftp.debian.org/debian/dists/unstable/main/sou
 
 ### find unmet dependencies before metadata implantation
 
-Broken in trixie:
+Fix myrepo with trixie:
 
-```
-echo "" | backport.sh broken-before trixie bookworm
-```
+`echo "" | backport.sh broken-before trixie myrepo`
 
-### select binary packages
+### select packages to backport
 
 Get list of sections in "sid":
 
@@ -108,6 +106,10 @@ awk -v RS='\n\n' '/Version:.*24\.12.*KDE Main/' trixie_Packages | grep ^Package:
 awk -v RS='\n\n' '/Version:.*25\.0.*KDE Main/' trixie_Packages | grep ^Package: | cut -f 2 -d ' ' >> kde.list
 sort -u -o kde.list kde.list
 ```
+
+### convert to binary
+
+`cat gnome.list | pre-dose.py --resolve-bin sid_Sources sid_Sources > tmp && mv -f tmp gnome.list`
 
 ### run resolver
 
