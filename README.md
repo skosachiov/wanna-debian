@@ -227,8 +227,8 @@ from trixie (newer) to trixie snapshot 2025.01 (older)
 wget -O trixie_Sources.gz http://ftp.debian.org/debian/dists/trixie/main/source/Sources.gz && gunzip trixie_Sources.gz
 wget -O trixie_Packages.gz http://ftp.debian.org/debian/dists/trixie/main/binary-amd64/Packages.gz && gunzip trixie_Packages.gz
 
-wget -O t202501_Sources.gz https://snapshot.debian.org/archive/debian/20250114T204503Z/dists/trixie/main/source/Sources.gz && gunzip t202501_Sources.gz
-wget -O t202501_Packages.gz https://snapshot.debian.org/archive/debian/20250114T204503Z/dists/trixie/main/binary-amd64/Packages.gz && gunzip t202501_Packages.gz
+wget -O t202501_Sources.gz https://snapshot.debian.org/archive/debian/20250131T203740Z/dists/trixie/main/source/Sources.gz && gunzip t202501_Sources.gz
+wget -O t202501_Packages.gz https://snapshot.debian.org/archive/debian/20250131T203740Z/dists/trixie/main/binary-amd64/Packages.gz && gunzip t202501_Packages.gz
 ```
 
 #### iterate pre-dose and dose with backport script
