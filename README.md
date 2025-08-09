@@ -91,12 +91,8 @@ or
 ```
 echo gnome-core | ./pre-dose.py -e 2 trixie_Packages trixie_Sources 2> /dev/null \
 | xargs -I {} grep-dctrl -P -F -n -e "^{}$" -s Package,Version,Maintainer,Section trixie_Packages \
-| tr -s "\n" | paste -d = - - - - | grep 'GNOME Maintainers'
+| tr -s "\n" | paste -d = - - - - | grep 'GNOME Maintainers' > gnome.list
 ```
-
-or
-
-`echo gnome-core | python pre-dose.py -e 1 sid_Packages sid_Sources | cut -f 1 -d ' ' | sort -u > gnome.list`
 
 or
 
