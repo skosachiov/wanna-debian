@@ -31,7 +31,7 @@ def parse_metadata(filepath, src_dict = None, prov_dict = None, bin_dict = None)
         # Split into individual package blocks
         package_blocks = re.split(r'\n\n+', content.strip())
         for block in package_blocks:
-            pkg_name = version = source = None
+            pkg_name = version = source = source_version = None
             depends = []
             block_list = []
             for line in block.splitlines():
@@ -55,7 +55,10 @@ def parse_metadata(filepath, src_dict = None, prov_dict = None, bin_dict = None)
                             src_dict[p] = pkg_name
                     # Build binary-to-source mapping for binary metadata if requested
                     if key == 'Source' and bin_dict != None:
-                        source = value.strip().split()[0]
+                        source_line = value.strip().split()
+                        if len(source_line) > 0:
+                            source = source_line[0]
+                            if len(source_line) > 1: source_version = re.findall(r'\((.*?)\)', source_line[1])[0]
                         if source not in bin_dict:
                             bin_dict[source] = [pkg_name]
                         else:
@@ -80,7 +83,9 @@ def parse_metadata(filepath, src_dict = None, prov_dict = None, bin_dict = None)
             # Store package metadata if valid
             if pkg_name != None:
                 if pkg_name not in packages or apt_pkg.version_compare(version, packages[pkg_name]['version']) > 0:
-                    packages[pkg_name] = {'version': version, 'block': block, 'depends': depends, 'source': source}
+                    if source == None: source = pkg_name
+                    if source_version == None: source_version = version
+                    packages[pkg_name] = {'version': version, 'block': block, 'depends': depends, 'source': source, 'source_version': source_version}
                 else:
                     logging.warning(f'A new version package already in the list: {pkg_name}')                
     logging.debug(f'In the file {filepath} processed packets: {len(packages)}')
@@ -217,7 +222,7 @@ if __name__ == "__main__":
                 logging.error(f'Package without resolve operation not found: {line_left_side}')
         elif args.resolve_src and pkg_name != None:
             if args.add_version:
-                print(f'{pkg_name}={origin[pkg_name]["version"]}')
+                print(f'{origin[pkg_name]['source']}={origin[pkg_name]["source_version"]}')
             else:
                 print(f'{pkg_name}')
         elif args.resolve_bin and pkg_name != None:
