@@ -1,3 +1,4 @@
+import pytest
 from toposort import *
 import random
 
@@ -26,7 +27,7 @@ def generate_random_graph(num_nodes=10000, max_out_edges=100):
     return graph
 
 # graph_dict = generate_random_graph(10000, 100)
-print(graph_dict)
+# print(graph_dict)
 
 # Convert the dictionary of sets to a list of Node objects
 def create_node_list(graph_dict):
@@ -41,11 +42,23 @@ def create_node_list(graph_dict):
     
     return list(nodes.values())
 
-# Create the node list from our graph
-nodes = create_node_list(graph_dict)
+def test_toposort():
+    # Create the node list from our graph
+    nodes = create_node_list(graph_dict)
 
-# Perform stable topological sort
-sorted_nodes_with_levels = StableTopoSort.stable_topo_sort(nodes)
-print("Sorted Nodes with Levels:")
-for level, node in sorted_nodes_with_levels:
-    print(f"Level {level}: Node {node.name}")
+    expected = [
+        (0, "main"),
+        (2, "a3"),
+        (1, "a4"),
+        (1, "b2"),
+        (2, "b1"),
+        (2, "a2"),
+        (3, "a1")
+    ]
+
+    # Perform stable topological sort
+    sorted_nodes_with_levels = StableTopoSort.stable_topo_sort(nodes)
+    # print("Sorted Nodes with Levels:")
+    for s, e in zip(sorted_nodes_with_levels, expected):
+        assert s[0] == e[0] and s[1].name == e[1] 
+        # print(f"Level {level}: Node {node.name}")
