@@ -74,7 +74,7 @@ Fix myrepo with trixie:
 
 `echo "" | backport.sh --checkall broken-before trixie myrepo`
 
-By default the backport script runs dose3 build dependencies check with the --checkonly <list of packages> option, to change the behavior here we use --checkall.
+By default the backport script runs dose3 build dependencies check with the `--checkonly` option, to change the behavior here we use --checkall.
 
 ### select packages to backport
 
