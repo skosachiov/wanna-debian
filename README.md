@@ -72,7 +72,9 @@ wget -O unstable_Sources.gz http://ftp.debian.org/debian/dists/unstable/main/sou
 
 Fix myrepo with trixie:
 
-`echo "" | backport.sh broken-before trixie myrepo`
+`echo "" | backport.sh --checkall broken-before trixie myrepo`
+
+By default the backport script runs dose3 build dependencies check with the --checkonly <list of packages> option, to change the behavior here we use --checkall.
 
 ### select packages to backport
 
