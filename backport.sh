@@ -4,7 +4,7 @@ SD="$(dirname "${BASH_SOURCE[0]}")"
 
 # print help
 if [ -z "$1" ]; then
-    echo "Usage: cat <pkgslist> | $0 <basename> <newerprefix> <olderprefix>"
+    echo "Usage: cat <pkgslist> | $0 [--checkall] <basename> <newerprefix> <olderprefix>"
     echo ""
     echo "The script $0 expects to find the following metadata files in the current directory:"
     echo "newerprefix_Packages, newerprefix_Sources, olderprefix_Packages, olderprefix_Sources"
@@ -12,6 +12,14 @@ if [ -z "$1" ]; then
     echo "Example: echo gnome-core | $0 gnome-core sid trixie"
     echo "Example: cat debootstrap.list | $0 minimal sid empty"
     exit 0
+fi
+
+OPT_CHECKALL=false
+EXTRA_PARAMS=()
+
+if [[ "$1" == "--checkall" ]]; then
+    OPT_CHECKALL=true
+    shift
 fi
 
 # warning if not installed
@@ -105,7 +113,10 @@ while [[ -s "$filename.bin" || -s "$filename.src"  ]]; do
     pid=$!
 
     # check src and append to bin, broken due to low dependent versions
-    dose-builddebcheck --latest 1 --deb-native-arch=amd64 -e -f ${base_name}_Packages ${base_name}_Sources | tee \
+    if [ "$OPT_CHECKALL" = false ]; then
+        EXTRA_PARAMS=(--checkonly "$(paste -sd, <(cat $base_name.*.src | grep -v "^\s*$"))")
+    fi
+    dose-builddebcheck "${EXTRA_PARAMS[@]}" --latest 1 --deb-native-arch=amd64 -e -f ${base_name}_Packages ${base_name}_Sources | tee \
         >(grep -oE 'unsat-.*: [^|]*(|.*)?' | tr '|' '\n' | grep -oE '\b[a-zA-Z][a-zA-Z0-9_.+-]+:[a-zA-Z0-9_]+\b' | cut -d: -f1 | sort -u >> $next_filename.bin) \
         >(grep -B 4 -P "^\s{6}unsat-.*\((<|=)" | grep -oP '(package:|version:) \K\S+' |  paste -d "=" - - | sort -u >> $next_filename.bin) \
         >> ${base_name}.builddebcheck.log
