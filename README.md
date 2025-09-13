@@ -89,7 +89,7 @@ https://people.debian.org/~fpeters/gnome/debian-gnome-48-status.html
 or
 
 ```
-echo gnome-core | ./pre-dose.py -e 2 trixie_Packages trixie_Sources 2> /dev/null \
+echo gnome-core | ./pre_dose.py -e 2 trixie_Packages trixie_Sources 2> /dev/null \
 | xargs -I {} grep-dctrl -P -F -n -e "^{}$" -s Package,Version,Maintainer,Section trixie_Packages \
 | tr -s "\n" | paste -d = - - - - | grep 'GNOME Maintainers' > gnome.list
 ```
@@ -111,7 +111,7 @@ sort -u -o kde.list kde.list
 
 ### convert to binary
 
-`cat gnome.list | pre-dose.py --resolve-bin sid_Sources sid_Sources > tmp && mv -f tmp gnome.list`
+`cat gnome.list | pre_dose.py --resolve-bin sid_Sources sid_Sources > tmp && mv -f tmp gnome.list`
 
 ### run resolver
 
@@ -136,7 +136,7 @@ comm -23 <(grep-dctrl -n -s Package,Version -P '' gnome_Sources | tr -s "\n" \
 
 ### topological sort result
 
-`cat gnome.backport.list | sort -u | python3 pre-dose.py --log-file gnome.log -t sid_Sources trixie_Sources > gnome.toposort.src`
+`cat gnome.backport.list | sort -u | python3 pre_dose.py --log-file gnome.log -t sid_Sources trixie_Sources > gnome.toposort.src`
 
 ## man dose-ceve
 
@@ -160,9 +160,9 @@ dose-ceve --deb-native-arch=amd64 -r build-essential -T deb --depth 1 \
 
 ## sources toposort with dot graph
 
-`echo build-essential | python3 pre-dose.py --log-file build-essential.log -e 2 sid_Sources trixie_Sources > build-essential.list`
+`echo build-essential | python3 pre_dose.py --log-file build-essential.log -e 2 sid_Sources trixie_Sources > build-essential.list`
 
-`tac build-essential.list | python3 pre-dose.py --log-file build-essential.log -t --dot build-essential.dot sid_Sources trixie_Sources > build-essential.toposort`
+`tac build-essential.list | python3 pre_dose.py --log-file build-essential.log -t --dot build-essential.dot sid_Sources trixie_Sources > build-essential.toposort`
 
 `xdot build-essential.dot`
 

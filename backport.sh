@@ -40,9 +40,9 @@ filename=$(printf "%s.%03d" "$base_name" $counter)
 
 cat > $filename.bin
 
-cat $filename.bin | python3 $SD/pre-dose.py --log-file $base_name.log $2_Packages $3_Packages > ${base_name}_Packages
-cat $filename.bin | python3 $SD/pre-dose.py --log-file $base_name.log -s $2_Sources $3_Sources | sort -u > $filename.src
-cat $filename.src | python3 $SD/pre-dose.py --log-file $base_name.log $2_Sources $3_Sources > ${base_name}_Sources
+cat $filename.bin | python3 $SD/pre_dose.py --log-file $base_name.log $2_Packages $3_Packages > ${base_name}_Packages
+cat $filename.bin | python3 $SD/pre_dose.py --log-file $base_name.log -s $2_Sources $3_Sources | sort -u > $filename.src
+cat $filename.src | python3 $SD/pre_dose.py --log-file $base_name.log $2_Sources $3_Sources > ${base_name}_Sources
 echo " " > $filename.src
 
 while [[ -s "$filename.bin" || -s "$filename.src"  ]]; do
@@ -53,53 +53,53 @@ while [[ -s "$filename.bin" || -s "$filename.src"  ]]; do
 
     # remove bin target packages and groups
     cat $filename.bin \
-        | python3 $SD/pre-dose.py --log-file $base_name.log --remove ${base_name}_Packages > ${base_name}_Packages.tmp && \
+        | python3 $SD/pre_dose.py --log-file $base_name.log --remove ${base_name}_Packages > ${base_name}_Packages.tmp && \
         mv -f ${base_name}_Packages.tmp ${base_name}_Packages
     cat $filename.bin \
-        | python3 $SD/pre-dose.py --log-file $base_name.log --resolve-group $3_Packages ${base_name}_Packages \
-        | python3 $SD/pre-dose.py --log-file $base_name.log --remove ${base_name}_Packages > ${base_name}_Packages.tmp && \
+        | python3 $SD/pre_dose.py --log-file $base_name.log --resolve-group $3_Packages ${base_name}_Packages \
+        | python3 $SD/pre_dose.py --log-file $base_name.log --remove ${base_name}_Packages > ${base_name}_Packages.tmp && \
         mv -f ${base_name}_Packages.tmp ${base_name}_Packages
     cat $filename.bin \
-        | python3 $SD/pre-dose.py --log-file $base_name.log --resolve-up $2_Packages ${base_name}_Packages \
-        | python3 $SD/pre-dose.py --log-file $base_name.log --remove ${base_name}_Packages > ${base_name}_Packages.tmp && \
+        | python3 $SD/pre_dose.py --log-file $base_name.log --resolve-up $2_Packages ${base_name}_Packages \
+        | python3 $SD/pre_dose.py --log-file $base_name.log --remove ${base_name}_Packages > ${base_name}_Packages.tmp && \
         mv -f ${base_name}_Packages.tmp ${base_name}_Packages        
 
     # remove src target sources
     cat $filename.bin \
-        | python3 $SD/pre-dose.py --log-file $base_name.log --resolve-src --provide $3_Packages $3_Sources ${base_name}_Sources \
-        | python3 $SD/pre-dose.py --log-file $base_name.log --remove ${base_name}_Sources > ${base_name}_Sources.tmp && \
+        | python3 $SD/pre_dose.py --log-file $base_name.log --resolve-src --provide $3_Packages $3_Sources ${base_name}_Sources \
+        | python3 $SD/pre_dose.py --log-file $base_name.log --remove ${base_name}_Sources > ${base_name}_Sources.tmp && \
         mv -f ${base_name}_Sources.tmp ${base_name}_Sources
     cat $filename.bin \
-        | python3 $SD/pre-dose.py --log-file $base_name.log --resolve-up $2_Sources ${base_name}_Sources \
-        | python3 $SD/pre-dose.py --log-file $base_name.log --remove ${base_name}_Sources > ${base_name}_Sources.tmp && \
+        | python3 $SD/pre_dose.py --log-file $base_name.log --resolve-up $2_Sources ${base_name}_Sources \
+        | python3 $SD/pre_dose.py --log-file $base_name.log --remove ${base_name}_Sources > ${base_name}_Sources.tmp && \
         mv -f ${base_name}_Sources.tmp ${base_name}_Sources
 
     # convert bin to src
     cat $filename.bin \
-        | python3 $SD/pre-dose.py --log-file $base_name.log --resolve-src --provide $2_Packages $2_Sources ${base_name}_Sources \
+        | python3 $SD/pre_dose.py --log-file $base_name.log --resolve-src --provide $2_Packages $2_Sources ${base_name}_Sources \
         | sort -u > $next_filename.src    
 
     # bin-bin implantation
     cat $filename.bin \
-        | python3 $SD/pre-dose.py --log-file $base_name.log --resolve-up $2_Packages ${base_name}_Packages \
-        | python3 $SD/pre-dose.py --log-file $base_name.log $2_Packages ${base_name}_Packages > ${base_name}_Packages.tmp && \
+        | python3 $SD/pre_dose.py --log-file $base_name.log --resolve-up $2_Packages ${base_name}_Packages \
+        | python3 $SD/pre_dose.py --log-file $base_name.log $2_Packages ${base_name}_Packages > ${base_name}_Packages.tmp && \
         mv -f ${base_name}_Packages.tmp ${base_name}_Packages                
 
     # src-src implantation
     cat $next_filename.src \
-        | python3 $SD/pre-dose.py --log-file $base_name.log --provide $2_Packages $2_Sources ${base_name}_Sources > ${base_name}_Sources.tmp && \
+        | python3 $SD/pre_dose.py --log-file $base_name.log --provide $2_Packages $2_Sources ${base_name}_Sources > ${base_name}_Sources.tmp && \
         mv -f ${base_name}_Sources.tmp ${base_name}_Sources
 
     # src-src dependent implantation if dep not found
     cat $filename.bin \
-        | python3 $SD/pre-dose.py --log-file $base_name.log --resolve-up $2_Sources ${base_name}_Sources \
-        | python3 $SD/pre-dose.py --log-file $base_name.log --provide $2_Packages $2_Sources ${base_name}_Sources > ${base_name}_Sources.tmp && \
+        | python3 $SD/pre_dose.py --log-file $base_name.log --resolve-up $2_Sources ${base_name}_Sources \
+        | python3 $SD/pre_dose.py --log-file $base_name.log --provide $2_Packages $2_Sources ${base_name}_Sources > ${base_name}_Sources.tmp && \
         mv -f ${base_name}_Sources.tmp ${base_name}_Sources
 
     # src-bin implantation
     cat $next_filename.src \
-        | python3 $SD/pre-dose.py --log-file $base_name.log --resolve-bin $2_Sources ${base_name}_Sources \
-        | python3 $SD/pre-dose.py --log-file $base_name.log $2_Packages ${base_name}_Packages > ${base_name}_Packages.tmp && \
+        | python3 $SD/pre_dose.py --log-file $base_name.log --resolve-bin $2_Sources ${base_name}_Sources \
+        | python3 $SD/pre_dose.py --log-file $base_name.log $2_Packages ${base_name}_Packages > ${base_name}_Packages.tmp && \
         mv -f ${base_name}_Packages.tmp ${base_name}_Packages
 
     echo -n > $next_filename.bin
