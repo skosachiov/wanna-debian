@@ -46,6 +46,8 @@ def parse_metadata(filepath, src_dict = None, prov_dict = None, bin_dict = None)
                     key, value = line.split(':', 1)
                     # Extract package name
                     if key == 'Package':
+                        if pkg_name != None:
+                            logging.error(f'duplicate stanza key: {key}: {value.strip()}')
                         pkg_name = value.strip()
                     # Build binary-to-source mapping for source metadata if requested
                     if key == 'Binary' and src_dict != None:
