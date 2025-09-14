@@ -153,7 +153,7 @@ def dict_to_dot(d, graph_name='G'):
     lines.append("}")
     return '\n'.join(lines)    
 
-if __name__ == "__main__":
+def main():
     # Setup command line argument parser
     parser = argparse.ArgumentParser(description='Pre-dose script performs a targeted substitution of package \
         information from a origin repository to a target repository, only for packages specified in the stdin input list.')
@@ -328,3 +328,5 @@ if __name__ == "__main__":
 
     logging.debug(f'Pre-dose finished and the input stream was: {lines}')
     
+if __name__ == "__main__":
+    main()
