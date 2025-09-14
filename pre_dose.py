@@ -47,7 +47,7 @@ def parse_metadata(filepath, src_dict = None, prov_dict = None, bin_dict = None)
                     # Extract package name
                     if key == 'Package':
                         if pkg_name != None:
-                            logging.error(f'duplicate stanza key: {key}: {value.strip()}')
+                            logging.error(f'Duplicate stanza key: {key}: {value.strip()}')
                         pkg_name = value.strip()
                     # Build binary-to-source mapping for source metadata if requested
                     if key == 'Binary' and src_dict != None:
@@ -78,7 +78,7 @@ def parse_metadata(filepath, src_dict = None, prov_dict = None, bin_dict = None)
                         deps_pkgs = [p.strip().split()[0].split(":")[0] for p in value.split(',') if p.strip()]
                         for p in deps_pkgs:
                             if p == pkg_name:
-                                logging.warning(f'package depends on itself, '
+                                logging.warning(f'Package depends on itself, '
                                     f'package name is excluded from dependencies: {pkg_name}')
                                 continue       
                             depends.append(p)
@@ -87,7 +87,8 @@ def parse_metadata(filepath, src_dict = None, prov_dict = None, bin_dict = None)
                 if pkg_name not in packages or apt_pkg.version_compare(version, packages[pkg_name]['version']) > 0:
                     if source == None: source = pkg_name
                     if source_version == None: source_version = version
-                    packages[pkg_name] = {'version': version, 'block': block, 'depends': depends, 'source': source, 'source_version': source_version}
+                    packages[pkg_name] = {'version': version, 'block': block, 'depends': depends, \
+                        'source': source, 'source_version': source_version}
                 else:
                     logging.warning(f'A new version package already in the list: {pkg_name}')                
     logging.debug(f'In the file {filepath} processed packets: {len(packages)}')
