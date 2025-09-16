@@ -235,9 +235,12 @@ def main():
             else:
                 logging.error(f'Can not resolve the source package to binary because the name was not found: {pkg_name}')
         elif args.resolve_group and pkg_name != None:
-            if pkg_name in target and target[pkg_name]["source"] != None:  
-                for p in group_dict[target[pkg_name]["source"]]:
-                    print(p)
+            if pkg_name in target and target[pkg_name]["source"] != None:
+                if target[pkg_name]["source"] in group_dict:
+                    for p in group_dict[target[pkg_name]["source"]]:
+                        print(p)
+                else:
+                    logging.error(f'Can not resolve package binary group for: {pkg_name} via source {target[pkg_name]["source"]}')
         elif args.resolve_up and pkg_name == None:
             dependent_found = False
             for key, value in target.items():
