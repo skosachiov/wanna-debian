@@ -57,15 +57,14 @@ By combining dose-debcheck and dose-builddebcheck, Pre-dose provides an efficien
 ### get metadata
 
 ```
-wget -O bookworm_Packages.gz http://ftp.debian.org/debian/dists/bookworm/main/binary-amd64/Packages.gz && gunzip bookworm_Packages.gz
-wget -O trixie_Packages.gz http://ftp.debian.org/debian/dists/trixie/main/binary-amd64/Packages.gz && gunzip trixie_Packages.gz
-wget -O sid_Packages.gz http://ftp.debian.org/debian/dists/sid/main/binary-amd64/Packages.gz && gunzip sid_Packages.gz
-wget -O unstable_Packages.gz http://ftp.debian.org/debian/dists/unstable/main/binary-amd64/Packages.gz && gunzip unstable_Packages.gz
-
-wget -O bookworm_Sources.gz http://ftp.debian.org/debian/dists/bookworm/main/source/Sources.gz && gunzip bookworm_Sources.gz
 wget -O trixie_Sources.gz http://ftp.debian.org/debian/dists/trixie/main/source/Sources.gz && gunzip trixie_Sources.gz
+wget -O trixie_Packages.gz http://ftp.debian.org/debian/dists/trixie/main/binary-amd64/Packages.gz && gunzip trixie_Packages.gz
+
+wget -O forky_Packages.gz http://ftp.debian.org/debian/dists/forky/main/binary-amd64/Packages.gz && gunzip forky_Packages.gz
+wget -O forky_Sources.gz http://ftp.debian.org/debian/dists/forky/main/source/Sources.gz && gunzip forky_Sources.gz
+
 wget -O sid_Sources.gz http://ftp.debian.org/debian/dists/sid/main/source/Sources.gz && gunzip sid_Sources.gz
-wget -O unstable_Sources.gz http://ftp.debian.org/debian/dists/unstable/main/source/Sources.gz && gunzip unstable_Sources.gz
+wget -O sid_Packages.gz http://ftp.debian.org/debian/dists/sid/main/binary-amd64/Packages.gz && gunzip sid_Packages.gz
 ```
 
 ### find unmet dependencies before metadata implantation
