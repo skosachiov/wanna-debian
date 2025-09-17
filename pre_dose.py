@@ -227,7 +227,7 @@ def main():
             if args.add_version:
                 print(f'{origin[pkg_name]['source']}={origin[pkg_name]["source_version"]}')
             else:
-                print(f'{pkg_name}')
+                print(f'{origin[pkg_name]['source']}')
         elif args.resolve_bin and pkg_name != None:
             if pkg_name in bin_dict:
                 for p in bin_dict[pkg_name]:

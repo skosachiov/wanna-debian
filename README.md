@@ -135,7 +135,7 @@ comm -23 <(grep-dctrl -n -s Package,Version -P '' gnome_Sources | tr -s "\n" \
 
 ### topological sort result
 
-`cat gnome.backport.list | sort -u | ./pre-dose.sh --log-file gnome.log -t sid_Sources trixie_Sources > gnome.toposort.src`
+`cat gnome.backport.list | sort -u | ./pre-dose.sh --log-file gnome.log -t -p sid_Packages sid_Sources trixie_Sources > gnome.toposort.src`
 
 ## man dose-ceve
 
