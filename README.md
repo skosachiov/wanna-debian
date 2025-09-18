@@ -260,3 +260,10 @@ comm -23 <(grep-dctrl -n -s Package,Version -P '' gnome-core_Sources | tr -s "\n
 comm -23 <(grep-dctrl -n -s Package,Version -P '' gnome-core_Packages | tr -s "\n" \
 | paste -d = - - | sort -u) <(grep-dctrl -n -s Package,Version -P '' t202501_Packages | tr -s "\n" | paste -d = - - | sort -u)
 ```
+#### compute the backport list of source packages based on the difference of the lists of binary packages
+
+```
+comm -23 <(grep-dctrl -n -s Package,Version -P '' gnome-core_Packages | tr -s "\n" \
+| paste -d = - - | sort -u) <(grep-dctrl -n -s Package,Version -P '' t202501_Packages | tr -s "\n" | paste -d = - - | sort -u) \
+| ./pre-dose.sh -s -p trixie_Packages trixie_Sources trixie_Sources
+```
