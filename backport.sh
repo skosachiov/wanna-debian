@@ -68,14 +68,16 @@ while [[ -s "$filename.bin" || -s "$filename.src"  ]]; do
     cat $filename.bin \
         | python3 $SD/pre_dose.py --log-file $base_name.log --remove ${base_name}_Packages > ${base_name}_Packages.tmp && \
         mv -f ${base_name}_Packages.tmp ${base_name}_Packages
+    if [ "$OPT_BIN_ONLY" = false ]; then
     cat $filename.bin \
         | python3 $SD/pre_dose.py --log-file $base_name.log --resolve-group $3_Packages ${base_name}_Packages \
         | python3 $SD/pre_dose.py --log-file $base_name.log --remove ${base_name}_Packages > ${base_name}_Packages.tmp && \
         mv -f ${base_name}_Packages.tmp ${base_name}_Packages
-    cat $filename.bin \
-        | python3 $SD/pre_dose.py --log-file $base_name.log --resolve-up $2_Packages ${base_name}_Packages \
-        | python3 $SD/pre_dose.py --log-file $base_name.log --remove ${base_name}_Packages > ${base_name}_Packages.tmp && \
-        mv -f ${base_name}_Packages.tmp ${base_name}_Packages        
+    fi
+    # cat $filename.bin \
+    #     | python3 $SD/pre_dose.py --log-file $base_name.log --resolve-up $2_Packages ${base_name}_Packages \
+    #     | python3 $SD/pre_dose.py --log-file $base_name.log --remove ${base_name}_Packages > ${base_name}_Packages.tmp && \
+    #     mv -f ${base_name}_Packages.tmp ${base_name}_Packages        
 
     # remove src target sources
     cat $filename.bin \
