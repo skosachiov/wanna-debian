@@ -4,7 +4,7 @@ SD="$(dirname "${BASH_SOURCE[0]}")"
 
 # print help
 if [ -z "$1" ]; then
-    echo "Usage: cat <pkgslist> | $0 [--checkall] <basename> <newerprefix> <olderprefix>"
+    echo "Usage: cat <pkgslist> | $0 [--checkall] [--bin-only] <basename> <newerprefix> <olderprefix>"
     echo ""
     echo "The script $0 expects to find the following metadata files in the current directory:"
     echo "newerprefix_Packages, newerprefix_Sources, olderprefix_Packages, olderprefix_Sources"
@@ -15,12 +15,25 @@ if [ -z "$1" ]; then
 fi
 
 OPT_CHECKALL=false
+OPT_BIN_ONLY=false
 EXTRA_PARAMS=()
-
-if [[ "$1" == "--checkall" ]]; then
-    OPT_CHECKALL=true
-    shift
-fi
+# Process options
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --checkall)
+            OPT_CHECKALL=true
+            shift
+            ;;
+        --bin-only)
+            OPT_BIN_ONLY=true
+            shift
+            ;;
+        *)
+            # Break out of the loop when we hit the first non-option argument
+            break
+            ;;
+    esac
+done
 
 # warning if not installed
 if ! dpkg -l | grep -q 'dose-distcheck'; then
@@ -116,10 +129,12 @@ while [[ -s "$filename.bin" || -s "$filename.src"  ]]; do
     if [ "$OPT_CHECKALL" = false ]; then
         EXTRA_PARAMS=(--checkonly "$(paste -sd, <(cat $base_name.*.src | grep -v "^\s*$"))")
     fi
+    if [ "$OPT_BIN_ONLY" = false ]; then
     dose-builddebcheck "${EXTRA_PARAMS[@]}" --latest 1 --deb-native-arch=amd64 -e -f ${base_name}_Packages ${base_name}_Sources | tee \
         >(grep -oE 'unsat-.*: [^|]*(|.*)?' | tr '|' '\n' | grep -oE '\b[a-zA-Z][a-zA-Z0-9_.+-]+:[a-zA-Z0-9_]+\b' | cut -d: -f1 | sort -u >> $next_filename.bin) \
         >(grep -B 4 -P "^\s{6}unsat-.*\((<|=)" | grep -oP '(package:|version:) \K\S+' |  paste -d "=" - - | sort -u >> $next_filename.bin) \
         >> ${base_name}.builddebcheck.log
+    fi
 
     wait $pid
 
