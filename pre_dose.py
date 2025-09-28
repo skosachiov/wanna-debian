@@ -302,7 +302,8 @@ def main():
             print(t)
 
     # Output modified package metadata if not in special mode
-    if not any((args.add_version, args.depends, args.resolve_src, args.resolve_bin, args.resolve_group, args.topo_sort, args.resolve_up)):
+    if not any((args.add_version, args.depends, args.resolve_src, args.resolve_bin,
+        args.resolve_group, args.topo_sort, args.resolve_up)):
         for pkg in target.values():
             print(pkg['block'])
             print()

@@ -94,6 +94,9 @@ while [[ -s "$filename.bin" || -s "$filename.src"  ]]; do
 
     # bin-bin implantation
     cat $filename.bin \
+        | python3 $SD/pre_dose.py --log-file $base_name.log $2_Packages ${base_name}_Packages > ${base_name}_Packages.tmp && \
+        mv -f ${base_name}_Packages.tmp ${base_name}_Packages                
+    cat $filename.bin \
         | python3 $SD/pre_dose.py --log-file $base_name.log --resolve-up $2_Packages ${base_name}_Packages \
         | python3 $SD/pre_dose.py --log-file $base_name.log $2_Packages ${base_name}_Packages > ${base_name}_Packages.tmp && \
         mv -f ${base_name}_Packages.tmp ${base_name}_Packages                
