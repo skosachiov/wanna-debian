@@ -6,23 +6,6 @@ from toposort import *
 import apt_pkg
 apt_pkg.init_system()
 
-# Remove specified dependencies from a package's metadata block
-def delete_depends(pkg_name, block, exclude_list):
-    result = []
-    for line in block.splitlines():
-        if ':' in line:
-            key, value = line.split(':', 1)
-            # Process dependency fields
-            if key in ('Build-Depends', 'Build-Depends-Indep', 'Build-Depends-Arch', 'Depends', 'Pre-Depends'):
-                packages = [p.strip() for p in value.split(',')]
-                # Filter out excluded packages
-                filtered_packages = [p for p in packages if not any((p.startswith(name + " ") or p.startswith(name + ":") or p == name) for name in exclude_list)]
-                line = key + ": " + ', '.join(filtered_packages)
-                if len(packages) - len(filtered_packages) > 0:
-                    logging.debug(f'Removed {len(packages) - len(filtered_packages)} dependencies from package: {pkg_name}')
-        result.append(line)
-    return "\n".join(result)
-
 # Parse package metadata from repository file
 def parse_metadata(filepath, src_dict = None, prov_dict = None, bin_dict = None):
     packages = {}
@@ -164,7 +147,6 @@ def main():
     parser.add_argument('target_repo', metavar='TARGET_REPO', help='older repository Packages/Sources')
     parser.add_argument('-m', '--add-missing', action='store_true', help='add missing packages do not change versions')
     parser.add_argument('-r', '--remove', action='store_true', help='remove packages instead of replacing or adding')
-    parser.add_argument('-d', '--delete-depends', action='store_true', help='delete from dependencies instead of replacing or adding')
     parser.add_argument('-p', '--provide', type=str, metavar='PATH', help="path to binary Packages metadata to provide replacements for sources implantation")
     parser.add_argument('-e', '--depends', type=int, metavar='DEPTH', help='print repository package dependencies and exit')        
     parser.add_argument('-s', '--resolve-src', action='store_true', help='resolve source code package names and exit')
@@ -266,8 +248,6 @@ def main():
                 logging.warning(f'Dependency search did not reach all leaf nodes, number of iteration: {args.depends}')
         elif args.topo_sort:
             pass
-        elif args.delete_depends:
-            exclude_depends.append(line_left_side)
         elif args.remove and pkg_name != None:
             if pkg_name in target:
                 del target[pkg_name]
@@ -278,11 +258,6 @@ def main():
             backport_version(origin, target, pkg_name, args.add_missing)
         else:
             logging.error(f'No deletion request and package name is not resolved: {line_left_side}')
-
-    # Process dependency deletion if requested
-    if args.delete_depends:
-        for k, v in target.items():
-            v['block'] = delete_depends(k, v['block'], exclude_depends)
 
     # Process dependency resolve requested
     for p in depends_set.keys():
