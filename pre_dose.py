@@ -229,7 +229,8 @@ def main():
                 if line_left_side in value['depends']:
                     dependent_set[key] = None
                     dependent_found = True
-            if not dependent_found: logging.error(f'Can not resolve the target dependent package for: {line_left_side}')                       
+                    logging.info(f'Resolve the target dependent {key} package for: {line_left_side}')
+            if not dependent_found: logging.error(f'Can not resolve the target dependent package for: {line_left_side}')
         elif args.depends and pkg_name != None:
             depends_set[pkg_name] = None # Set
             for i in range(args.depends):
