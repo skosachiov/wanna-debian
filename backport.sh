@@ -66,11 +66,11 @@ while [[ -s "$filename.bin" || -s "$filename.src"  ]]; do
 
     # keep resolve up
     cat $filename.bin \
-        | python3 $SD/pre_dose.py --log-file $base_name.log --resolve-up $2_Packages ${base_name}_Packages >> $filename.bin.tmp && \
-        mv -f $filename.bin.tmp $filename.bin
+        | python3 $SD/pre_dose.py --log-file $base_name.log --resolve-up $2_Packages ${base_name}_Packages > $filename.bin.tmp && \
+        cat $filename.bin.tmp >> $filename.bin && rm -f $filename.bin.tmp
     cat $filename.bin \
-        | python3 $SD/pre_dose.py --log-file $base_name.log --resolve-up $2_Sources ${base_name}_Sources >> $filename.bin.tmp && \
-        mv -f $filename.bin.tmp $filename.bin
+        | python3 $SD/pre_dose.py --log-file $base_name.log --resolve-up $2_Sources ${base_name}_Sources > $filename.bin.tmp && \
+        cat $filename.bin.tmp >> $filename.bin && rm -f $filename.bin.tmp
 
     # remove bin target packages and groups
     cat $filename.bin \
