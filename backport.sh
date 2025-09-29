@@ -64,6 +64,14 @@ while [[ -s "$filename.bin" || -s "$filename.src"  ]]; do
     ((counter++))
     next_filename=$(printf "%s.%03d" "$base_name" $counter)
 
+    # keep resolve up
+    cat $filename.bin \
+        | python3 $SD/pre_dose.py --log-file $base_name.log --resolve-up $2_Packages ${base_name}_Packages >> cat $filename.bin.tmp \
+        mv -f $filename.bin.tmp $filename.bin
+    cat $filename.bin \
+        | python3 $SD/pre_dose.py --log-file $base_name.log --resolve-up $2_Sources ${base_name}_Sources >> cat $filename.bin.tmp \
+        mv -f $filename.bin.tmp $filename.bin
+
     # remove bin target packages and groups
     cat $filename.bin \
         | python3 $SD/pre_dose.py --log-file $base_name.log --remove ${base_name}_Packages > ${base_name}_Packages.tmp && \
