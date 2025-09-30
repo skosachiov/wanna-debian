@@ -56,7 +56,7 @@ cat > $filename.bin
 cat $filename.bin | python3 $SD/pre_dose.py --log-file $base_name.log $2_Packages $3_Packages > ${base_name}_Packages
 cat $filename.bin | python3 $SD/pre_dose.py --log-file $base_name.log -s $2_Sources $3_Sources | sort -u > $filename.src
 cat $filename.src | python3 $SD/pre_dose.py --log-file $base_name.log $2_Sources $3_Sources > ${base_name}_Sources
-echo " " > $filename.src
+echo "" > $filename.src
 
 while [[ -s "$filename.bin" || -s "$filename.src"  ]]; do
 
