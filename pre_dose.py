@@ -255,7 +255,7 @@ def main():
                 logging.info(f'Package removed: {pkg_name}')
             else:
                 logging.error(f'Package to be removed is not present in the target: {pkg_name}')
-        elif pkg_name != None:
+        elif not any((args.resolve_src, args.resolve_bin, args.resolve_group, args.resolve_up)) and pkg_name != None:
             backport_version(origin, target, pkg_name, args.add_missing)
         else:
             logging.error(f'No deletion request and package name is not resolved: {line_left_side}')
