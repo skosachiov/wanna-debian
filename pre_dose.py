@@ -200,62 +200,69 @@ def main():
         if pkg_name != None: packages.add(pkg_name)
         
         # Handle different operation modes
-        if args.add_version and not any((args.resolve_src, args.resolve_bin, args.resolve_group, args.resolve_up)) and pkg_name != None:
-            if line_left_side in origin:
-                print(f'{line_left_side}={origin[line_left_side]["version"]}')
-            else:
-                logging.error(f'Package without resolve operation not found: {line_left_side}')
-        elif args.resolve_src and pkg_name != None:
-            if args.add_version:
-                print(f'{origin[pkg_name]['source']}={origin[pkg_name]["source_version"]}')
-            else:
-                print(f'{origin[pkg_name]['source']}')
-        elif args.resolve_bin and pkg_name != None:
-            if pkg_name in bin_dict:
-                for p in bin_dict[pkg_name]:
-                    print(p)
-            else:
-                logging.error(f'Can not resolve the source package to binary because the name was not found: {pkg_name}')
-        elif args.resolve_group and pkg_name != None:
-            if pkg_name in target and target[pkg_name]["source"] != None:
-                if target[pkg_name]["source"] in group_dict:
-                    for p in group_dict[target[pkg_name]["source"]]:
+        if args.add_version:
+            if pkg_name != None:
+                if line_left_side in origin:
+                    print(f'{line_left_side}={origin[line_left_side]["version"]}')
+                else:
+                    logging.error(f'Package without resolve operation not found: {line_left_side}')
+        elif args.resolve_src:
+            if pkg_name != None:
+                if args.add_version:
+                    print(f'{origin[pkg_name]['source']}={origin[pkg_name]["source_version"]}')
+                else:
+                    print(f'{origin[pkg_name]['source']}')
+        elif args.resolve_bin:
+            if pkg_name != None:
+                if pkg_name in bin_dict:
+                    for p in bin_dict[pkg_name]:
                         print(p)
                 else:
-                    logging.error(f'Can not resolve package binary group for: {pkg_name} via source {target[pkg_name]["source"]}')
-        elif args.resolve_up and pkg_name == None:
-            dependent_found = False
-            for key, value in target.items():
-                if line_left_side in value['depends']:
-                    dependent_set[key] = None
-                    dependent_found = True
-                    logging.info(f'Resolve the target dependent {key} package for: {line_left_side}')
-            if not dependent_found: logging.error(f'Can not resolve the target dependent package for: {line_left_side}')
-        elif args.depends and pkg_name != None:
-            depends_set[pkg_name] = None # Set
-            for i in range(args.depends):
-                set_len = len(depends_set)
-                for p in dict(depends_set).keys():
-                    p_src = resolve_pkg_name(p, origin, src_dict, prov_dict)
-                    if p_src:
-                        for pd in origin[p_src]["depends"]:
-                            pd_src = resolve_pkg_name(pd, origin, src_dict, prov_dict)
-                            if pd_src:
-                                depends_set[pd_src] = None
-                if set_len == len(depends_set):
-                    logging.info(f'Dependency search completed at iteration: {i + 1}')
-                    break
-            else:
-                logging.warning(f'Dependency search did not reach all leaf nodes, number of iteration: {args.depends}')
+                    logging.error(f'Can not resolve the source package to binary because the name was not found: {pkg_name}')
+        elif args.resolve_group:
+            if pkg_name != None:
+                if pkg_name in target and target[pkg_name]["source"] != None:
+                    if target[pkg_name]["source"] in group_dict:
+                        for p in group_dict[target[pkg_name]["source"]]:
+                            print(p)
+                    else:
+                        logging.error(f'Can not resolve package binary group for: {pkg_name} via source {target[pkg_name]["source"]}')
+        elif args.resolve_up:
+            if pkg_name == None:
+                dependent_found = False
+                for key, value in target.items():
+                    if line_left_side in value['depends']:
+                        dependent_set[key] = None
+                        dependent_found = True
+                        logging.info(f'Resolve the target dependent {key} package for: {line_left_side}')
+                if not dependent_found: logging.error(f'Can not resolve the target dependent package for: {line_left_side}')
+        elif args.depends:
+            if pkg_name != None:
+                depends_set[pkg_name] = None # Set
+                for i in range(args.depends):
+                    set_len = len(depends_set)
+                    for p in dict(depends_set).keys():
+                        p_src = resolve_pkg_name(p, origin, src_dict, prov_dict)
+                        if p_src:
+                            for pd in origin[p_src]["depends"]:
+                                pd_src = resolve_pkg_name(pd, origin, src_dict, prov_dict)
+                                if pd_src:
+                                    depends_set[pd_src] = None
+                    if set_len == len(depends_set):
+                        logging.info(f'Dependency search completed at iteration: {i + 1}')
+                        break
+                else:
+                    logging.warning(f'Dependency search did not reach all leaf nodes, number of iteration: {args.depends}')
         elif args.topo_sort:
             pass
-        elif args.remove and pkg_name != None:
-            if pkg_name in target:
-                del target[pkg_name]
-                logging.info(f'Package removed: {pkg_name}')
-            else:
-                logging.error(f'Package to be removed is not present in the target: {pkg_name}')
-        elif not any((args.resolve_src, args.resolve_bin, args.resolve_group, args.resolve_up)) and pkg_name != None:
+        elif args.remove:
+            if pkg_name != None:
+                if pkg_name in target:
+                    del target[pkg_name]
+                    logging.info(f'Package removed: {pkg_name}')
+                else:
+                    logging.error(f'Package to be removed is not present in the target: {pkg_name}')
+        elif pkg_name != None:
             backport_version(origin, target, pkg_name, args.add_missing)
         else:
             logging.error(f'No deletion request and package name is not resolved: {line_left_side}')
