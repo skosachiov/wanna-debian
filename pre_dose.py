@@ -226,7 +226,8 @@ def main():
         elif args.resolve_up and pkg_name == None:
             dependent_found = False
             for key, value in target.items():
-                if line_left_side in value['depends']:
+                # do not resolve up provides
+                if line_left_side in value['depends'] and line_left_side not in prov_dict:
                     dependent_set[key] = None
                     dependent_found = True
                     logging.info(f'Resolve the target dependent {key} package for: {line_left_side}')
