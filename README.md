@@ -71,9 +71,9 @@ wget -O sid_Packages.gz http://ftp.debian.org/debian/dists/sid/main/binary-amd64
 
 Fix myrepo with trixie:
 
-`echo "" | backport.sh --checkall broken-before trixie myrepo`
+`echo "" | backport.sh broken-before trixie myrepo`
 
-By default the backport script runs dose3 build dependencies check with the `--checkonly` option, to change the behavior here we use --checkall.
+By default the backport script runs dose3 build dependencies check without the `--check-only` option, to change the behavior here we use --check-only.
 
 ### select packages to backport
 

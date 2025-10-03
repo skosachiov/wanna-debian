@@ -4,7 +4,7 @@ SD="$(dirname "${BASH_SOURCE[0]}")"
 
 # print help
 if [ -z "$1" ]; then
-    echo "Usage: cat <pkgslist> | $0 [--checkall] [--bin-only] <basename> <newerprefix> <olderprefix>"
+    echo "Usage: cat <pkgslist> | $0 [--check-only] [--bin-only] <basename> <newerprefix> <olderprefix>"
     echo ""
     echo "The script $0 expects to find the following metadata files in the current directory:"
     echo "newerprefix_Packages, newerprefix_Sources, olderprefix_Packages, olderprefix_Sources"
@@ -14,14 +14,14 @@ if [ -z "$1" ]; then
     exit 0
 fi
 
-OPT_CHECKALL=false
+OPT_CHECK_ONLY=false
 OPT_BIN_ONLY=false
 EXTRA_PARAMS=()
 # Process options
 while [[ $# -gt 0 ]]; do
     case "$1" in
-        --checkall)
-            OPT_CHECKALL=true
+        --check-only)
+            OPT_CHECK_ONLY=true
             shift
             ;;
         --bin-only)
@@ -141,7 +141,7 @@ while [[ -s "$filename.bin" || -s "$filename.src"  ]]; do
     pid=$!
 
     # check src and append to bin, broken due to low dependent versions
-    if [ "$OPT_CHECKALL" = false ]; then
+    if [ "$OPT_CHECK_ONLY" = true ]; then
         EXTRA_PARAMS=(--checkonly "$(paste -sd, <(cat $base_name.*.src | grep -v "^\s*$"))")
     fi
     if [ "$OPT_BIN_ONLY" = false ]; then
