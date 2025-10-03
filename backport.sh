@@ -4,7 +4,7 @@ SD="$(dirname "${BASH_SOURCE[0]}")"
 
 # print help
 if [ -z "$1" ]; then
-    echo "Usage: cat <pkgslist> | $0 [--check-only] [--bin-only] <basename> <newerprefix> <olderprefix>"
+    echo "Usage: cat <pkgslist> | $0 [--checkonly] [--binonly] <basename> <newerprefix> <olderprefix>"
     echo ""
     echo "The script $0 expects to find the following metadata files in the current directory:"
     echo "newerprefix_Packages, newerprefix_Sources, olderprefix_Packages, olderprefix_Sources"
@@ -14,18 +14,18 @@ if [ -z "$1" ]; then
     exit 0
 fi
 
-OPT_CHECK_ONLY=false
-OPT_BIN_ONLY=false
+OPT_CHECKONLY=false
+OPT_BINONLY=false
 EXTRA_PARAMS=()
 # Process options
 while [[ $# -gt 0 ]]; do
     case "$1" in
-        --check-only)
-            OPT_CHECK_ONLY=true
+        --checkonly)
+            OPT_CHECKONLY=true
             shift
             ;;
-        --bin-only)
-            OPT_BIN_ONLY=true
+        --binonly)
+            OPT_BINONLY=true
             shift
             ;;
         *)
@@ -141,10 +141,10 @@ while [[ -s "$filename.bin" || -s "$filename.src"  ]]; do
     pid=$!
 
     # check src and append to bin, broken due to low dependent versions
-    if [ "$OPT_CHECK_ONLY" = true ]; then
+    if [ "$OPT_CHECKONLY" = true ]; then
         EXTRA_PARAMS=(--checkonly "$(paste -sd, <(cat $base_name.*.src | grep -v "^\s*$"))")
     fi
-    if [ "$OPT_BIN_ONLY" = false ]; then
+    if [ "$OPT_BINONLY" = false ]; then
     dose-builddebcheck "${EXTRA_PARAMS[@]}" --latest 1 --deb-native-arch=amd64 -e -f ${base_name}_Packages ${base_name}_Sources | tee \
         >(grep -oE 'unsat-.*: [^|]*(|.*)?' | tr '|' '\n' | grep -oE '\b[a-zA-Z][a-zA-Z0-9_.+-]+:[a-zA-Z0-9_]+\b' | cut -d: -f1 | sort -u >> $next_filename.bin) \
         >(grep -B 4 -P "^\s{6}unsat-.*\((<|=)" | grep -oP '(package:|version:) \K\S+' | paste -d "=" - - | sort -u >> $next_filename.bin) \
