@@ -1,0 +1,67 @@
+[build-system]
+requires = ["setuptools>=45", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "wanna-debian"
+version = "0.1.0"
+description = "Debian package management utilities"
+readme = "README.md"
+license = {text = "GPL-3.0-only OR BSD-3-Clause"}
+authors = [
+    {name = "Serge Kosachiov", email = "skosachiov@gmail.com"},
+]
+requires-python = ">=3.8"
+dependencies = [
+    "requests>=2.25.0",
+    "python-apt>=2.0.0",
+]
+classifiers = [
+    "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+    "License :: OSI Approved :: BSD License",
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: System Administrators",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Topic :: System :: Archiving :: Packaging",
+    "Topic :: System :: Systems Administration",
+]
+
+[project.urls]
+Homepage = "https://github.com/skosachiov/wanna-debian"
+Repository = "https://github.com/skosachiov/wanna-debian"
+"Bug Tracker" = "https://github.com/skosachiov/wanna-debian/issues"
+
+[project.scripts]
+backport = "predose.backport:main"
+pre-dose = "predose.predose:main"
+distrotracker = "distrotracker.distrotracker:main"
+
+[tool.setuptools]
+packages = [
+    "predose",
+    "distrotracker", 
+    "toposort",
+]
+
+[tool.pytest.ini_options]
+# Add the project root to Python path
+pythonpath = ["."]
+# Where to look for tests
+testpaths = ["tests"]
+# Test file patterns
+python_files = ["test_*.py", "*_test.py"]
+# Test class patterns  
+python_classes = ["Test*"]
+# Test function patterns
+python_functions = ["test_*"]
+# Markers
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+    "integration: integration tests",
+]

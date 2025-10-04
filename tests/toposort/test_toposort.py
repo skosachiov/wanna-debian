@@ -1,6 +1,6 @@
 import pytest
 from toposort import *
-from pre_dose import reverse_graph
+from predose import reverse_graph
 import random
 
 # Example graph represented as a dictionary of sets

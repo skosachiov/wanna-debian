@@ -3,7 +3,7 @@ import os
 import re
 import logging
 from pathlib import Path
-from pre_dose import parse_metadata
+from predose import parse_metadata
 
 # Set up logging for tests
 logging.basicConfig(level=logging.WARNING)

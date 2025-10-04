@@ -1,6 +1,6 @@
 import pytest
 import logging
-from pre_dose import resolve_pkg_name
+from predose import resolve_pkg_name
 
 # Set up logging for tests
 logging.basicConfig(level=logging.INFO)
