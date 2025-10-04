@@ -43,11 +43,15 @@ pre-dose = "predose.predose:main"
 distrotracker = "distrotracker.distrotracker:main"
 
 [tool.setuptools]
+include-package-data = true
 packages = [
     "predose",
     "distrotracker", 
     "toposort",
 ]
+
+[tool.setuptools.package-data]
+"*" = ["*.sh"]
 
 [tool.pytest.ini_options]
 # Add the project root to Python path

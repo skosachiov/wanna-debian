@@ -13,3 +13,15 @@ Distribution package tracking and dependency resolution tool for Debian. Distrot
 
 see docs/distrotracker/index.md
 
+## install
+
+```
+pip install --user --break-system-packages  git+https://github.com/skosachiov/wanna-debian.git
+
+echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc
+source ~/.bashrc
+```
+
+## uninstall
+
+pip uninstall --break-system-packages  wanna-debian
