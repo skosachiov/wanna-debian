@@ -13,7 +13,7 @@ Distribution package tracking and dependency resolution tool for Debian. Distrot
 
 readme: [docs/distrotracker/index.md](docs/distrotracker/index.md)
 
-## rootless, userspace install
+## rootless userspace install
 
 `pip install --user --break-system-packages  git+https://github.com/skosachiov/wanna-debian.git`
 ```
@@ -21,6 +21,10 @@ echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc
 source ~/.bashrc
 ```
 
+## upgrade
+
+`pip install --upgrade --user --break-system-packages  git+https://github.com/skosachiov/wanna-debian.git`
+
 ## uninstall
 
-`pip uninstall --break-system-packages  wanna-debian`
+`pip uninstall -y --break-system-packages  wanna-debian`
