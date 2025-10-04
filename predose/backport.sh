@@ -3,14 +3,14 @@
 SD="$(dirname "${BASH_SOURCE[0]}")"
 
 # print help
-if [ -z "$1" ]; then
-    echo "Usage: cat <pkgslist> | $0 [--checkonly] [--binonly] <basename> <newerprefix> <olderprefix>"
+if [ -z "$1" ] || [ "$1" = "--help" ] || [ "$1" = "-h" ]; then
+    echo "Usage: cat <pkgslist> | backport [--checkonly] [--binonly] <basename> <newerprefix> <olderprefix>"
     echo ""
-    echo "The script $0 expects to find the following metadata files in the current directory:"
+    echo "The script backport expects to find the following metadata files in the current directory:"
     echo "newerprefix_Packages, newerprefix_Sources, olderprefix_Packages, olderprefix_Sources"
     echo ""
-    echo "Example: echo gnome-core | $0 gnome-core sid trixie"
-    echo "Example: cat debootstrap.list | $0 minimal sid empty"
+    echo "Example: echo gnome-core | backport gnome-core sid trixie"
+    echo "Example: cat debootstrap.list | backport minimal sid empty"
     exit 0
 fi
 
