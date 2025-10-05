@@ -149,7 +149,7 @@ def check_version(version, required_op, required_version):
     else:
         return False
 
-def find_versions(fin, filename, dist = None, arch = None, briefly = None, latest = None, index_key = 'package'):
+def find_versions(fin, filename, dist = None, arch = None, briefly = None, element = None, index_key = 'package'):
 
     version_key = "source_version" if index_key == "source" else "version"
 
@@ -198,7 +198,9 @@ def find_versions(fin, filename, dist = None, arch = None, briefly = None, lates
                     flag_ok = False
                 if flag_ok:
                     item_str = json.dumps({k: v for k, v in p.items() if k in briefly_keys} if briefly else p)
-                    if latest and package_prev == p[index_key]: items.pop()
+                    if package_prev == p[index_key]:
+                        if element == 'latest': items.pop()
+                        if element == 'earliest': continue
                     items.append(f'  {item_str}')
                     package_prev = p[index_key]
     if no_arch_package_names:
@@ -471,7 +473,8 @@ def main():
     parser.add_argument("--comp", default=['main'], nargs='+', help="Components main, contrib, non-free, non-free-firmware etc. (default: main)")
     parser.add_argument("--arch", default=['binary-amd64', 'source'], nargs='+', \
         help="Architectures binary-amd64, binary-arm64, source etc. (default: binary-amd64 source)")
-    parser.add_argument("--latest", action="store_true", help="Show only one maximum version of a package")
+    parser.add_argument("--latest", action="store_true", help="Show only one latest suitable version of a package")
+    parser.add_argument("--earliest", action="store_true", help="Show only one earliest suitable version")
     parser.add_argument("--force", action="store_true", help="Force update even if remote files are older")
     parser.add_argument("--hold", action="store_true", help="Do not attempt to update metadata")
     parser.add_argument("--find", action="store_true", \
@@ -507,7 +510,8 @@ def main():
             update_metadata(args.base_url, args.local_dir, args.dist, args.comp, args.arch)
             logging.info("Metadata update completed!")
     if args.find:
-        find_versions(sys.stdin, args.local_dir + "/index.json", args.dist, args.arch, args.briefly, args.latest, \
+        find_versions(sys.stdin, args.local_dir + "/index.json", args.dist, args.arch, args.briefly, \
+            'latest' if args.latest else 'earliest' if args.earliest else None, \
             "package" if not args.source else "source")
 
 
