@@ -4,15 +4,15 @@ Distribution package tracking and dependency resolution tool for Debian. `distro
 
 ## update metadata
 
-`./distrotracker.sh --base-url http://deb.debian.org/debian/`
+`distrotracker --base-url http://deb.debian.org/debian/`
 
 ## search for the minimum version that satisfies dependencies
 
-`echo 'libpython3.13 (>= 3.13.0~rc3)' | ./distrotracker.sh --find`
+`echo 'libpython3.13 (>= 3.13.0~rc3)' | distrotracker --find`
 
 or
 
-`cat dose-unsat.list | ./distrotracker.sh --find`
+`cat dose-unsat.list | distrotracker --find`
 
 or dose-unsat.list example:
 ```
@@ -24,9 +24,9 @@ librandomconv-ocaml-dev (>= 0.2)
 ```
 
 ```
-cat dose-unsat.list | ./distrotracker.sh --find --arch binary-amd64
-cat dose-unsat.list | ./distrotracker.sh --find --arch source
-cat dose-unsat.list | ./distrotracker.sh --find --arch binary-amd64 binary-arm64 --dist trixie sid
+cat dose-unsat.list | distrotracker --find --arch binary-amd64
+cat dose-unsat.list | distrotracker --find --arch source
+cat dose-unsat.list | distrotracker --find --arch binary-amd64 binary-arm64 --dist trixie sid
 ```
 
 or backport.list example:
@@ -36,7 +36,11 @@ librust-gix-fs-0.12+default-dev=0.12.1
 librandomconv-ocaml-dev=0.2
 ```
 
-`cat backport.list | sed 's/=/ (>= /;s/$/)/' | ./distrotracker.sh --find --briefly`
+`cat backport.list | sed 's/=/ (>= /;s/$/)/' | distrotracker --find --briefly`
+
+```
+echo 'libpython3.13' | distrotracker --find | jq -c -r '.[] | "Package: \(.package), Version: \(.version)"'
+```
 
 ## simple search with grep-dctrl 
 
