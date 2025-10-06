@@ -191,9 +191,9 @@ def find_versions(fin, filename, dist = None, arch = None, briefly = None, eleme
         for p in data_dict[package_name]:
             if check_version(p[version_key], operator, required_version):
                 not_match = False
-                if arch and e['arch'] not in arch: not_match = True
+                if arch and p['arch'] not in arch: not_match = True
                 else: no_arch = False
-                if dist and e['dist'] not in dist: not_match = True
+                if dist and p['dist'] not in dist: not_match = True
                 else: no_dist = False
                 if not_match: continue
                 item_str = json.dumps({k: v for k, v in p.items() if k in briefly_keys} if briefly else p)
