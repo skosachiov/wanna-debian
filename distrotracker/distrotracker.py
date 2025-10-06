@@ -184,32 +184,19 @@ def find_versions(fin, filename, dist = None, arch = None, briefly = None, eleme
             logging.warning(f"Can not find package name: {package_name}")
             continue
 
-        package_prev = ""
-        found = False
-        no_arch = True
-        no_dist = True
+        package_prev = None
         for p in data_dict[package_name]:
             if check_version(p[version_key], operator, required_version):
-                not_match = False
-                if arch and p['arch'] not in arch: not_match = True
-                else: no_arch = False
-                if dist and p['dist'] not in dist: not_match = True
-                else: no_dist = False
-                if not_match: continue
+                if arch and p['arch'] not in arch: continue
+                if dist and p['dist'] not in dist: continue
                 item_str = json.dumps({k: v for k, v in p.items() if k in briefly_keys} if briefly else p)
                 if package_prev == p[index_key]:
                     if element == 'latest': items.pop()
                     if element == 'earliest': continue
                 items.append(f'  {item_str}')
                 package_prev = p[index_key]
-                found = True
-        if not found:
-            logging.warning(f"Package name was found, but the version did not match: {package_name} ({operator} {required_version})")
-        else:
-            if no_arch:
-                logging.warning(f"Package version was found, but the architecture did not match: {package_name} ({operator} {required_version})")
-            if no_dist:
-                logging.warning(f"Package version was found, but the distribution is not from the list: {package_name} ({operator} {required_version})")
+        if not package_prev:
+            logging.warning(f"Version, architecture or distribution do not meet the conditions: {package_name} ({operator} {required_version})")
 
     print("[")                
     print(',\n'.join(items))
