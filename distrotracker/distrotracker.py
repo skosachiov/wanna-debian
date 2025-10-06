@@ -191,10 +191,10 @@ def find_versions(fin, filename, dist = None, arch = None, briefly = None, eleme
             flag_ok = True
             if check_version(p['version'], operator, required_version):
                 if arch and p['arch'] not in arch:
-                    no_arch_package_names.add(package_name)
+                    no_arch_package_names.add(f'{package_name} ({operator} {required_version})')
                     flag_ok = False
                 if dist and p['dist'] not in dist:
-                    no_dist_package_names.add(package_name)
+                    no_dist_package_names.add(f'{package_name} ({operator} {required_version})')
                     flag_ok = False
                 if flag_ok:
                     item_str = json.dumps({k: v for k, v in p.items() if k in briefly_keys} if briefly else p)
