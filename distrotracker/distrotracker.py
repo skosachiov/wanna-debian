@@ -161,6 +161,8 @@ def find_versions(fin, filename, dist = None, arch = None, briefly = None, eleme
         with open(filename, 'r', encoding='utf-8') as f:
             data_list = json.load(f)
         for e in data_list:
+            if arch and e['arch'] not in arch: continue
+            if dist and e['dist'] not in dist: continue
             if e[index_key] not in data_dict:
                 data_dict[e[index_key]] = [e]
             else:
@@ -189,8 +191,6 @@ def find_versions(fin, filename, dist = None, arch = None, briefly = None, eleme
         package_prev = ""
         for p in data_dict[package_name]:
             if check_version(p[version_key], operator, required_version):
-                if arch and p['arch'] not in arch: continue
-                if dist and p['dist'] not in dist: continue
                 item_str = json.dumps({k: v for k, v in p.items() if k in briefly_keys} if briefly else p)
                 if package_prev == p[index_key]:
                     if element == 'latest': items.pop()
