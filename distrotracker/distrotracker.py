@@ -189,6 +189,7 @@ def find_versions(fin, filename, dist = None, arch = None, briefly = None, eleme
             continue
 
         package_prev = ""
+        found = False
         for p in data_dict[package_name]:
             if check_version(p[version_key], operator, required_version):
                 item_str = json.dumps({k: v for k, v in p.items() if k in briefly_keys} if briefly else p)
@@ -197,6 +198,10 @@ def find_versions(fin, filename, dist = None, arch = None, briefly = None, eleme
                     if element == 'earliest': continue
                 items.append(f'  {item_str}')
                 package_prev = p[index_key]
+                found = True
+        if not found:
+            logging.warning(f"Package name was found, but the version did not match: {package_name} ({operator} {required_version})")
+
     print("[")                
     print(',\n'.join(items))
     print("]")
