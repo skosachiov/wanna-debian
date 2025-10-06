@@ -509,7 +509,7 @@ def main():
         if original_metadata_is_newer(args.base_url, args.local_dir) or args.force or \
                 not os.path.exists(os.path.join(args.local_dir, "status")):
             logging.info("Starting metadata update...")
-            update_metadata(args.base_url, args.local_dir, args.dist, args.comp, args.arch)
+            update_metadata(args.base_url, args.local_dir, args.dist, args.comp, ['binary-amd64', 'source'])
             logging.info("Metadata update completed!")
     if args.find:
         find_versions(sys.stdin, args.local_dir + "/index.json", args.dist, args.arch, args.briefly, \
