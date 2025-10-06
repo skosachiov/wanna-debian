@@ -185,8 +185,10 @@ def find_versions(fin, filename, dist = None, arch = None, briefly = None, eleme
             continue
 
         package_prev = None
+        version_found = False
         for p in data_dict[package_name]:
             if check_version(p[version_key], operator, required_version):
+                version_found = True
                 if arch and p['arch'] not in arch: continue
                 if dist and p['dist'] not in dist: continue
                 item_str = json.dumps({k: v for k, v in p.items() if k in briefly_keys} if briefly else p)
@@ -195,8 +197,10 @@ def find_versions(fin, filename, dist = None, arch = None, briefly = None, eleme
                     if element == 'earliest': continue
                 items.append(f'  {item_str}')
                 package_prev = p[index_key]
-        if not package_prev:
-            logging.warning(f"Version, architecture or distribution do not meet the conditions: {package_name} ({operator} {required_version})")
+        if not version_found:
+            logging.warning(f"Version does not meet the conditions: {package_name} ({operator} {required_version})")
+        if not package_prev and version_found:
+                logging.warning(f"Architecture, distribution do not meet the conditions: {package_name} ({operator} {required_version})")            
 
     print("[")                
     print(',\n'.join(items))
