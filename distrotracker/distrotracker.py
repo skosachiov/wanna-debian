@@ -188,27 +188,15 @@ def find_versions(fin, filename, dist = None, arch = None, briefly = None, eleme
 
         package_prev = ""
         for p in data_dict[package_name]:
-            flag_ok = True
             if check_version(p[version_key], operator, required_version):
-                if arch and p['arch'] not in arch:
-                    no_arch_package_names.add(f'{package_name} ({operator} {required_version})')
-                    flag_ok = False
-                if dist and p['dist'] not in dist:
-                    no_dist_package_names.add(f'{package_name} ({operator} {required_version})')
-                    flag_ok = False
-                if flag_ok:
-                    item_str = json.dumps({k: v for k, v in p.items() if k in briefly_keys} if briefly else p)
-                    if package_prev == p[index_key]:
-                        if element == 'latest': items.pop()
-                        if element == 'earliest': continue
-                    items.append(f'  {item_str}')
-                    package_prev = p[index_key]
-    if no_arch_package_names:
-        for p in no_arch_package_names:
-            logging.warning(f"Package does not exist for the processed architectures: {p}")
-    if no_dist_package_names:
-        for p in no_dist_package_names:
-            logging.warning(f"Package is not available in the processed distributions: {p}")   
+                if arch and p['arch'] not in arch: continue
+                if dist and p['dist'] not in dist: continue
+                item_str = json.dumps({k: v for k, v in p.items() if k in briefly_keys} if briefly else p)
+                if package_prev == p[index_key]:
+                    if element == 'latest': items.pop()
+                    if element == 'earliest': continue
+                items.append(f'  {item_str}')
+                package_prev = p[index_key]
     print("[")                
     print(',\n'.join(items))
     print("]")
