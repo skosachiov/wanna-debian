@@ -29,9 +29,9 @@ The build metadata of the target repository may have unresolved dependencies bef
 
 If the user provides a list of source packages (e.g., from a Debian software section like packages.debian.org/trixie/), they must first be converted to binary packages before processing.
 
-## workflow of backport.sh
+## workflow of backport
 
-The backport.sh script assumes that the input consists of binary package names.
+The backport script assumes that the input consists of binary package names.
 
 The provided binary packages must replace their counterparts in the target repository. This means that the existing versions of these packages must first be removed.
 Their "siblings" (all binary packages built from the same source in the target repository) must also be removed.
@@ -69,7 +69,7 @@ wget -O sid_Packages.gz http://ftp.debian.org/debian/dists/sid/main/binary-amd64
 
 Fix myrepo with trixie:
 
-`echo "" | backport.sh --checkall broken-before trixie myrepo`
+`echo "" | backport --checkall broken-before trixie myrepo`
 
 By default the backport script runs dose3 build dependencies check with the `--checkonly` option, to change the behavior here we use --checkall.
 
@@ -86,7 +86,7 @@ https://people.debian.org/~fpeters/gnome/debian-gnome-48-status.html
 or
 
 ```
-echo gnome-core | ./pre-dose.sh -e 2 trixie_Packages trixie_Sources 2> /dev/null \
+echo gnome-core | pre-dose -e 2 trixie_Packages trixie_Sources 2> /dev/null \
 | xargs -I {} grep-dctrl -P -F -n -e "^{}$" -s Package,Version,Maintainer,Section trixie_Packages \
 | tr -s "\n" | paste -d = - - - - | grep 'GNOME Maintainers' > gnome.list
 ```
@@ -108,15 +108,15 @@ sort -u -o kde.list kde.list
 
 ### convert to binary
 
-`cat gnome.list | ./pre-dose.sh --resolve-bin sid_Sources sid_Sources > tmp && mv -f tmp gnome.list`
+`cat gnome.list | pre-dose --resolve-bin sid_Sources sid_Sources > tmp && mv -f tmp gnome.list`
 
 ### run resolver
 
-`cat gnome.list | ./backport.sh gnome sid trixie`
+`cat gnome.list | backport gnome sid trixie`
 
 or 
 
-`cat kde.list | ./backport.sh kde sid trixie`
+`cat kde.list | backport kde sid trixie`
 
 ### view result
 
@@ -133,7 +133,7 @@ comm -23 <(grep-dctrl -n -s Package,Version -P '' gnome_Sources | tr -s "\n" \
 
 ### topological sort result
 
-`cat gnome.backport.list | sort -u | ./pre-dose.sh --log-file gnome.log -t -p sid_Packages sid_Sources trixie_Sources > gnome.toposort.src`
+`cat gnome.backport.list | sort -u | pre-dose --log-file gnome.log -t -p sid_Packages sid_Sources trixie_Sources > gnome.toposort.src`
 
 ## man dose-ceve
 
@@ -157,9 +157,9 @@ dose-ceve --deb-native-arch=amd64 -r build-essential -T deb --depth 1 \
 
 ## sources toposort with dot graph
 
-`echo build-essential | ./pre-dose.sh --log-file build-essential.log -e 2 sid_Sources trixie_Sources > build-essential.list`
+`echo build-essential | pre-dose --log-file build-essential.log -e 2 sid_Sources trixie_Sources > build-essential.list`
 
-`tac build-essential.list | ./pre-dose.sh --log-file build-essential.log -t --dot build-essential.dot sid_Sources trixie_Sources > build-essential.toposort`
+`tac build-essential.list | pre-dose --log-file build-essential.log -t --dot build-essential.dot sid_Sources trixie_Sources > build-essential.toposort`
 
 `xdot build-essential.dot`
 
@@ -203,7 +203,7 @@ debootstrap --print-debs trixie /tmp/trixie-chroot | tr " " "\n" > /tmp/bootstra
 echo "" > empty_Packages
 echo "" > empty_Sources
 
-cat /tmp/bootstrap.list | ./backport.sh bootstrap trixie empty
+cat /tmp/bootstrap.list | backport bootstrap trixie empty
 ```
 
 #### debootstrap final check
@@ -236,7 +236,7 @@ wget -O t202501_Packages.gz https://snapshot.debian.org/archive/debian/20250131T
 
 it takes about 30 min ...
 
-`echo gnome-core | ./backport.sh gnome-core trixie t202501 &`
+`echo gnome-core | backport gnome-core trixie t202501 &`
 
 #### remove from snapshot source repo 
 ```
@@ -263,5 +263,5 @@ comm -23 <(grep-dctrl -n -s Package,Version -P '' gnome-core_Packages | tr -s "\
 ```
 comm -23 <(grep-dctrl -n -s Package,Version -P '' gnome-core_Packages | tr -s "\n" \
 | paste -d = - - | sort -u) <(grep-dctrl -n -s Package,Version -P '' t202501_Packages | tr -s "\n" | paste -d = - - | sort -u) \
-| ./pre-dose.sh -s -p trixie_Packages trixie_Sources trixie_Sources
+| pre-dose -s -p trixie_Packages trixie_Sources trixie_Sources
 ```
