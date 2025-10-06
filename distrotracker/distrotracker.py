@@ -200,7 +200,7 @@ def find_versions(fin, filename, dist = None, arch = None, briefly = None, eleme
         if not version_found:
             logging.warning(f"Version does not meet the conditions: {package_name} ({operator} {required_version})")
         if not package_prev and version_found:
-                logging.warning(f"Architecture, distribution do not meet the conditions: {package_name} ({operator} {required_version})")            
+            logging.warning(f"Architecture, distribution do not meet the conditions: {package_name} ({operator} {required_version})")            
 
     print("[")                
     print(',\n'.join(items))
