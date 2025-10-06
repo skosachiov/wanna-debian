@@ -189,7 +189,7 @@ def find_versions(fin, filename, dist = None, arch = None, briefly = None, eleme
         package_prev = ""
         for p in data_dict[package_name]:
             flag_ok = True
-            if check_version(p['version'], operator, required_version):
+            if check_version(p[version_key], operator, required_version):
                 if arch and p['arch'] not in arch:
                     no_arch_package_names.add(f'{package_name} ({operator} {required_version})')
                     flag_ok = False
