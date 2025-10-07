@@ -161,6 +161,8 @@ def find_versions(fin, filename, dist = None, arch = None, briefly = None, eleme
         with open(filename, 'r', encoding='utf-8') as f:
             data_list = json.load(f)
         for e in data_list:
+            if arch and e['arch'] not in arch: continue
+            if dist and e['dist'] not in dist: continue
             if e[index_key] not in data_dict:
                 data_dict[e[index_key]] = [e]
             else:
@@ -185,22 +187,18 @@ def find_versions(fin, filename, dist = None, arch = None, briefly = None, eleme
             continue
 
         package_prev = None
-        version_found = False
         for p in data_dict[package_name]:
             if check_version(p[version_key], operator, required_version):
                 version_found = True
-                if arch and p['arch'] not in arch: continue
-                if dist and p['dist'] not in dist: continue
                 item_str = json.dumps({k: v for k, v in p.items() if k in briefly_keys} if briefly else p)
                 if package_prev == p[index_key]:
                     if element == 'latest': items.pop()
                     if element == 'earliest': continue
                 items.append(f'  {item_str}')
                 package_prev = p[index_key]
-        if not version_found:
-            logging.warning(f"Version does not meet the conditions: {package_name} ({operator} {required_version})")
-        if not package_prev and version_found:
-            logging.warning(f"Architecture, distribution do not meet the conditions: {package_name} ({operator} {required_version})")            
+        if not package_prev:
+            logging.warning(f"Version does not meet the conditions: {package_name} ({operator} {required_version})")            
+
 
     print("[")                
     print(',\n'.join(items))
