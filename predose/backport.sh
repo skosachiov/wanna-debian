@@ -134,7 +134,7 @@ while [[ -s "$filename.bin" || -s "$filename.src"  ]]; do
 
     # check binary packages in dependencies, broken due to low dependent versions
     dose-debcheck --latest 1 --deb-native-arch=amd64 -e -f ${base_name}_Packages | tee \
-        >(grep -oE 'unsat-.*: [^|]*(|.*)?' | tr '|' '\n' | grep -oE '\b[a-zA-Z][a-zA-Z0-9_.+-]+:[a-zA-Z0-9_]+\b' | cut -d: -f1 | sort -u >> $next_filename.bin) \
+        >(grep -oE 'unsat-.*: [^|]*(|.*)?' | tr '|' '\n' | grep -oP 'unsat-dependency: \K[^:| ]+' | sort -u >> $next_filename.bin) \
         >(grep -B 4 -P "^\s{6}unsat-.*\((<|=)" | grep -oP '(package:|version:) \K\S+' | paste -d "=" - - | sort -u >> $next_filename.bin) \
         >> ${base_name}.debcheck.log &
     
@@ -146,7 +146,7 @@ while [[ -s "$filename.bin" || -s "$filename.src"  ]]; do
     fi
     if [ "$OPT_BINONLY" = false ]; then
     dose-builddebcheck "${EXTRA_PARAMS[@]}" --latest 1 --deb-native-arch=amd64 -e -f ${base_name}_Packages ${base_name}_Sources | tee \
-        >(grep -oE 'unsat-.*: [^|]*(|.*)?' | tr '|' '\n' | grep -oE '\b[a-zA-Z][a-zA-Z0-9_.+-]+:[a-zA-Z0-9_]+\b' | cut -d: -f1 | sort -u >> $next_filename.bin) \
+        >(grep -oE 'unsat-.*: [^|]*(|.*)?' | tr '|' '\n' | grep -oP 'unsat-dependency: \K[^:| ]+' | sort -u >> $next_filename.bin) \
         >(grep -B 4 -P "^\s{6}unsat-.*\((<|=)" | grep -oP '(package:|version:) \K\S+' | paste -d "=" - - | sort -u >> $next_filename.bin) \
         >> ${base_name}.builddebcheck.log
     fi
