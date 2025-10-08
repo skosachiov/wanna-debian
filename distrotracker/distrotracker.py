@@ -29,8 +29,8 @@ def update_metadata_index(filename, data_list, dist, comp, arch):
         if arch == "source": pkgs = deb822.Sources.iter_paragraphs(f)
         else: pkgs = deb822.Packages.iter_paragraphs(f)
         for pkg in pkgs:
-            if source not in pkg: source = pkg['package']
-            if source_version not in pkg: source_version = pkg['version']
+            if 'source not' in pkg: source = pkg['package']
+            if 'source_version' not in pkg: source_version = pkg['version']
             packages.append({ \
                 'package': pkg['package'], 'version': pkg['version'], 'dist': dist, 'comp': comp, 'arch': arch, \
                 'depends': hashlib.md5(str(pkg.relations).encode()).hexdigest()[:8], \
