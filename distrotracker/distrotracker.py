@@ -26,9 +26,9 @@ def write_metadata_index(filename, data_list):
 def update_metadata_index(filename, data_list, dist, comp, arch):
     packages = data_list
     with open(filename, 'rt', encoding='utf-8') as f:
-        if arch == "source": deb822 = deb822.Sources.iter_paragraphs(f)
-        else: deb822 = deb822.Packages.iter_paragraphs(f)
-        for pkg in deb822:
+        if arch == "source": pkgs = deb822.Sources.iter_paragraphs(f)
+        else: pkgs = deb822.Packages.iter_paragraphs(f)
+        for pkg in pkgs:
             if source not in pkg: source = pkg['package']
             if source_version not in pkg: source_version = pkg['version']
             packages.append({ \
