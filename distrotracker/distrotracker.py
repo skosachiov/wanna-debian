@@ -32,7 +32,7 @@ def update_metadata_index(filename, data_list, dist, comp, arch):
             packages.append({ \
                 'package': pkg['package'], 'version': pkg['version'], 'dist': dist, 'comp': comp, 'arch': arch, \
                 'depends': hashlib.md5(str(pkg.relations).encode()).hexdigest()[:8], \
-                'source': pkg['source'] if 'source' in pkg else pkg['packages'], \
+                'source': pkg['source'] if 'source' in pkg else pkg['package'], \
                 'source_version': pkg['source_version'] if 'source_version' in pkg else pkg['version']})
     logging.debug(f'In the file {filename} processed packets: {len(packages)}')
     return packages
