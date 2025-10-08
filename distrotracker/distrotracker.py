@@ -5,6 +5,7 @@ import time, argparse, logging, json, hashlib, re, apt_pkg, sys
 from urllib.parse import urljoin, urlparse
 from datetime import datetime
 from functools import cmp_to_key
+from debian import deb822
 
 
 def write_metadata_index(filename, data_list):
@@ -25,61 +26,19 @@ def write_metadata_index(filename, data_list):
 def update_metadata_index(filename, data_list, dist, comp, arch):
     packages = data_list
     with open(filename, 'rt', encoding='utf-8') as f:
-        content = f.read()
-        # Split into individual package blocks
-        package_blocks = re.split(r'\n\n+', content.strip())
-        for block in package_blocks:
-            pkg_name = version = source = source_version = None
-            depends = []
-            block_list = []
-            for line in block.splitlines():
-                if len(block_list) > 0 and block_list[-1][-1] == ',' and line[0].isspace():
-                    block_list[-1] += line.rstrip()
-                else:
-                    if line:
-                        block_list.append(line.rstrip())
-            for line in block_list:
-                if not line or line[0].isspace(): continue
-                if ':' in line:
-                    key, value = line.split(':', 1)
-                    # Extract package name
-                    if key == 'Package':
-                        if pkg_name != None:
-                            logging.error(f'Duplicate stanza key: {key}: {value.strip()}')
-                        pkg_name = value.strip()
-                    # Build binary-to-source mapping for binary metadata if requested
-                    if key == 'Source':
-                        source_line = value.strip().split()
-                        if len(source_line) > 0:
-                            source = source_line[0]
-                            if len(source_line) > 1: source_version = re.findall(r'\((.*?)\)', source_line[1])[0]
-                   # Extract version
-                    if key == 'Version':
-                        version = value.strip()
-                    # Collect dependencies
-                    if key in ('Build-Depends', 'Build-Depends-Indep', 'Build-Depends-Arch', 'Depends', 'Pre-Depends'):
-                        deps_pkgs = [p.strip().split()[0].split(":")[0] for p in value.split(',') if p.strip()]
-                        for p in deps_pkgs:
-                            depends.append(p)
-            # Store package metadata if valid
-            if pkg_name != None:
-                if source == None: source = pkg_name
-                if source_version == None: source_version = version
-                packages.append({ \
-                    'package': pkg_name, 'version': version, 'dist': dist, 'comp': comp, 'arch': arch, \
-                    'depends': hashlib.md5(",".join(depends).encode()).hexdigest()[:8], \
-                    'source': source, 'source_version': source_version})
+        if arch == "source": deb822 = deb822.Sources.iter_paragraphs(f)
+        else: deb822 = deb822.Packages.iter_paragraphs(f)
+        for pkg in deb822:
+            if source not in pkg: source = pkg['package']
+            if source_version not in pkg: source_version = pkg['version']
+            packages.append({ \
+                'package': pkg['package'], 'version': pkg['version'], 'dist': dist, 'comp': comp, 'arch': arch, \
+                'depends': hashlib.md5(str(pkg.relations).encode()).hexdigest()[:8], \
+                'source': source, 'source_version': source_version})
     logging.debug(f'In the file {filename} processed packets: {len(packages)}')
     return packages
 
 def parse_requirement_line(line):
-    """
-    Parse a Debian requirement line into (package_name, operator, version)
-    Handles: =, >=, <=, >>, << and various edge cases
-    """
-    line = line.strip()
-    if not line:
-        return None
     
     # Handle lines with trailing comments or other characters
     line = line.split('#')[0].strip()  # Remove comments
@@ -94,39 +53,13 @@ def parse_requirement_line(line):
         package_part = match.group(1).strip()
         operator = match.group(2).strip()
         version = match.group(3).strip()
-        
-        # Handle operators with multiple characters
-        if operator == '>>':
-            return (package_part, '>>', version)
-        elif operator == '<<':
-            return (package_part, '<<', version)
-        elif operator == '>=':
-            return (package_part, '>=', version)
-        elif operator == '<=':
-            return (package_part, '<=', version)
-        elif operator == '=':
-            return (package_part, '=', version)
+        if operator in ('>=', '<=', '>>', '<<', '='):
+            return (package_part, operator, version)
     else:
-        package_part = line.strip()
+        package_part = line
         operator = '>='
         version = '0'
         return (package_part, '>=', version)
-    
-    # Alternative parsing for edge cases
-    if '(' in line and ')' in line:
-        # Extract content between parentheses
-        package_part = line.split('(')[0].strip()
-        constraint_part = line.split('(')[1].split(')')[0].strip()
-        
-        # Handle operators with spaces
-        operators = ['>=', '<=', '>>', '<<', '=']
-        for op in operators:
-            if constraint_part.startswith(op):
-                version = constraint_part[len(op):].strip()
-                # Handle cases where operator might have a space after it
-                if version.startswith(' '):
-                    version = version[1:].strip()
-                return (package_part, op, version)
     
     return None
 
