@@ -197,7 +197,7 @@ def find_versions(fin, filename, dist = None, arch = None, briefly = None, eleme
                 items.append(f'  {item_str}')
                 package_prev = p[index_key]
         if not package_prev:
-            logging.warning(f"Version does not meet the conditions: {package_name} ({operator} {required_version})")            
+            logging.info(f"Package versions found do not meet the conditions: {package_name} ({operator} {required_version})")            
 
 
     print("[")                
