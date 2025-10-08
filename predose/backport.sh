@@ -4,7 +4,7 @@ SD="$(dirname "${BASH_SOURCE[0]}")"
 
 # print help
 if [ -z "$1" ] || [ "$1" = "--help" ] || [ "$1" = "-h" ]; then
-    echo "Usage: cat <pkgslist> | backport [--checkonly] [--binonly] <basename> <newerprefix> <olderprefix>"
+    echo "Usage: cat <pkgslist> | backport [--checkonly] [--binonly] [--removeonly] <basename> <newerprefix> <olderprefix>"
     echo ""
     echo "The script backport expects to find the following metadata files in the current directory:"
     echo "newerprefix_Packages, newerprefix_Sources, olderprefix_Packages, olderprefix_Sources"
@@ -16,6 +16,7 @@ fi
 
 OPT_CHECKONLY=false
 OPT_BINONLY=false
+OPT_REMOVEONLY=false
 EXTRA_PARAMS=()
 # Process options
 while [[ $# -gt 0 ]]; do
@@ -28,6 +29,10 @@ while [[ $# -gt 0 ]]; do
             OPT_BINONLY=true
             shift
             ;;
+        --removeonly)
+            OPT_REMOVEONLY=true
+            shift
+            ;;            
         *)
             # Break out of the loop when we hit the first non-option argument
             break
@@ -98,7 +103,9 @@ while [[ -s "$filename.bin" || -s "$filename.src"  ]]; do
     # convert bin to src
     cat $filename.bin \
         | python3 $SD/predose.py --log-file $base_name.log --resolve-src --provide $2_Packages $2_Sources ${base_name}_Sources \
-        | sort -u > $next_filename.src    
+        | sort -u > $next_filename.src
+
+    if [ "$OPT_REMOVEONLY" = false ]; then # skip all implantations if true
 
     # bin-bin implantation
     cat $filename.bin \
@@ -129,6 +136,8 @@ while [[ -s "$filename.bin" || -s "$filename.src"  ]]; do
         | python3 $SD/predose.py --log-file $base_name.log --resolve-bin $2_Sources ${base_name}_Sources \
         | python3 $SD/predose.py --log-file $base_name.log $2_Packages ${base_name}_Packages > ${base_name}_Packages.tmp && \
         mv -f ${base_name}_Packages.tmp ${base_name}_Packages
+
+    fi # removeonly
 
     echo -n > $next_filename.bin
 
