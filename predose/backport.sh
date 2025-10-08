@@ -90,6 +90,7 @@ while [[ -s "$filename.bin" || -s "$filename.src"  ]]; do
         | python3 $SD/predose.py --log-file $base_name.log --remove ${base_name}_Packages > ${base_name}_Packages.tmp && \
         mv -f ${base_name}_Packages.tmp ${base_name}_Packages        
 
+    if [ "$OPT_BINONLY" = false ]; then
     # remove src target sources
     cat $filename.bin \
         | python3 $SD/predose.py --log-file $base_name.log --resolve-src --provide $3_Packages $3_Sources ${base_name}_Sources \
@@ -99,6 +100,7 @@ while [[ -s "$filename.bin" || -s "$filename.src"  ]]; do
         | python3 $SD/predose.py --log-file $base_name.log --resolve-up $2_Sources ${base_name}_Sources \
         | python3 $SD/predose.py --log-file $base_name.log --remove ${base_name}_Sources > ${base_name}_Sources.tmp && \
         mv -f ${base_name}_Sources.tmp ${base_name}_Sources
+    fi
 
     # convert bin to src
     cat $filename.bin \
