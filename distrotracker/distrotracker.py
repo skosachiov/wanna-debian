@@ -73,13 +73,6 @@ def update_metadata_index(filename, data_list, dist, comp, arch):
     return packages
 
 def parse_requirement_line(line):
-    """
-    Parse a Debian requirement line into (package_name, operator, version)
-    Handles: =, >=, <=, >>, << and various edge cases
-    """
-    line = line.strip()
-    if not line:
-        return None
     
     # Handle lines with trailing comments or other characters
     line = line.split('#')[0].strip()  # Remove comments
@@ -94,39 +87,13 @@ def parse_requirement_line(line):
         package_part = match.group(1).strip()
         operator = match.group(2).strip()
         version = match.group(3).strip()
-        
-        # Handle operators with multiple characters
-        if operator == '>>':
-            return (package_part, '>>', version)
-        elif operator == '<<':
-            return (package_part, '<<', version)
-        elif operator == '>=':
-            return (package_part, '>=', version)
-        elif operator == '<=':
-            return (package_part, '<=', version)
-        elif operator == '=':
-            return (package_part, '=', version)
+        if operator in ('>=', '<=', '>>', '<<', '='):
+            return (package_part, operator, version)
     else:
-        package_part = line.strip()
+        package_part = line
         operator = '>='
         version = '0'
         return (package_part, '>=', version)
-    
-    # Alternative parsing for edge cases
-    if '(' in line and ')' in line:
-        # Extract content between parentheses
-        package_part = line.split('(')[0].strip()
-        constraint_part = line.split('(')[1].split(')')[0].strip()
-        
-        # Handle operators with spaces
-        operators = ['>=', '<=', '>>', '<<', '=']
-        for op in operators:
-            if constraint_part.startswith(op):
-                version = constraint_part[len(op):].strip()
-                # Handle cases where operator might have a space after it
-                if version.startswith(' '):
-                    version = version[1:].strip()
-                return (package_part, op, version)
     
     return None
 
@@ -183,7 +150,7 @@ def find_versions(fin, filename, dist = None, arch = None, briefly = None, eleme
         package_name, operator, required_version = req
  
         if package_name not in data_dict:
-            logging.warning(f"Can not find package name: {package_name}")
+            logging.warning(f"Can not find package name: {package_name} ({operator} {required_version})")
             continue
 
         package_prev = None
