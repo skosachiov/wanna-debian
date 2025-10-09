@@ -114,7 +114,7 @@ sort -u -o kde.list kde.list
 
 `cat gnome.list | backport gnome sid trixie`
 
-or 
+or
 
 `cat kde.list | backport kde sid trixie`
 
@@ -152,7 +152,7 @@ dose-ceve --deb-native-arch amd64 -r patchutils -T deb --depth 2 deb://sid_Packa
 Find all build deps for build-essential:
 ```
 dose-ceve --deb-native-arch=amd64 -r build-essential -T deb --depth 1 \
-    debsrc://sid_Sources deb://sid_Packages | grep-dctrl -n -s Package '' | sort -u 
+    debsrc://sid_Sources deb://sid_Packages | grep-dctrl -n -s Package '' | sort -u
 ```
 
 ## sources toposort with dot graph
@@ -171,7 +171,7 @@ apt update && apt -y upgrade
 apt install sbuild mmdebstrap uidmap devscripts
 apt install vim
 mmdebstrap --include=ca-certificates --variant=buildd bookworm ~/.cache/sbuild
-chmod a+w /root/.cache/sbuild/dev/null 
+chmod a+w /root/.cache/sbuild/dev/null
 sbuild -d bookworm package.dsc
 ```
 
@@ -184,7 +184,7 @@ Signed-By: /usr/share/keyrings/debian-archive-keyring.gpg
 ```
 
 ```
-cat /etc/schroot/chroot.d/bookworm.conf 
+cat /etc/schroot/chroot.d/bookworm.conf
 [bookworm]
 directory=/root/.cache/sbuild
 users=root
@@ -238,22 +238,22 @@ it takes about 30 min ...
 
 `echo gnome-core | backport gnome-core trixie t202501 &`
 
-#### remove from snapshot source repo 
+#### remove from snapshot source repo
 ```
 comm -13 <(grep-dctrl -n -s Package,Version -P '' gnome-core_Sources | tr -s "\n" \
 | paste -d = - - | sort -u) <(grep-dctrl -n -s Package,Version -P '' t202501_Sources | tr -s "\n" | paste -d = - - | sort -u)
 ```
-#### remove from snapshot binary repo 
+#### remove from snapshot binary repo
 ```
 comm -13 <(grep-dctrl -n -s Package,Version -P '' gnome-core_Packages | tr -s "\n" \
 | paste -d = - - | sort -u) <(grep-dctrl -n -s Package,Version -P '' t202501_Packages | tr -s "\n" | paste -d = - - | sort -u)
 ```
-#### add to snapshot source repo 
+#### add to snapshot source repo
 ```
 comm -23 <(grep-dctrl -n -s Package,Version -P '' gnome-core_Sources | tr -s "\n" \
 | paste -d = - - | sort -u) <(grep-dctrl -n -s Package,Version -P '' t202501_Sources | tr -s "\n" | paste -d = - - | sort -u)
 ```
-#### add to snapshot binary repo 
+#### add to snapshot binary repo
 ```
 comm -23 <(grep-dctrl -n -s Package,Version -P '' gnome-core_Packages | tr -s "\n" \
 | paste -d = - - | sort -u) <(grep-dctrl -n -s Package,Version -P '' t202501_Packages | tr -s "\n" | paste -d = - - | sort -u)

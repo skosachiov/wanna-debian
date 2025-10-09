@@ -151,10 +151,10 @@ class StableTopoSort:
             if comp not in components:
                 components[comp] = []
             components[comp].append(node.name)
-        
+
         # Filter components with more than one node (these contain cycles)
         cycles = [comp for comp in components.values() if len(comp) > 1]
-        
+
         import json
         data = {'cycle_count': len(cycles), 'cycles': cycles}
         return(json.dumps(data, indent = 4))

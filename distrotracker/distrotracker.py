@@ -73,16 +73,16 @@ def update_metadata_index(filename, data_list, dist, comp, arch):
     return packages
 
 def parse_requirement_line(line):
-    
+
     # Handle lines with trailing comments or other characters
     line = line.split('#')[0].strip()  # Remove comments
     if not line:
         return None
-    
+
     # Use regex for more robust parsing
     pattern = r'^([a-zA-Z0-9\-\._\+]+)\s*\(\s*([=><]+)\s*([^\)]+)\s*\)$'
     match = re.match(pattern, line)
-    
+
     if match:
         package_part = match.group(1).strip()
         operator = match.group(2).strip()
@@ -94,7 +94,7 @@ def parse_requirement_line(line):
         operator = '>='
         version = '0'
         return (package_part, '>=', version)
-    
+
     return None
 
 def check_version(version, required_op, required_version):
@@ -102,7 +102,7 @@ def check_version(version, required_op, required_version):
     Check if installed version satisfies the Debian requirement
     """
     comparison = apt_pkg.version_compare(version, required_version)
-    
+
     if required_op == '=':
         return comparison == 0
     elif required_op == '>=':
@@ -148,7 +148,7 @@ def find_versions(fin, filename, dist = None, arch = None, briefly = None, eleme
         if not req:
             continue
         package_name, operator, required_version = req
- 
+
         if package_name not in data_dict:
             logging.warning(f"Can not find package name: {package_name} ({operator} {required_version})")
             continue
@@ -164,10 +164,9 @@ def find_versions(fin, filename, dist = None, arch = None, briefly = None, eleme
                 items.append(f'  {item_str}')
                 package_prev = p[index_key]
         if not package_prev:
-            logging.info(f"Package versions found do not meet the conditions: {package_name} ({operator} {required_version})")            
+            logging.info(f"Package versions found do not meet the conditions: {package_name} ({operator} {required_version})")
 
-
-    print("[")                
+    print("[")
     print(',\n'.join(items))
     print("]")
 
@@ -184,12 +183,12 @@ def original_metadata_is_newer(base_url, local_base_dir):
         'indices/files/arch-amd64.files',
         'indices/files/components/source.list.gz'
     ]
-    
+
     # Base local directory
     os.makedirs(local_base_dir, exist_ok=True)
-    
+
     updated = True
-    
+
     for metadata_dir in metadata_dirs:
         url = base_url + metadata_dir
         try:
@@ -198,34 +197,34 @@ def original_metadata_is_newer(base_url, local_base_dir):
             # Remove leading slash and split path
             url_path = parsed_url.path.lstrip('/')
             local_path = os.path.join(local_base_dir, url_path)
-            
+
             # Create directory structure if it doesn't exist
             os.makedirs(os.path.dirname(local_path), exist_ok=True)
-            
+
             # Check if file exists locally
             if os.path.exists(local_path):
                 local_mtime = os.path.getmtime(local_path)
-                
+
                 # Get remote file headers to check last-modified
                 head_response = requests.head(url)
                 head_response.raise_for_status()
-                
+
                 if 'last-modified' in head_response.headers:
                     remote_time_str = head_response.headers['last-modified']
                     remote_time = datetime.strptime(remote_time_str, '%a, %d %b %Y %H:%M:%S %Z').timestamp()
-                    
+
                     if remote_time > local_mtime:
                         logging.info(f"Updating (remote is newer): {url_path}")
                         # Download the updated file
                         file_response = requests.get(url)
                         file_response.raise_for_status()
-                        
+
                         with open(local_path, 'wb') as f:
                             f.write(file_response.content)
-                        
+
                         # Update local modification time to match remote
                         os.utime(local_path, (remote_time, remote_time))
-                        
+
                         # Extract gzip file if it's a .gz file
                         if local_path.endswith('.gz'):
                             extract_path = local_path[:-3]  # Remove .gz extension
@@ -238,7 +237,7 @@ def original_metadata_is_newer(base_url, local_base_dir):
                                 logging.info(f"Extracted to: {extract_path}")
                             except Exception as e:
                                  logging.error(f"Error extracting {local_path}: {e}")
-                        
+
                     else:
                         logging.info(f"Url is up to date: {url_path}")
                         updated = False
@@ -249,16 +248,16 @@ def original_metadata_is_newer(base_url, local_base_dir):
                 logging.info(f"Downloading new file: {url_path}")
                 file_response = requests.get(url)
                 file_response.raise_for_status()
-                
+
                 with open(local_path, 'wb') as f:
                     f.write(file_response.content)
-                
+
                 # Set modification time from server if available
                 if 'last-modified' in file_response.headers:
                     remote_time_str = file_response.headers['last-modified']
                     remote_time = datetime.strptime(remote_time_str, '%a, %d %b %Y %H:%M:%S %Z').timestamp()
                     os.utime(local_path, (remote_time, remote_time))
-                
+
                 # Extract gzip file if it's a .gz file
                 if local_path.endswith('.gz'):
                     extract_path = local_path[:-3]  # Remove .gz extension
@@ -272,11 +271,11 @@ def original_metadata_is_newer(base_url, local_base_dir):
                         logging.info(f"Extracted to: {extract_path}")
                     except Exception as e:
                         logging.error(f"Error extracting {local_path}: {e}")
-                
+
         except requests.RequestException as e:
             logging.warning(f"No processing {url}: {e}")
             continue
-    
+
     return updated
 
 def get_distributions(base_url):
@@ -284,7 +283,7 @@ def get_distributions(base_url):
     try:
         response = requests.get(base_url)
         response.raise_for_status()
-        
+
         # Parse distributions from the directory listing
         distributions = []
         for line in response.text.split('\n'):
@@ -295,9 +294,9 @@ def get_distributions(base_url):
                 dist = line[start:end].rstrip('/')
                 if dist and not dist.startswith(('.', '?')):
                     distributions.append(dist)
-        
+
         return distributions
-    
+
     except requests.RequestException as e:
         logging.error(f"Error fetching distributions: {e}")
         return []
@@ -306,13 +305,13 @@ def should_download_file(local_path, remote_last_modified):
     """Check if local file is older than remote file or doesn't exist"""
     if not os.path.exists(local_path):
         return True
-    
+
     local_mtime = os.path.getmtime(local_path)
     local_time = datetime.fromtimestamp(local_mtime)
-    
+
     # Parse remote last-modified date
     remote_time = datetime.strptime(remote_last_modified, '%a, %d %b %Y %H:%M:%S %Z')
-    
+
     return local_time < remote_time
 
 def download_file(url, local_path):
@@ -321,34 +320,34 @@ def download_file(url, local_path):
         # Get file info first to check last-modified
         head_response = requests.head(url)
         head_response.raise_for_status()
-        
+
         last_modified = head_response.headers.get('last-modified')
         if not last_modified:
             logging.warning(f"No last-modified header for {url}, forcing download")
             last_modified = "Thu, 01 Jan 1970 00:00:00 GMT"  # Force download
-        
+
         if should_download_file(local_path, last_modified):
             logging.info(f"Downloading: {url}")
             response = requests.get(url)
             response.raise_for_status()
-            
+
             # Create directory if it doesn't exist
             os.makedirs(os.path.dirname(local_path), exist_ok=True)
-            
+
             # Save the file
             with open(local_path, 'wb') as f:
                 f.write(response.content)
-            
+
             # Set file modification time to match remote
             remote_time = datetime.strptime(last_modified, '%a, %d %b %Y %H:%M:%S %Z')
             timestamp = time.mktime(remote_time.timetuple())
             os.utime(local_path, (timestamp, timestamp))
-            
+
             return True
         else:
             logging.info(f"Skipping (up to date): {os.path.basename(local_path)}")
             return False
-            
+
     except requests.RequestException as e:
         logging.error(f"Error downloading {url}: {e}")
         return None
@@ -370,16 +369,16 @@ def update_metadata(base_url, local_base_dir, dists, components, architectures):
         os.remove(local_base_dir + "/status")
     except Exception as e:
         pass
-    
+
     logging.info("Fetching distributions list...")
     distributions = get_distributions(base_url + "/dists/")
-    
+
     if not distributions:
         logging.error("No distributions found!")
         return
 
     logging.info(f"Found {len(distributions)} distributions: {', '.join(distributions)}")
-    
+
     # Files to download for each distribution
     data_list = []
     metadata_files = []
@@ -388,14 +387,14 @@ def update_metadata(base_url, local_base_dir, dists, components, architectures):
             metadata_files.append(arch + "/Sources.gz")
         else:
             metadata_files.append(arch + "/Packages.gz")
-    
+
     for dist in distributions:
         if dists and dist not in dists:
             continue
         logging.info(f"Processing distribution: {dist}")
         dist_url = urljoin(base_url, "dists/" + dist + "/")
         dist_dir = os.path.join(local_base_dir, "dists/" + dist)
-        
+
         for component in components:
             for metadata_file in metadata_files:
                 file_path = component + "/" + metadata_file
@@ -411,15 +410,15 @@ def update_metadata(base_url, local_base_dir, dists, components, architectures):
                 if download_status:
                     # Extract the .gz file
                     extract_gz_file(local_gz_path, output_path)
-                
+
                 # Update index dict
                 if download_status != None:
                     update_metadata_index(output_path, data_list, dist, component, metadata_file.split("/")[0])
-    
+
     write_metadata_index(local_base_dir + "/index.json", data_list)
 
     with open(local_base_dir + "/status", "w") as f:
-        json.dump({'base_url': base_url, 'timestamp': str(time.time())}, f) 
+        json.dump({'base_url': base_url, 'timestamp': str(time.time())}, f)
 
 def main():
     """Main entry point"""
@@ -427,7 +426,7 @@ def main():
     parser = argparse.ArgumentParser(description="Update Debian metadata files from the Debian repository")
     parser.add_argument("--base-url", help="Base URL for Debian metadata (example: https://ftp.debian.org/debian/)")
     parser.add_argument("--local-dir", default="./metadata", help="Local directory to store metadata files (default: %(default)s)")
-    parser.add_argument("--dist", default=[], nargs='+', help="Distributions (default: all)")    
+    parser.add_argument("--dist", default=[], nargs='+', help="Distributions (default: all)")
     parser.add_argument("--comp", default=['main'], nargs='+', help="Components main, contrib, non-free, non-free-firmware etc. (default: main)")
     parser.add_argument("--arch", default=['binary-amd64', 'source'], nargs='+', \
         help="Architectures binary-amd64, binary-arm64, source etc. (default: binary-amd64 source)")
@@ -441,8 +440,8 @@ def main():
     parser.add_argument("--source", action="store_true", help="Use the Source field for searching, not the Package field")
     parser.add_argument("--briefly", action="store_true", help="Display only basic fields")
     parser.add_argument("--log-level", default='INFO', choices=['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'], \
-        help='Set the logging level (default: %(default)s)')    
-    
+        help='Set the logging level (default: %(default)s)')
+
     args = parser.parse_args()
 
     if not args.base_url:

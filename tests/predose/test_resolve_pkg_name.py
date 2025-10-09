@@ -10,7 +10,7 @@ def test_resolve_pkg_name_unchanged():
     origin = {"pkg1", "pkg2", "pkg3"}
     src_dict = {"binary1": "source1", "binary2": "source2"}
     prov_dict = {"provided1": "provider1", "provided2": "provider2"}
-    
+
     result = resolve_pkg_name("pkg2", origin, src_dict, prov_dict)
     assert result == "pkg2"
 
@@ -19,7 +19,7 @@ def test_resolve_pkg_name_binary_to_source():
     origin = {"source1", "source2"}
     src_dict = {"binary1": "source1", "binary2": "source2"}
     prov_dict = {"provided1": "provider1"}
-    
+
     result = resolve_pkg_name("binary1", origin, src_dict, prov_dict)
     assert result == "source1"
 
@@ -28,7 +28,7 @@ def test_resolve_pkg_name_provided_to_source():
     origin = {"source1", "provider1"}
     src_dict = {"binary1": "source1", "provider1": "source1"}  # provider1 is also a binary
     prov_dict = {"provided1": "provider1"}
-    
+
     result = resolve_pkg_name("provided1", origin, src_dict, prov_dict)
     assert result == "source1"
 
@@ -37,7 +37,7 @@ def test_resolve_pkg_name_provided_direct():
     origin = {"provider1", "source2"}
     src_dict = {"binary1": "source1"}  # provider1 not in src_dict
     prov_dict = {"provided1": "provider1"}
-    
+
     result = resolve_pkg_name("provided1", origin, src_dict, prov_dict)
     assert result == "provider1"
 
@@ -46,7 +46,7 @@ def test_resolve_pkg_name_provided_not_found():
     origin = {"source1"}
     src_dict = {"binary1": "source1"}
     prov_dict = {"provided1": "unknown_provider"}  # provider not in origin or src_dict
-    
+
     result = resolve_pkg_name("provided1", origin, src_dict, prov_dict)
     assert result is None
 
@@ -55,7 +55,7 @@ def test_resolve_pkg_name_not_found():
     origin = {"pkg1"}
     src_dict = {"binary1": "source1"}
     prov_dict = {"provided1": "provider1"}
-    
+
     result = resolve_pkg_name("nonexistent", origin, src_dict, prov_dict)
     assert result is None
 
@@ -64,11 +64,11 @@ def test_resolve_pkg_name_empty_dicts():
     origin = {"pkg1"}
     src_dict = {}
     prov_dict = {}
-    
+
     # Package in origin should still work
     result = resolve_pkg_name("pkg1", origin, src_dict, prov_dict)
     assert result == "pkg1"
-    
+
     # Package not in origin should return None
     result = resolve_pkg_name("unknown", origin, src_dict, prov_dict)
     assert result is None
@@ -85,7 +85,7 @@ def test_resolve_pkg_name_complex_chain():
         "provided-service": "provider-binary",
         "another-provided": "binary1"
     }
-    
+
     # provided-service -> provider-binary -> intermediate-source -> ultimate-source
     result = resolve_pkg_name("provided-service", origin, src_dict, prov_dict)
     #### assert result == "ultimate-source"
@@ -101,11 +101,11 @@ def test_resolve_pkg_name_case_sensitivity():
     origin = {"Pkg1", "SOURCE1"}
     src_dict = {"Binary1": "Source1", "BINARY2": "SOURCE1"}
     prov_dict = {"Provided1": "Provider1", "PROVIDED2": "PROVIDER2"}
-    
+
     # Exact case matching
     result = resolve_pkg_name("Pkg1", origin, src_dict, prov_dict)
     assert result == "Pkg1"
-    
+
     result = resolve_pkg_name("Binary1", origin, src_dict, prov_dict)
     assert result == "Source1"  # Note: this might fail if case sensitivity matters
 
@@ -122,7 +122,7 @@ def test_resolve_pkg_name_multiple_options():
         "provided1": "binary2",  # This would overwrite, but testing edge case
         "provided2": "direct-provider"
     }
-    
+
     # provided2 should resolve directly to provider
     result = resolve_pkg_name("provided2", origin, src_dict, prov_dict)
     assert result == "direct-provider"
@@ -139,6 +139,6 @@ def test_resolve_pkg_name_parametrized(pkg_name, expected):
     origin = {"pkg_in_origin", "source_pkg", "direct_provider"}
     src_dict = {"binary_pkg": "source_pkg", "provider_binary": "source_pkg"}
     prov_dict = {"provided_pkg": "provider_binary", "other_provided": "unknown"}
-    
+
     result = resolve_pkg_name(pkg_name, origin, src_dict, prov_dict)
     assert result == expected

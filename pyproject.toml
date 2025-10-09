@@ -46,7 +46,7 @@ distrotracker = "distrotracker.distrotracker:main"
 include-package-data = true
 packages = [
     "predose",
-    "distrotracker", 
+    "distrotracker",
     "toposort",
 ]
 
@@ -60,7 +60,7 @@ pythonpath = ["."]
 testpaths = ["tests"]
 # Test file patterns
 python_files = ["test_*.py", "*_test.py"]
-# Test class patterns  
+# Test class patterns
 python_classes = ["Test*"]
 # Test function patterns
 python_functions = ["test_*"]

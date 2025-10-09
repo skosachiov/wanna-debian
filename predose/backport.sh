@@ -32,7 +32,7 @@ while [[ $# -gt 0 ]]; do
         --removeonly)
             OPT_REMOVEONLY=true
             shift
-            ;;            
+            ;;
         *)
             # Break out of the loop when we hit the first non-option argument
             break
@@ -88,7 +88,7 @@ while [[ -s "$filename.bin" || -s "$filename.src"  ]]; do
     cat $filename.bin \
         | python3 $SD/predose.py --log-file $base_name.log --resolve-up $2_Packages ${base_name}_Packages \
         | python3 $SD/predose.py --log-file $base_name.log --remove ${base_name}_Packages > ${base_name}_Packages.tmp && \
-        mv -f ${base_name}_Packages.tmp ${base_name}_Packages        
+        mv -f ${base_name}_Packages.tmp ${base_name}_Packages
 
     if [ "$OPT_BINONLY" = false ]; then
     # remove src target sources
@@ -112,7 +112,7 @@ while [[ -s "$filename.bin" || -s "$filename.src"  ]]; do
     # bin-bin implantation
     cat $filename.bin \
         | python3 $SD/predose.py --log-file $base_name.log $2_Packages ${base_name}_Packages > ${base_name}_Packages.tmp && \
-        mv -f ${base_name}_Packages.tmp ${base_name}_Packages                
+        mv -f ${base_name}_Packages.tmp ${base_name}_Packages
     cat $filename.bin \
         | python3 $SD/predose.py --log-file $base_name.log --resolve-group $2_Packages ${base_name}_Packages \
         | python3 $SD/predose.py --log-file $base_name.log $2_Packages ${base_name}_Packages > ${base_name}_Packages.tmp && \
@@ -120,7 +120,7 @@ while [[ -s "$filename.bin" || -s "$filename.src"  ]]; do
     cat $filename.bin \
         | python3 $SD/predose.py --log-file $base_name.log --resolve-up $2_Packages ${base_name}_Packages \
         | python3 $SD/predose.py --log-file $base_name.log $2_Packages ${base_name}_Packages > ${base_name}_Packages.tmp && \
-        mv -f ${base_name}_Packages.tmp ${base_name}_Packages                
+        mv -f ${base_name}_Packages.tmp ${base_name}_Packages
 
     # src-src implantation
     cat $next_filename.src \
@@ -148,7 +148,7 @@ while [[ -s "$filename.bin" || -s "$filename.src"  ]]; do
         >(grep -oE 'unsat-.*: [^|]*(|.*)?' | tr '|' '\n' | grep -oP 'unsat-dependency: \K[^:| ]+' | sort -u >> $next_filename.bin) \
         >(grep -B 4 -P "^\s{6}unsat-.*\((<|=)" | grep -oP '(package:|version:) \K\S+' | paste -d "=" - - | sort -u >> $next_filename.bin) \
         >> ${base_name}.debcheck.log &
-    
+
     pid=$!
 
     # check src and append to bin, broken due to low dependent versions

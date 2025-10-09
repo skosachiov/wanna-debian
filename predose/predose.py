@@ -63,7 +63,7 @@ def parse_metadata(filepath, src_dict = None, prov_dict = None, bin_dict = None)
                             if p == pkg_name:
                                 logging.warning(f'Package depends on itself, '
                                     f'package name is excluded from dependencies: {pkg_name}')
-                                continue       
+                                continue
                             depends.append(p)
             # Store package metadata if valid
             if pkg_name != None:
@@ -73,7 +73,7 @@ def parse_metadata(filepath, src_dict = None, prov_dict = None, bin_dict = None)
                     packages[pkg_name] = {'version': version, 'block': block, 'depends': depends, \
                         'source': source, 'source_version': source_version}
                 else:
-                    logging.warning(f'A new version package already in the list: {pkg_name}')                
+                    logging.warning(f'A new version package already in the list: {pkg_name}')
     logging.debug(f'In the file {filepath} processed packets: {len(packages)}')
     return packages
 
@@ -137,7 +137,7 @@ def dict_to_dot(d, graph_name='G'):
             lines.append(f'    "{value}";')
             lines.append(f'    "{key}" -> "{value}";')
     lines.append("}")
-    return '\n'.join(lines)    
+    return '\n'.join(lines)
 
 def main():
     # Setup command line argument parser
@@ -148,16 +148,16 @@ def main():
     parser.add_argument('-m', '--add-missing', action='store_true', help='add missing packages do not change versions')
     parser.add_argument('-r', '--remove', action='store_true', help='remove packages instead of replacing or adding')
     parser.add_argument('-p', '--provide', type=str, metavar='PATH', help="path to binary Packages metadata to provide replacements for sources implantation")
-    parser.add_argument('-e', '--depends', type=int, metavar='DEPTH', help='print repository package dependencies and exit')        
+    parser.add_argument('-e', '--depends', type=int, metavar='DEPTH', help='print repository package dependencies and exit')
     parser.add_argument('-s', '--resolve-src', action='store_true', help='resolve source code package names and exit')
     parser.add_argument('-b', '--resolve-bin', action='store_true', help='resolve binary package names by original source metadata and exit')
-    parser.add_argument('-u', '--resolve-up', action='store_true', help='resolve the target dependent package if the package name is not found in origin and exit')    
+    parser.add_argument('-u', '--resolve-up', action='store_true', help='resolve the target dependent package if the package name is not found in origin and exit')
     parser.add_argument('-o', '--resolve-group', action='store_true', help='resolve target binary group and exit')
-    parser.add_argument('-t', '--topo-sort', action='store_true', help='perform topological sort on origin and exit')   
+    parser.add_argument('-t', '--topo-sort', action='store_true', help='perform topological sort on origin and exit')
     parser.add_argument('-g', '--dot', type=str, help="save toposort graph to dot file")
     parser.add_argument('-a', '--add-version', action='store_true', help='add version to package name and exit')
     parser.add_argument('-l', '--log-level', default='DEBUG', choices=['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'], \
-                       help='set the logging level (default: DEBUG)')    
+                       help='set the logging level (default: DEBUG)')
     parser.add_argument('--log-file', help="save logs to file (default: stderr)")
     args = parser.parse_args()
 
@@ -167,7 +167,7 @@ def main():
 
     # Configure logging system
     handlers = []
-    if args.log_file: handlers.append(logging.FileHandler(args.log_file)) 
+    if args.log_file: handlers.append(logging.FileHandler(args.log_file))
     else: handlers.append(logging.StreamHandler())
     logging.basicConfig(handlers=handlers, level=getattr(logging, args.log_level), format='%(asctime)s %(levelname)s %(message)s')
 
@@ -198,7 +198,7 @@ def main():
         lines.append(line_left_side)
         pkg_name = resolve_pkg_name(line_left_side, origin, src_dict, prov_dict)
         if pkg_name != None: packages.add(pkg_name)
-        
+
         # Handle different operation modes
         if args.add_version:
             if pkg_name != None:
@@ -273,7 +273,7 @@ def main():
 
     # Process target dependent requested
     for p in dependent_set.keys():
-        print(p)      
+        print(p)
 
     # Perform topological sort if requested
     if args.topo_sort:
@@ -287,7 +287,7 @@ def main():
                     graph[p].add(pkg_name)
                     if pkg_name not in graph: graph[pkg_name] = set()
         # Save graph to dot file
-        if args.dot: 
+        if args.dot:
             with open(args.dot, 'w') as f:
                 f.write(dict_to_dot(graph))
         # Prepare graph for topological sort
@@ -317,6 +317,6 @@ def main():
             print()
 
     logging.debug(f'Pre-dose finished and the input stream was: {lines}')
-    
+
 if __name__ == "__main__":
     main()

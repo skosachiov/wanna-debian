@@ -42,7 +42,7 @@ librandomconv-ocaml-dev=0.2
 echo 'libpython3.13' | distrotracker --find | jq -c -r '.[] | "Package: \(.package), Version: \(.version)"'
 ```
 
-## simple search with grep-dctrl 
+## simple search with grep-dctrl
 
 ```
 find metadata/ -name Packages -type f -exec sh -c 'echo {} | cut -f 3,4 -d\/; grep-dctrl -n -s Package,Version,Section -P "" {} \

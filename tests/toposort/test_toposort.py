@@ -66,13 +66,13 @@ def generate_random_graph(num_nodes=10000, max_out_edges=100):
 def create_node_list(graph_dict):
     # First create all nodes
     nodes = {name: Node(name) for name in graph_dict}
-    
+
     # Then set up the edges
     for name, edges in graph_dict.items():
         node = nodes[name]
         for edge_name in edges:
             node.edges.append(nodes[edge_name])
-    
+
     return list(nodes.values())
 
 def test_toposort():
