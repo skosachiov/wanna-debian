@@ -444,7 +444,7 @@ def update_metadata(base_url, local_base_dir, dists, components, architectures):
                 if download_status != None:
                     update_metadata_index(output_path, data_list, dist, component, metadata_file.split("/")[0])
                 else:
-                    logging.warinig(f"Can not download: {remote_url}")
+                    logging.warning(f"Can not download: {remote_url}")
 
 
     write_metadata_index(local_base_dir + "/index.json", data_list)
