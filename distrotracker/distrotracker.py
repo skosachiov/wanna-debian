@@ -326,6 +326,7 @@ def should_download_file(local_path, remote_last_modified):
 
 def download_file(url, local_path):
     """Download a file if local version is older or doesn't exist"""
+    logging.info(f"Trying to download: {url}")
     try:
         # Get file info first to check last-modified
         head_response = requests.head(url)
