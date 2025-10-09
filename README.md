@@ -13,6 +13,10 @@ Distribution package tracking and dependency resolution tool for Debian. Distrot
 
 readme: [docs/distrotracker/index.md](docs/distrotracker/index.md)
 
+## python deps
+
+`apt install python3-apt python3-requests python3-debian`
+
 ## rootless userspace install
 
 `pip install --user --break-system-packages  git+https://github.com/skosachiov/wanna-debian.git`
