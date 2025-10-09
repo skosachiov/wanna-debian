@@ -429,7 +429,7 @@ def update_metadata(base_url, local_base_dir, dists, components, architectures):
 
                 download_status = download_file(remote_url, local_z_path)
                 # Download .xz file
-                if file_path.endswith('Packages.gz') and not download_status:
+                if file_path.endswith('Packages.gz') and download_status == None:
                     file_path.replace('.gz', 'xz')
                     local_z_path = os.path.join(dist_dir, file_path)
                     download_status = download_file(remote_url, local_z_path)
