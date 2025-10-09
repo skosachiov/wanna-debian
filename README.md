@@ -15,12 +15,14 @@ readme: [docs/distrotracker/index.md](docs/distrotracker/index.md)
 
 ## python deps
 
-`apt install python3-apt python3-requests python3-debian`
+`sudo apt install python3-pip python3-apt python3-requests python3-debian`
 
-## rootless userspace install
+## rootless userspace install from git
 
 `pip install --user --break-system-packages  git+https://.../wanna-debian.git`
+
 or
+
 `pip install --user --break-system-packages  git+ssh://.../wanna-debian.git`
 
 ```
@@ -31,7 +33,9 @@ source ~/.bashrc
 ## upgrade
 
 `pip install --upgrade --user --break-system-packages  git+https://.../wanna-debian.git`
+
 or
+
 `pip install --upgrade --user --break-system-packages  git+ssh://.../wanna-debian.git`
 
 ## uninstall
