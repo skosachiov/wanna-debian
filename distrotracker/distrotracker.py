@@ -360,7 +360,7 @@ def download_file(url, local_path):
             return False
 
     except requests.RequestException as e:
-        logging.warning(f"Can not download {url}: {e}")
+        logging.warning(f"Can not download: {e}")
         return None
 
 def extract_compressed_file(compressed_path, output_path):
