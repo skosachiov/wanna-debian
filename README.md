@@ -19,7 +19,10 @@ readme: [docs/distrotracker/index.md](docs/distrotracker/index.md)
 
 ## rootless userspace install
 
-`pip install --user --break-system-packages  git+https://github.com/skosachiov/wanna-debian.git`
+`pip install --user --break-system-packages  git+https://.../wanna-debian.git`
+or
+`pip install --user --break-system-packages  git+ssh://.../wanna-debian.git`
+
 ```
 echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc
 source ~/.bashrc
@@ -27,7 +30,9 @@ source ~/.bashrc
 
 ## upgrade
 
-`pip install --upgrade --user --break-system-packages  git+https://github.com/skosachiov/wanna-debian.git`
+`pip install --upgrade --user --break-system-packages  git+https://.../wanna-debian.git`
+or
+`pip install --upgrade --user --break-system-packages  git+ssh://.../wanna-debian.git`
 
 ## uninstall
 
