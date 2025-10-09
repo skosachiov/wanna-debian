@@ -226,7 +226,7 @@ def original_metadata_is_newer(base_url, local_base_dir):
                         os.utime(local_path, (remote_time, remote_time))
 
                         # Extract gzip file if it's a .gz file
-                        if local_path.endswith('.gz', '.xz'):
+                        if local_path.endswith(('.gz', '.xz')):
                             extract_path = local_path[:-3]  # Remove .gz extension
                             try:
                                 if local_path.endswith('.gz'):
@@ -264,7 +264,7 @@ def original_metadata_is_newer(base_url, local_base_dir):
                     os.utime(local_path, (remote_time, remote_time))
 
                 # Extract compressed file
-                if local_path.endswith('.gz', '.xz'):
+                if local_path.endswith(('.gz', '.xz')):
                     extract_path = local_path[:-3]  # Remove extension
                     try:
                         if local_path.endswith('.gz'):
