@@ -360,7 +360,7 @@ def download_file(url, local_path):
             return False
 
     except requests.RequestException as e:
-        logging.warning(f"Can not download: {e}")
+        logging.debug(f"Can not download: {e}")
         return None
 
 def extract_compressed_file(compressed_path, output_path):
@@ -430,11 +430,12 @@ def update_metadata(base_url, local_base_dir, dists, components, architectures):
 
                 download_status = download_file(remote_url, local_z_path)
                 # Download .xz file
-                if file_path.endswith('Packages.gz') and download_status == None:
+                if file_path.endswith('.gz') and download_status == None:
                     file_path = file_path.replace('.gz', '.xz')
                     remote_url = urljoin(dist_url, file_path)
                     local_z_path = os.path.join(dist_dir, file_path)
                     download_status = download_file(remote_url, local_z_path)
+
                 if download_status:
                     # Extract file
                     extract_compressed_file(local_z_path, output_path)
@@ -442,6 +443,9 @@ def update_metadata(base_url, local_base_dir, dists, components, architectures):
                 # Update index dict
                 if download_status != None:
                     update_metadata_index(output_path, data_list, dist, component, metadata_file.split("/")[0])
+                else:
+                    logging.warinig(f"Can not download: {remote_url}")
+
 
     write_metadata_index(local_base_dir + "/index.json", data_list)
 
