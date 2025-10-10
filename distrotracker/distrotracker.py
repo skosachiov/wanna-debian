@@ -225,23 +225,7 @@ def original_metadata_is_newer(base_url, local_base_dir):
                         # Update local modification time to match remote
                         os.utime(local_path, (remote_time, remote_time))
 
-                        # Extract gzip file if it's a .gz file
-                        if local_path.endswith(('.gz', '.xz')):
-                            extract_path = local_path[:-3]  # Remove .gz extension
-                            try:
-                                if local_path.endswith('.gz'):
-                                    with gzip.open(local_path, 'rb') as f_in:
-                                        with open(extract_path, 'wb') as f_out:
-                                            shutil.copyfileobj(f_in, f_out)
-                                elif local_path.endswith('.xz'):
-                                    with lzma.open(local_path, 'rb') as f_in:
-                                        with open(extract_path, 'wb') as f_out:
-                                            shutil.copyfileobj(f_in, f_out)
-                                # Set same modification time for extracted file
-                                os.utime(extract_path, (remote_time, remote_time))
-                                logging.info(f"Extracted to: {extract_path}")
-                            except Exception as e:
-                                 logging.error(f"Error extracting {local_path}: {e}")
+                        extract_compressed_file(local_path, extract_path, remote_time)
 
                     else:
                         logging.info(f"Url is up to date: {url_path}")
@@ -263,24 +247,7 @@ def original_metadata_is_newer(base_url, local_base_dir):
                     remote_time = datetime.strptime(remote_time_str, '%a, %d %b %Y %H:%M:%S %Z').timestamp()
                     os.utime(local_path, (remote_time, remote_time))
 
-                # Extract compressed file
-                if local_path.endswith(('.gz', '.xz')):
-                    extract_path = local_path[:-3]  # Remove extension
-                    try:
-                        if local_path.endswith('.gz'):
-                            with gzip.open(local_path, 'rb') as f_in:
-                                with open(extract_path, 'wb') as f_out:
-                                    shutil.copyfileobj(f_in, f_out)
-                        elif local_path.endswith('.xz'):
-                            with lzma.open(local_path, 'rb') as f_in:
-                                with open(extract_path, 'wb') as f_out:
-                                    shutil.copyfileobj(f_in, f_out)
-                        # Set same modification time for extracted file
-                        if 'last-modified' in file_response.headers:
-                            os.utime(extract_path, (remote_time, remote_time))
-                        logging.info(f"Extracted to: {extract_path}")
-                    except Exception as e:
-                        logging.error(f"Error extracting {local_path}: {e}")
+                extract_compressed_file(local_path, extract_path, remote_time)
 
         except requests.RequestException as e:
             logging.warning(f"No processing {url}: {e}")
@@ -363,26 +330,28 @@ def download_file(url, local_path):
         logging.debug(f"Can not download: {e}")
         return None
 
-def extract_compressed_file(compressed_path, output_path):
-    """Extract .gz or .xz file to output path"""
-    try:
-        if compressed_path.endswith('.gz'):
-            with gzip.open(compressed_path, 'rb') as f_in:
-                with open(output_path, 'wb') as f_out:
-                    shutil.copyfileobj(f_in, f_out)
-        elif compressed_path.endswith('.xz'):
-            with lzma.open(compressed_path, 'rb') as f_in:
-                with open(output_path, 'wb') as f_out:
-                    shutil.copyfileobj(f_in, f_out)
-        else:
-            raise ValueError(f"Unsupported file format: {compressed_path}")
+def extract_compressed_file(compressed_path, extract_path, remote_time=None):
+    # Extract compressed file if supported
+    extension_handlers = {'.gz': gzip.open, '.xz': lzma.open}
 
-        logging.info(f"Extracted: {os.path.basename(output_path)}")
-        return True
+    for ext, open_func in extension_handlers.items():
+        if compressed_path.endswith(ext):
+            try:
+                with open_func(compressed_path, 'rb') as f_in:
+                    with open(extract_path, 'wb') as f_out:
+                        shutil.copyfileobj(f_in, f_out)
+                # Set same modification time for extracted file
+                if remote_time is not None:  # Fixed: "is not" instead of "in not"
+                    os.utime(extract_path, (remote_time, remote_time))
+                logging.info(f"Extracted to: {extract_path}")
+                return True
+            except Exception as e:
+                logging.error(f"Error extracting {compressed_path}: {e}")
+                return False
 
-    except Exception as e:
-        logging.error(f"Error extracting {compressed_path}: {e}")
-        return False
+    # If no supported extension found
+    logging.error(f"Unsupported file extension: {compressed_path}")
+    return False
 
 def update_metadata(base_url, local_base_dir, dists, components, architectures):
     """Main function to update Debian repository metadata"""
@@ -420,32 +389,33 @@ def update_metadata(base_url, local_base_dir, dists, components, architectures):
         for component in components:
             for metadata_file in metadata_files:
                 file_path = component + "/" + metadata_file
-                # Download .gz file
-                remote_url = urljoin(dist_url, file_path)
-                local_z_path = os.path.join(dist_dir, file_path)
+                download_status = None
+                for extension in ['.gz', '.xz']:
+                    remote_url = urljoin(dist_url, current_file_path)
+                    local_z_path = os.path.join(dist_dir, current_file_path)
 
-                output_filename = os.path.basename(file_path).replace('.gz', '')
+                    download_status = download_file(remote_url, local_z_path)
+                    if download_status is not None:
+                        file_path = current_file_path  # Update to the successful path
+                        break
+
+                # Process result
+                output_filename = os.path.basename(file_path).replace('.gz', '').replace('.xz', '')
                 output_dir = os.path.dirname(local_z_path)
                 output_path = os.path.join(output_dir, output_filename)
 
-                download_status = download_file(remote_url, local_z_path)
-                # Download .xz file
-                if file_path.endswith('.gz') and download_status == None:
-                    file_path = file_path.replace('.gz', '.xz')
-                    remote_url = urljoin(dist_url, file_path)
-                    local_z_path = os.path.join(dist_dir, file_path)
-                    download_status = download_file(remote_url, local_z_path)
-
                 if download_status:
-                    # Extract file
                     extract_compressed_file(local_z_path, output_path)
 
-                # Update index dict
-                if download_status != None:
+                if download_status is not None:
                     update_metadata_index(output_path, data_list, dist, component, metadata_file.split("/")[0])
                 else:
-                    logging.warning(f"Can not download: {remote_url[:-2]}[gz|xz])")
+                    logging.warning(f"Can not download: {urljoin(dist_url, file_path)[:-2]}[gz|xz])")
 
+                file_path = component + "/" + metadata_file
+                # Download .gz file
+                remote_url = urljoin(dist_url, file_path)
+                local_z_path = os.path.join(dist_dir, file_path)
 
     write_metadata_index(local_base_dir + "/index.json", data_list)
 
