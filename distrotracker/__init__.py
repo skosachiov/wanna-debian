@@ -1,4 +1,4 @@
-__version__ = "0.1.2"
+__version__ = "0.1.5"
 
 # Import and export all functions needed for testing
 from .distrotracker import (
