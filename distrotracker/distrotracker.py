@@ -375,9 +375,9 @@ def update_metadata(base_url, local_base_dir, dists, components, architectures):
     metadata_files = []
     for arch in architectures:
         if arch == "source":
-            metadata_files.append(arch + "/Sources.gz")
+            metadata_files.append(arch + "/Sources")
         else:
-            metadata_files.append(arch + "/Packages.gz")
+            metadata_files.append(arch + "/Packages")
 
     for dist in distributions:
         if dists and dist not in dists:
@@ -388,12 +388,11 @@ def update_metadata(base_url, local_base_dir, dists, components, architectures):
 
         for component in components:
             for metadata_file in metadata_files:
-                file_path = component + "/" + metadata_file
                 download_status = None
                 for extension in ['.gz', '.xz']:
+                    file_path = component + "/" + metadata_file + extension
                     remote_url = urljoin(dist_url, file_path)
                     local_z_path = os.path.join(dist_dir, file_path)
-
                     download_status = download_file(remote_url, local_z_path)
                     if download_status is not None:
                         file_path = file_path  # Update to the successful path
