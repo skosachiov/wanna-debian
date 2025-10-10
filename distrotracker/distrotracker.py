@@ -164,7 +164,7 @@ def find_versions(fin, filename, dist = None, arch = None, briefly = None, eleme
                 items.append(f'  {item_str}')
                 package_prev = p[index_key]
         if not package_prev:
-            logging.info(f"Package versions found do not meet the conditions: {package_name} ({operator} {required_version})")
+            logging.warning(f"Package versions found do not meet the conditions: {package_name} ({operator} {required_version})")
 
     print("[")
     print(',\n'.join(items))
@@ -412,7 +412,7 @@ def update_metadata(base_url, local_base_dir, dists, components, architectures):
                     logging.warning(f"Can not download: {urljoin(dist_url, file_path)[:-2]}[gz|xz])")
 
                 file_path = component + "/" + metadata_file
-                # Download .gz file
+                # Download file
                 remote_url = urljoin(dist_url, file_path)
                 local_z_path = os.path.join(dist_dir, file_path)
 
