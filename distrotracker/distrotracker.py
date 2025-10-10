@@ -391,12 +391,12 @@ def update_metadata(base_url, local_base_dir, dists, components, architectures):
                 file_path = component + "/" + metadata_file
                 download_status = None
                 for extension in ['.gz', '.xz']:
-                    remote_url = urljoin(dist_url, current_file_path)
-                    local_z_path = os.path.join(dist_dir, current_file_path)
+                    remote_url = urljoin(dist_url, file_path)
+                    local_z_path = os.path.join(dist_dir, file_path)
 
                     download_status = download_file(remote_url, local_z_path)
                     if download_status is not None:
-                        file_path = current_file_path  # Update to the successful path
+                        file_path = file_path  # Update to the successful path
                         break
 
                 # Process result
