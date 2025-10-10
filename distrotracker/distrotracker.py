@@ -225,7 +225,7 @@ def original_metadata_is_newer(base_url, local_base_dir):
                         # Update local modification time to match remote
                         os.utime(local_path, (remote_time, remote_time))
 
-                        extract_compressed_file(local_path, extract_path, remote_time)
+                        extract_compressed_file(local_path, local_path[:-3], remote_time)
 
                     else:
                         logging.info(f"Url is up to date: {url_path}")
@@ -247,7 +247,7 @@ def original_metadata_is_newer(base_url, local_base_dir):
                     remote_time = datetime.strptime(remote_time_str, '%a, %d %b %Y %H:%M:%S %Z').timestamp()
                     os.utime(local_path, (remote_time, remote_time))
 
-                extract_compressed_file(local_path, extract_path, remote_time)
+                extract_compressed_file(local_path, local_path[:-3], remote_time)
 
         except requests.RequestException as e:
             logging.warning(f"No processing {url}: {e}")
