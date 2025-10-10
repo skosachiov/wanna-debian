@@ -44,7 +44,7 @@ def update_metadata_index(filename, data_list, dist, comp, arch):
                     key, value = line.split(':', 1)
                     # Extract package name
                     if key == 'Package':
-                        if pkg_name != None:
+                        if pkg_name is not None:
                             logging.error(f'Duplicate stanza key: {key}: {value.strip()}')
                         pkg_name = value.strip()
                     # Build binary-to-source mapping for binary metadata if requested
@@ -62,9 +62,9 @@ def update_metadata_index(filename, data_list, dist, comp, arch):
                         for p in deps_pkgs:
                             depends.append(p)
             # Store package metadata if valid
-            if pkg_name != None:
-                if source == None: source = pkg_name
-                if source_version == None: source_version = version
+            if pkg_name is not None:
+                if source is None: source = pkg_name
+                if source_version is None: source_version = version
                 packages.append({ \
                     'package': pkg_name, 'version': version, 'dist': dist, 'comp': comp, 'arch': arch, \
                     'depends': hashlib.md5(",".join(depends).encode()).hexdigest()[:8], \
@@ -156,7 +156,6 @@ def find_versions(fin, filename, dist = None, arch = None, briefly = None, eleme
         package_prev = None
         for p in data_dict[package_name]:
             if check_version(p[version_key], operator, required_version):
-                version_found = True
                 item_str = json.dumps({k: v for k, v in p.items() if k in briefly_keys} if briefly else p)
                 if package_prev == p[index_key]:
                     if element == 'latest': items.pop()
