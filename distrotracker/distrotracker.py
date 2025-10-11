@@ -169,7 +169,7 @@ def find_versions(fin, filename, dist = None, arch = None, briefly = None, eleme
     print(',\n'.join(items))
     print("]")
 
-def original_metadata_is_newer(base_url, local_base_dir, session):
+def original_metadata_is_newer(base_url, local_base_dir):
     """
     Check if specific Debian metadata files are newer than local ones and update if needed.
     Builds local paths from URL structure.
@@ -205,7 +205,7 @@ def original_metadata_is_newer(base_url, local_base_dir, session):
                 local_mtime = os.path.getmtime(local_path)
 
                 # Get remote file headers to check last-modified
-                head_response = session.head(url)
+                head_response = requests.head(url)
                 head_response.raise_for_status()
 
                 if 'last-modified' in head_response.headers:
@@ -215,7 +215,7 @@ def original_metadata_is_newer(base_url, local_base_dir, session):
                     if remote_time > local_mtime:
                         logging.info(f"Updating (remote is newer): {url_path}")
                         # Download the updated file
-                        file_response = session.get(url)
+                        file_response = requests.get(url)
                         file_response.raise_for_status()
 
                         with open(local_path, 'wb') as f:
@@ -234,7 +234,7 @@ def original_metadata_is_newer(base_url, local_base_dir, session):
             else:
                 # File doesn't exist locally, download it
                 logging.info(f"Downloading new file: {url_path}")
-                file_response = session.get(url)
+                file_response = requests.get(url)
                 file_response.raise_for_status()
 
                 with open(local_path, 'wb') as f:
@@ -290,12 +290,12 @@ def should_download_file(local_path, remote_last_modified):
 
     return local_time < remote_time
 
-def download_file(url, local_path, session):
+def download_file(url, local_path):
     """Download a file if local version is older or doesn't exist"""
     logging.info(f"Trying to download: {url}")
     try:
         # Get file info first to check last-modified
-        head_response = session.head(url)
+        head_response = requests.head(url)
         head_response.raise_for_status()
 
         last_modified = head_response.headers.get('last-modified')
@@ -305,7 +305,7 @@ def download_file(url, local_path, session):
 
         if should_download_file(local_path, last_modified):
             logging.info(f"Downloading: {url}")
-            response = session.get(url)
+            response = requests.get(url)
             response.raise_for_status()
 
             # Create directory if it doesn't exist
@@ -352,7 +352,7 @@ def extract_compressed_file(compressed_path, extract_path, remote_time=None):
     logging.error(f"Unsupported file extension: {compressed_path}")
     return False
 
-def update_metadata(base_url, local_base_dir, dists, components, architectures, session):
+def update_metadata(base_url, local_base_dir, dists, components, architectures):
     """Main function to update Debian repository metadata"""
 
     try:
@@ -392,7 +392,7 @@ def update_metadata(base_url, local_base_dir, dists, components, architectures, 
                     file_path = component + "/" + metadata_file + extension
                     remote_url = urljoin(dist_url, file_path)
                     local_z_path = os.path.join(dist_dir, file_path)
-                    download_status = download_file(remote_url, local_z_path, session)
+                    download_status = download_file(remote_url, local_z_path)
                     if download_status is not None:
                         break
 
@@ -458,13 +458,12 @@ def main():
     logging.basicConfig(level=getattr(logging, args.log_level), format='%(asctime)s %(levelname)s %(message)s')
 
     apt_pkg.init()
-    session = requests.Session()
 
     if not args.hold:
-        if original_metadata_is_newer(args.base_url, args.local_dir, session) or args.force or \
+        if original_metadata_is_newer(args.base_url, args.local_dir) or args.force or \
                 not os.path.exists(os.path.join(args.local_dir, "status")):
             logging.info("Starting metadata update...")
-            update_metadata(args.base_url, args.local_dir, args.dist, args.comp, ['binary-amd64', 'source'], session)
+            update_metadata(args.base_url, args.local_dir, args.dist, args.comp, ['binary-amd64', 'source'])
             logging.info("Metadata update completed!")
     if args.find:
         find_versions(sys.stdin, args.local_dir + "/index.json", args.dist, args.arch, args.briefly, \
