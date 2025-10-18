@@ -443,6 +443,17 @@ def main():
 
     args = parser.parse_args()
 
+    if args.base_url:
+        try:
+            with open(args.local_dir + "/status", "r") as f:
+                saved_base_url = json.load(f)['base_url']
+                if args.base_url != saved_base_url:
+                    logging.error("New base url detected. Please remove metadata and repeat.")
+                    logging.error(f"Saved base_url: {saved_base_url}")
+                    logging.error(f"New base_url: {args.base_url}")
+                    return
+        except FileNotFoundError:
+            pass
     if not args.base_url:
         try:
             with open(args.local_dir + "/status", "r") as f:
