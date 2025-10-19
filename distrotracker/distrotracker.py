@@ -444,6 +444,8 @@ def main():
 
     args = parser.parse_args()
 
+    logging.basicConfig(level=getattr(logging, args.log_level), format='%(asctime)s %(levelname)s %(message)s')
+
     if args.base_url:
         try:
             with open(args.local_dir + "/status", "r") as f:
@@ -468,8 +470,6 @@ def main():
         args.base_url += "/"
     if not args.dist:
         args.dist = None
-
-    logging.basicConfig(level=getattr(logging, args.log_level), format='%(asctime)s %(levelname)s %(message)s')
 
     apt_pkg.init()
 
