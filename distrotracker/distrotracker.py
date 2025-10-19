@@ -427,7 +427,7 @@ def main():
     parser.add_argument("--base-url", help="Base URL for Debian metadata (example: https://ftp.debian.org/debian/)")
     parser.add_argument("--local-dir", default="./metadata", help="Local directory to store metadata files (default: %(default)s)")
     parser.add_argument("--dist", default=[], nargs='+', help="Distributions (default: all)")
-    parser.add_argument("--comp", default=['main'], nargs='+', help="Components main, contrib, non-free, non-free-firmware etc. (default: main)")
+    parser.add_argument("--comp", default=['main'], nargs='+', help="Components main, universe, contrib, non-free, non-free-firmware etc. (default: main)")
     parser.add_argument("--arch", default=['binary-amd64', 'source'], nargs='+', \
         help="Architectures binary-amd64, binary-arm64, source etc. (default: binary-amd64 source)")
     parser.add_argument("--latest", action="store_true", help="Show only one latest suitable version of a package")
