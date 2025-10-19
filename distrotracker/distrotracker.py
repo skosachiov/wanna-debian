@@ -178,6 +178,7 @@ def original_metadata_is_newer(base_url, local_base_dir):
     # Specific metadata files to check
     metadata_dirs = [
         # 'db/references.db',
+        'ls-lR.gz',
         'db/release.caches.db',
         'indices/files/arch-amd64.files',
         'indices/files/components/source.list.gz'
@@ -448,9 +449,9 @@ def main():
             with open(args.local_dir + "/status", "r") as f:
                 saved_base_url = json.load(f)['base_url']
                 if args.base_url != saved_base_url:
-                    logging.error("New base url detected. Please remove metadata and repeat.")
                     logging.error(f"Saved base_url: {saved_base_url}")
                     logging.error(f"New base_url: {args.base_url}")
+                    logging.error("New base url detected. Please remove metadata and repeat or use --local-dir option.")
                     return
         except FileNotFoundError:
             pass
