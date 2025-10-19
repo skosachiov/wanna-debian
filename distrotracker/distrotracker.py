@@ -418,7 +418,7 @@ def update_metadata(base_url, local_base_dir, dists, components, architectures):
     write_metadata_index(local_base_dir + "/index.json", data_list)
 
     with open(local_base_dir + "/status", "w") as f:
-        json.dump({'base_url': base_url, 'timestamp': str(time.time())}, f)
+        json.dump({'base_url': base_url, 'comp': components, 'timestamp': str(time.time())}, f)
 
 def main():
     """Main entry point"""
@@ -448,10 +448,11 @@ def main():
         try:
             with open(args.local_dir + "/status", "r") as f:
                 saved_base_url = json.load(f)['base_url']
-                if args.base_url != saved_base_url:
-                    logging.error(f"Saved base_url: {saved_base_url}")
-                    logging.error(f"New base_url: {args.base_url}")
-                    logging.error("New base url detected. Please remove metadata and repeat or use --local-dir option.")
+                saved_components = json.load(f)['comp']
+                if args.base_url != saved_base_url or args.comp != saved_components:
+                    logging.error(f"Saved base_url and components: {saved_base_url} {saved_components}")
+                    logging.error(f"New base_url and components: {args.base_url} {args.comp}")
+                    logging.error("New options detected. Please remove metadata and repeat or use new --local-dir.")
                     return
         except FileNotFoundError:
             pass
@@ -459,6 +460,7 @@ def main():
         try:
             with open(args.local_dir + "/status", "r") as f:
                 args.base_url = json.load(f)['base_url']
+                args.comp = json.load(f)['comp']
         except FileNotFoundError:
             logging.error("Status file missing, base url required")
             return
