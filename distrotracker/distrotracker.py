@@ -447,10 +447,9 @@ def main():
     if args.base_url:
         try:
             with open(args.local_dir + "/status", "r") as f:
-                saved_base_url = json.load(f)['base_url']
-                saved_components = json.load(f)['comp']
-                if args.base_url != saved_base_url or args.comp != saved_components:
-                    logging.error(f"Saved base_url and components: {saved_base_url} {saved_components}")
+                saved_status = json.load(f)
+                if args.base_url != saved_status['base_url'] or args.comp != saved_status['comp']:
+                    logging.error(f"Saved base_url and components: {saved_status['base_url']} {saved_status['comp']}")
                     logging.error(f"New base_url and components: {args.base_url} {args.comp}")
                     logging.error("New options detected. Please remove metadata and repeat or use new --local-dir.")
                     return
@@ -459,8 +458,9 @@ def main():
     if not args.base_url:
         try:
             with open(args.local_dir + "/status", "r") as f:
-                args.base_url = json.load(f)['base_url']
-                args.comp = json.load(f)['comp']
+                saved_status = json.load(f)
+                args.base_url = saved_status['base_url']
+                args.comp = saved_status['comp']
         except FileNotFoundError:
             logging.error("Status file missing, base url required")
             return
