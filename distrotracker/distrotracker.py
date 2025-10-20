@@ -445,10 +445,11 @@ def main():
     args = parser.parse_args()
 
     logging.basicConfig(level=getattr(logging, args.log_level), format='%(asctime)s %(levelname)s %(message)s')
+    status_file = args.local_dir + "/status"
 
     if args.base_url:
         try:
-            with open(args.local_dir + "/status", "r") as f:
+            with open(status_file, "r") as f:
                 saved_status = json.load(f)
                 if args.base_url != saved_status['base_url'] or args.comp != saved_status['comp']:
                     logging.error(f"Saved base_url and components: {saved_status['base_url']} {saved_status['comp']}")
@@ -458,11 +459,11 @@ def main():
         except FileNotFoundError:
             pass
         except Exception as e:
-            logging.error(f"Try deleting the file status: {e}")
+            logging.error(f"Try deleting the file status: {status_file}")
             return
     if not args.base_url:
         try:
-            with open(args.local_dir + "/status", "r") as f:
+            with open(status_file, "r") as f:
                 saved_status = json.load(f)
                 args.base_url = saved_status['base_url']
                 args.comp = saved_status['comp']
@@ -470,7 +471,7 @@ def main():
             logging.error("Status file missing, base url required")
             return
         except Exception as e:
-            logging.error(f"Try deleting the file status: {e}")
+            logging.error(f"Try deleting the file status: {status_file}")
             return
     if not args.base_url.endswith("/"):
         args.base_url += "/"
@@ -481,7 +482,7 @@ def main():
 
     if not args.hold:
         if original_metadata_is_newer(args.base_url, args.local_dir) or args.force or \
-                not os.path.exists(os.path.join(args.local_dir, "status")):
+                not os.path.exists(status_file):
             logging.info("Starting metadata update...")
             update_metadata(args.base_url, args.local_dir, args.dist, args.comp, ['binary-amd64', 'source'])
             logging.info("Metadata update completed!")
