@@ -6,6 +6,11 @@ Distribution package tracking and dependency resolution tool for Debian. `distro
 
 `distrotracker --base-url http://deb.debian.org/debian/`
 
+or
+
+`distrotracker --base-url http://ru.archive.ubuntu.com/ubuntu/ --local-dir metadata-ubuntu --comp main universe`
+
+
 ## search for the minimum version that satisfies dependencies
 
 `echo 'libpython3.13 (>= 3.13.0~rc3)' | distrotracker --find`

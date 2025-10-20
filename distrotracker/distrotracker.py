@@ -457,6 +457,9 @@ def main():
                     return
         except FileNotFoundError:
             pass
+        except Exception as e:
+            logging.error(f"Try deleting the file status: {e}")
+            return
     if not args.base_url:
         try:
             with open(args.local_dir + "/status", "r") as f:
