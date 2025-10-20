@@ -469,6 +469,9 @@ def main():
         except FileNotFoundError:
             logging.error("Status file missing, base url required")
             return
+        except Exception as e:
+            logging.error(f"Try deleting the file status: {e}")
+            return
     if not args.base_url.endswith("/"):
         args.base_url += "/"
     if not args.dist:
