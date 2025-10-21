@@ -29,9 +29,9 @@ librandomconv-ocaml-dev (>= 0.2)
 ```
 
 ```
-cat dose-unsat.list | distrotracker --find --arch binary-amd64
-cat dose-unsat.list | distrotracker --find --arch source
-cat dose-unsat.list | distrotracker --find --arch binary-amd64 binary-arm64 --dist trixie sid
+cat dose-unsat.list | distrotracker --find --build binary-amd64
+cat dose-unsat.list | distrotracker --find --build source
+cat dose-unsat.list | distrotracker --find --build binary-amd64 binary-arm64 --dist trixie sid
 ```
 
 or backport.list example:
