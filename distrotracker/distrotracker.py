@@ -119,7 +119,7 @@ def check_version(version, required_op, required_version):
     else:
         return False
 
-def find_versions(fin, filename, dist = None, build = None, arch = None, briefly = None, element = None, index_key = 'package'):
+def find_versions(fin, filename, dist = None, build = None, briefly = None, element = None, index_key = 'package'):
 
     version_key = "source_version" if index_key == "source" else "version"
 
@@ -131,7 +131,6 @@ def find_versions(fin, filename, dist = None, build = None, arch = None, briefly
         with open(filename, 'r', encoding='utf-8') as f:
             data_list = json.load(f)
         for e in data_list:
-            if arch and e['arch'] not in arch: continue
             if build and e['build'] not in build: continue
             if dist and e['dist'] not in dist: continue
             if e[index_key] not in data_dict:
@@ -145,7 +144,7 @@ def find_versions(fin, filename, dist = None, build = None, arch = None, briefly
     for key in data_dict:
         data_dict[key].sort(key=cmp_to_key(lambda a, b: apt_pkg.version_compare(a[version_key], b[version_key])))
 
-    briefly_keys = ['package', 'version', 'dist', 'build', 'arch', 'source']
+    briefly_keys = ['package', 'version', 'dist', 'build', 'source']
     items = []
     for line in fin:
         req = parse_requirement_line(line)
@@ -432,8 +431,6 @@ def main():
     parser.add_argument("--local-dir", default="./metadata", help="Local directory to store metadata files (default: %(default)s)")
     parser.add_argument("--dist", default=[], nargs='+', help="Distributions (default: all)")
     parser.add_argument("--comp", default=['main'], nargs='+', help="Components main, universe, contrib, non-free, non-free-firmware etc. (default: main)")
-    parser.add_argument("--arch", default=['amd64', 'all', 'any'], nargs='+', \
-        help="Architectures amd64, all, any etc. (default: amd64 all any)")
     parser.add_argument("--build", default=['binary-amd64', 'source'], nargs='+', \
         help="Build binary-amd64, binary-arm64, source etc. (default: binary-amd64 source)")
     parser.add_argument("--latest", action="store_true", help="Show only one latest suitable version of a package")
@@ -493,7 +490,7 @@ def main():
             update_metadata(args.base_url, args.local_dir, args.dist, args.comp, ['binary-amd64', 'source'])
             logging.info("Metadata update completed!")
     if args.find:
-        find_versions(sys.stdin, args.local_dir + "/index.json", args.dist, args.build, args.arch, args.briefly, \
+        find_versions(sys.stdin, args.local_dir + "/index.json", args.dist, args.build, args.briefly, \
             'latest' if args.latest else 'earliest' if args.earliest else None, \
             "package" if not args.source else "source")
 
