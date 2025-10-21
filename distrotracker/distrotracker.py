@@ -356,7 +356,7 @@ def extract_compressed_file(compressed_path, extract_path, remote_time=None):
     logging.error(f"Unsupported file extension: {compressed_path}")
     return False
 
-def update_metadata(base_url, local_base_dir, dists, components, Builds):
+def update_metadata(base_url, local_base_dir, dists, components, builds):
     """Main function to update Debian repository metadata"""
 
     try:
@@ -376,7 +376,7 @@ def update_metadata(base_url, local_base_dir, dists, components, Builds):
     # Files to download for each distribution
     data_list = []
     metadata_files = []
-    for build in Builds:
+    for build in builds:
         if build == "source":
             metadata_files.append(build + "/Sources")
         else:
