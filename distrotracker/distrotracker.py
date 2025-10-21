@@ -22,14 +22,14 @@ def write_metadata_index(filename, data_list):
     except IOError as e:
         logging.error(f"Error writing to file: {e}")
 
-def update_metadata_index(filename, data_list, dist, comp, arch):
+def update_metadata_index(filename, data_list, dist, comp, build):
     packages = data_list
     with open(filename, 'rt', encoding='utf-8') as f:
         content = f.read()
         # Split into individual package blocks
         package_blocks = re.split(r'\n\n+', content.strip())
         for block in package_blocks:
-            pkg_name = version = source = source_version = None
+            pkg_name = version = arch = source = source_version = None
             depends = []
             block_list = []
             for line in block.splitlines():
@@ -56,6 +56,9 @@ def update_metadata_index(filename, data_list, dist, comp, arch):
                    # Extract version
                     if key == 'Version':
                         version = value.strip()
+                   # Extract architecture
+                    if key == 'Architecture':
+                        arch = value.strip()
                     # Collect dependencies
                     if key in ('Build-Depends', 'Build-Depends-Indep', 'Build-Depends-Arch', 'Depends', 'Pre-Depends'):
                         deps_pkgs = [p.strip().split()[0].split(":")[0] for p in value.split(',') if p.strip()]
@@ -66,7 +69,7 @@ def update_metadata_index(filename, data_list, dist, comp, arch):
                 if source is None: source = pkg_name
                 if source_version is None: source_version = version
                 packages.append({ \
-                    'package': pkg_name, 'version': version, 'dist': dist, 'comp': comp, 'arch': arch, \
+                    'package': pkg_name, 'version': version, 'dist': dist, 'comp': comp, 'build': build, 'arch': arch, \
                     'depends': hashlib.md5(",".join(depends).encode()).hexdigest()[:8], \
                     'source': source, 'source_version': source_version})
     logging.debug(f'In the file {filename} processed packets: {len(packages)}')
@@ -116,7 +119,7 @@ def check_version(version, required_op, required_version):
     else:
         return False
 
-def find_versions(fin, filename, dist = None, arch = None, briefly = None, element = None, index_key = 'package'):
+def find_versions(fin, filename, dist = None, build = None, arch = None, briefly = None, element = None, index_key = 'package'):
 
     version_key = "source_version" if index_key == "source" else "version"
 
@@ -129,6 +132,7 @@ def find_versions(fin, filename, dist = None, arch = None, briefly = None, eleme
             data_list = json.load(f)
         for e in data_list:
             if arch and e['arch'] not in arch: continue
+            if build and e['build'] not in build: continue
             if dist and e['dist'] not in dist: continue
             if e[index_key] not in data_dict:
                 data_dict[e[index_key]] = [e]
@@ -141,7 +145,7 @@ def find_versions(fin, filename, dist = None, arch = None, briefly = None, eleme
     for key in data_dict:
         data_dict[key].sort(key=cmp_to_key(lambda a, b: apt_pkg.version_compare(a[version_key], b[version_key])))
 
-    briefly_keys = ['package', 'version', 'dist', 'arch', 'source']
+    briefly_keys = ['package', 'version', 'dist', 'build', 'arch', 'source']
     items = []
     for line in fin:
         req = parse_requirement_line(line)
@@ -353,7 +357,7 @@ def extract_compressed_file(compressed_path, extract_path, remote_time=None):
     logging.error(f"Unsupported file extension: {compressed_path}")
     return False
 
-def update_metadata(base_url, local_base_dir, dists, components, architectures):
+def update_metadata(base_url, local_base_dir, dists, components, Builds):
     """Main function to update Debian repository metadata"""
 
     try:
@@ -373,11 +377,11 @@ def update_metadata(base_url, local_base_dir, dists, components, architectures):
     # Files to download for each distribution
     data_list = []
     metadata_files = []
-    for arch in architectures:
-        if arch == "source":
-            metadata_files.append(arch + "/Sources")
+    for build in Builds:
+        if build == "source":
+            metadata_files.append(build + "/Sources")
         else:
-            metadata_files.append(arch + "/Packages")
+            metadata_files.append(build + "/Packages")
 
     for dist in distributions:
         if dists and dist not in dists:
@@ -428,8 +432,10 @@ def main():
     parser.add_argument("--local-dir", default="./metadata", help="Local directory to store metadata files (default: %(default)s)")
     parser.add_argument("--dist", default=[], nargs='+', help="Distributions (default: all)")
     parser.add_argument("--comp", default=['main'], nargs='+', help="Components main, universe, contrib, non-free, non-free-firmware etc. (default: main)")
-    parser.add_argument("--arch", default=['binary-amd64', 'source'], nargs='+', \
-        help="Architectures binary-amd64, binary-arm64, source etc. (default: binary-amd64 source)")
+    parser.add_argument("--arch", default=['amd64', 'all', 'any'], nargs='+', \
+        help="Architectures amd64, all, any etc. (default: amd64 all any)")
+    parser.add_argument("--build", default=['binary-amd64', 'source'], nargs='+', \
+        help="Build binary-amd64, binary-arm64, source etc. (default: binary-amd64 source)")
     parser.add_argument("--latest", action="store_true", help="Show only one latest suitable version of a package")
     parser.add_argument("--earliest", action="store_true", help="Show only one earliest suitable version")
     parser.add_argument("--force", action="store_true", help="Force update even if remote files are older")
@@ -487,7 +493,7 @@ def main():
             update_metadata(args.base_url, args.local_dir, args.dist, args.comp, ['binary-amd64', 'source'])
             logging.info("Metadata update completed!")
     if args.find:
-        find_versions(sys.stdin, args.local_dir + "/index.json", args.dist, args.arch, args.briefly, \
+        find_versions(sys.stdin, args.local_dir + "/index.json", args.dist, args.build, args.arch, args.briefly, \
             'latest' if args.latest else 'earliest' if args.earliest else None, \
             "package" if not args.source else "source")
 
