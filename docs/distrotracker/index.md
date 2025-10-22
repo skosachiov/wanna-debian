@@ -50,7 +50,7 @@ echo 'libpython3.13' | distrotracker --find | jq -c -r '.[] | "Package: \(.packa
 ## find packages with only one of the two architectures built
 
 ```
-export DIST="rc-buggy"; cat metadata/index.json | jq -c -r '.[] | select(.dist == env.DIST and .build == "binary-amd64") | "\(.source) (= \(.source_version))"' | sort -u | distrotracker --find --hold --source --dist $DIST | jq -c -r '.[] | select(.dist == env.DIST and .build == "source" and .arch != "any" and .arch != "all" and .arch != "linux-any") | "\(.source) (= \(.source_version))"' | distrotracker --find --hold --source --dist $DIST --build binary-amd64 | jq -c -r '.[] | select(.dist == env.DIST) | "\(.source) \(.arch)"' | sort -u | cut -f 1 -d ' ' | uniq -c | sort -r
+export DIST="rc-buggy"; cat metadata/index.json | jq -c -r '.[] | select(.dist == env.DIST and .build == "binary-amd64") | "\(.source) (= \(.source_version))"' | sort -u | distrotracker --find --hold --source --dist $DIST | jq -c -r '.[] | select(.dist == env.DIST and .build == "source") | select(.arch | contains("all") and (contains("any") or contains("amd64"))) | "\(.source) (= \(.source_version))"' | distrotracker --find --hold --source --dist $DIST --build binary-amd64 | jq -c -r '.[] | select(.dist == env.DIST) | "\(.source) \(.arch)"' | sort -u | cut -f 1 -d ' ' | uniq -c | sort -r
 ```
 
 ## simple search with grep-dctrl
