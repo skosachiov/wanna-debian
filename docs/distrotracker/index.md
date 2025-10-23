@@ -53,6 +53,17 @@ echo 'libpython3.13' | distrotracker --find | jq -c -r '.[] | "Package: \(.packa
 export DIST="rc-buggy"; cat metadata/index.json | jq -c -r '.[] | select(.dist == env.DIST and .build == "binary-amd64") | "\(.source) (= \(.source_version))"' | sort -u | distrotracker --find --hold --source --dist $DIST | jq -c -r '.[] | select(.dist == env.DIST and .build == "source") | select(.arch | contains("all") and (contains("any") or contains("linux-any") or contains("amd64"))) | "\(.source) (= \(.source_version))"' | distrotracker --find --hold --source --dist $DIST --build binary-amd64 | jq -c -r '.[] | select(.dist == env.DIST) | "\(.source) \(.arch)"' | sort -u | cut -f 1 -d ' ' | uniq -c | sort -r
 ```
 
+## j2 transformation
+
+file convert.j2:
+```
+{% for item in input_list %}
+EXAMPLE,{{ item.source }}={{ item.source_version}},{{ item.filename }},{{ item.dist }},EXAMPLE
+{%- endfor %}
+```
+
+`echo vim | distrotracker --find --hold | jq ''{"input_list": .} | j2 -f json convert.j2 -`
+
 ## simple search with grep-dctrl
 
 ```
