@@ -22,14 +22,14 @@ def write_metadata_index(filename, data_list):
     except IOError as e:
         logging.error(f"Error writing to file: {e}")
 
-def update_metadata_index(filename, data_list, dist, comp, build):
+def update_metadata_index(packagefile, data_list, dist, comp, build):
     packages = data_list
-    with open(filename, 'rt', encoding='utf-8') as f:
+    with open(packagefile, 'rt', encoding='utf-8') as f:
         content = f.read()
         # Split into individual package blocks
         package_blocks = re.split(r'\n\n+', content.strip())
         for block in package_blocks:
-            pkg_name = version = arch = source = source_version = None
+            pkg_name = version = arch = filename = source = source_version = None
             depends = []
             block_list = []
             for line in block.splitlines():
@@ -59,6 +59,9 @@ def update_metadata_index(filename, data_list, dist, comp, build):
                    # Extract architecture
                     if key == 'Architecture':
                         arch = value.strip()
+                   # Extract filename
+                    if key == 'Filename':
+                        filename = value.strip()
                     # Collect dependencies
                     if key in ('Build-Depends', 'Build-Depends-Indep', 'Build-Depends-Arch', 'Depends', 'Pre-Depends'):
                         deps_pkgs = [p.strip().split()[0].split(":")[0] for p in value.split(',') if p.strip()]
@@ -71,8 +74,8 @@ def update_metadata_index(filename, data_list, dist, comp, build):
                 packages.append({ \
                     'package': pkg_name, 'version': version, 'dist': dist, 'comp': comp, 'build': build, 'arch': arch, \
                     'depends': hashlib.md5(",".join(depends).encode()).hexdigest()[:8], \
-                    'source': source, 'source_version': source_version})
-    logging.debug(f'In the file {filename} processed packets: {len(packages)}')
+                    'source': source, 'source_version': source_version, 'filename': filename})
+    logging.debug(f'In the file {packagefile} processed packets: {len(packages)}')
     return packages
 
 def parse_requirement_line(line):
