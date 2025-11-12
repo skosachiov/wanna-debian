@@ -41,6 +41,7 @@ Repository = "https://github.com/skosachiov/wanna-debian"
 backport = "predose.backport:main"
 pre-dose = "predose.predose:main"
 distrotracker = "distrotracker.distrotracker:main"
+simplebuilder = "simplebuilder.simplebuilder:main"
 
 [tool.setuptools]
 include-package-data = true

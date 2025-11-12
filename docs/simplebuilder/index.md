@@ -1,13 +1,20 @@
 # Build from a single .dsc file
-echo "https://example.com/package.dsc" | python3 build-packages.py
+echo "https://example.com/package.dsc" | python3 simplebuilder.py
 
 # Build from a Git repository
-echo "https://github.com/user/repo.git" | python3 build-packages.py
+echo "https://github.com/user/repo.git" | python3 simplebuilder.py
 
 # Build from multiple sources
-echo -e "https://github.com/user/repo.git\nhttps://example.com/package.dsc" | python3 build-packages.py
+https://github.com/user/repo.git # comment
+https://example.com/pkg-1.2.3.dsc
+https://example.com/chromium-140.dsc # rebuild with b1
+https://example.com/package.deb # no reprepro before copy
+file:///home/user/abc-1.2.3.deb #
+file:///home/user/package-1.2.3.deb
+https://example.com/package.dsc
 
+# Docker run
 docker run -it --rm \
   -v $(pwd)/repository:/workspace/repository \
   debian-pkg-builder \
-  bash -c "cat urls.txt | python3 build-packages.py"
+  bash -c "cat urls.txt | python3 simplebuilder.py"
