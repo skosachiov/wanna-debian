@@ -1,8 +1,8 @@
 # Build from a single .dsc file
-`echo "https://example.com/package.dsc" | python3 simplebuilder.py`
+`echo "https://example.com/package.dsc" | simplebuilder`
 
 # Build from a Git repository
-`echo "https://github.com/user/repo.git" | python3 simplebuilder.py`
+`echo "https://github.com/user/repo.git" | simplebuilder`
 
 # Build from multiple sources
 ```
