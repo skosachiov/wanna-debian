@@ -64,6 +64,15 @@ EXAMPLE,{{ item.source }}={{ item.source_version}},{{ item.filename }},{{ item.d
 
 `echo vim | distrotracker --find --hold | jq ''{"input_list": .} | j2 -f json convert.j2 -`
 
+file groupby.j2:
+```
+{% for dist, items in input_list|groupby('dist') %}
+EXAMPLE,{{ dist }}, {% for item in items %} {{item.source}}={{item.source_version}} {%- endfor %}
+{%- endfor %}
+```
+
+`echo vim | distrotracker --find --hold | jq ''{"input_list": .} | j2 -f json groupby.j2 -`
+
 ## simple search with grep-dctrl
 
 ```
