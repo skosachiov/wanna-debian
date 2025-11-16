@@ -6,13 +6,15 @@
 
 # Build from multiple sources
 ```
-https://github.com/user/repo.git # comment
-https://example.com/pkg-1.2.3.dsc
-https://example.com/chromium-140.dsc # rebuild with b1
-https://example.com/package.deb # no reprepro before copy
-file:///home/user/abc-1.2.3.deb #
-file:///home/user/package-1.2.3.deb
-https://example.com/package.dsc
+http://deb.debian.org/debian/pool/main/h/hello/hello_2.10-5.dsc
+https://salsa.debian.org/debian/curl.git
+https://deb.debian.org/debian/pool/main/a/acct/acct_6.6.4-10.dsc
+https://deb.debian.org/debian/pool/main/h/hello/hello_2.10-3.dsc
+https://deb.debian.org/debian/pool/main/j/jq/jq_1.8.1-4.dsc
+http://ftp.debian.org/debian/pool/main/p/pcre2/libpcre2-8-0_10.46-1_amd64.deb
+http://ftp.debian.org/debian/pool/main/libs/libsepol/libsepol2_3.9-2_amd64.deb
+http://deb.debian.org/debian/pool/main/libs/libselinux/libselinux_3.9-2.dsc
+https://deb.debian.org/debian/pool/main/h/hello-traditional/hello-traditional_2.10-6.dsc
 ```
 
 # Docker run
