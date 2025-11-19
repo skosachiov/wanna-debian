@@ -67,9 +67,7 @@ def update_metadata_index(packagefile, data_list, dist, comp, build):
                         directory = value.strip()
                     # Collect dependencies
                     if key in ('Build-Depends', 'Build-Depends-Indep', 'Build-Depends-Arch', 'Depends', 'Pre-Depends'):
-                        deps_pkgs = [p.strip().split()[0].split(":")[0] for p in value.split(',') if p.strip()]
-                        for p in deps_pkgs:
-                            depends.append(p)
+                        depends.append(value)
             # Store package metadata if valid
             if pkg_name is not None:
                 if source is None: source = pkg_name
