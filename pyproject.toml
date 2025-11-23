@@ -49,6 +49,7 @@ packages = [
     "predose",
     "distrotracker",
     "toposort",
+    "simplebuilder",
 ]
 
 [tool.setuptools.package-data]
