@@ -107,13 +107,13 @@ def copy_built_packages(source_dir, repo_dir):
 
     return copied
 
-def parse_input_line(line):
-    """Parse input line and return (url, comment, action_type)."""
+def process_line(line, args):
+    """Process a single input line."""
     line = line.strip()
     if not line or line.startswith('#'):
-        return None, None, None
+        return True  # Skip empty lines
 
-    # Remove comments
+    # Extract URL and comment
     if '#' in line:
         url_part, comment = line.split('#', 1)
         url_part = url_part.strip()
@@ -123,33 +123,10 @@ def parse_input_line(line):
         comment = ""
 
     if not url_part:
-        return None, None, None
+        return True  # Skip lines with only comments
 
-    # Determine action type based on URL and comments
-    if url_part.endswith('.git'):
-        return url_part, comment, 1
-    elif url_part.endswith('.dsc'):
-        if 'rebuild' in comment.lower():
-            return url_part, comment, 3
-        else:
-            return url_part, comment, 2
-    elif url_part.endswith('.deb'):
-        if url_part.startswith('file://'):
-            return url_part, comment, 4
-        else:
-            return url_part, comment, 5
-    else:
-        logging.warning(f"Unknown file type: {url_part}")
-        return url_part, comment, None
-
-def process_line(line, args):
-    """Process a single input line."""
-    url, comment, action_type = parse_input_line(line)
-
-    if not url:
-        return True  # Skip empty lines
-
-    logging.info(f"Processing: {url} (action: {action_type}, comment: '{comment}')")
+    url = url_part
+    logging.info(f"Processing: {url} (comment: '{comment}')")
 
     # Ensure directories exist
     os.makedirs(args.build, exist_ok=True)
@@ -158,31 +135,36 @@ def process_line(line, args):
     success = False
 
     try:
-        if action_type == 1:
-            # Clone and build with gbp-buildpackage
+        if url.endswith('.git'):
+            # Git repository - clone and build with gbp-buildpackage
             success = clone_and_build_gbp(url, args.build, args.repository)
             if success:
                 success = scan_packages(args.repository)
 
-        elif action_type == 2:
-            # Download and build with dpkg-buildpackage
-            success = download_and_build_dpkg(url, args.build, args.repository, rebuild=False)
+        elif url.endswith('.dsc'):
+            # Source package
+            if 'rebuild' in comment.lower():
+                # Rebuild with version bump
+                success = download_and_build_dpkg(url, args.build, args.repository, rebuild=True)
+            else:
+                # Normal build
+                success = download_and_build_dpkg(url, args.build, args.repository, rebuild=False)
+
             if success:
                 success = scan_packages(args.repository)
 
-        elif action_type == 3:
-            # Rebuild with dpkg-buildpackage (with b1 version bump)
-            success = download_and_build_dpkg(url, args.build, args.repository, rebuild=True)
-            if success:
-                success = scan_packages(args.repository)
-
-        elif action_type == 4 or action_type == 5:
-            # Just copy to local repo
-            success = copy_to_repo(url, args.repository)
+        elif url.endswith('.deb'):
+            # Binary package - copy to repository
+            if url.startswith('file://'):
+                # Local file copy
+                success = copy_to_repo(url, args.repository)
+            else:
+                # Remote file download and copy
+                success = copy_to_repo(url, args.repository)
             # No package scanning for copy operations as per requirements
 
         else:
-            logging.error(f"Unknown action type for: {url}")
+            logging.warning(f"Unknown file type: {url}")
             return False
 
         if success:
