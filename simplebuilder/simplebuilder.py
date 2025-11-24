@@ -190,7 +190,7 @@ def add_local_repo_sources(repo_path):
     """Add local repository to apt sources using pure Python"""
     repo_entry = f"deb [trusted=yes] file://{os.path.abspath(repo_path)} ./"
     sources_file = "/etc/apt/sources.list.d/simplebuilder.list"
-    with open(sources_file, 'a') as f:
+    with open(sources_file, 'w') as f:
         f.write(repo_entry + '\n')
         logging.info("Successfully added local repository to sources")
 
