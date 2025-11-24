@@ -103,9 +103,6 @@ def copy_to_repo(file_url, repo_dir):
     """Copy file to repository using wget for URLs."""
     logging.info(f"Copying to repository: {file_url}")
 
-    # Ensure repo directory exists
-    os.makedirs(repo_dir, exist_ok=True)
-
     if file_url.startswith(('http://', 'https://')):
         # Use wget for HTTP/HTTPS URLs
         try:
@@ -120,13 +117,8 @@ def copy_to_repo(file_url, repo_dir):
         except subprocess.CalledProcessError as e:
             logging.error(f"Failed to download {file_url}: {e}")
             return False
-    else:
-        # Handle local files and file:// URLs
-        if file_url.startswith('file://'):
-            local_path = file_url[7:]
-        else:
-            local_path = file_url
-
+    elif file_url.startswith('file://'):
+        local_path = file_url[7:]
         if os.path.exists(local_path):
             shutil.copy2(local_path, repo_dir)
             logging.info(f"Successfully copied: {local_path}")
@@ -197,13 +189,7 @@ def process_line(line, args):
 
         elif url.endswith('.deb'):
             # Binary package - copy to repository
-            if url.startswith('file://'):
-                # Local file copy
-                success = copy_to_repo(url, args.repository)
-            else:
-                # Remote file download and copy
-                success = copy_to_repo(url, args.repository)
-            # No package scanning for copy operations as per requirements
+            success = copy_to_repo(url, args.repository)
 
         else:
             logging.warning(f"Unknown file type: {url}")
