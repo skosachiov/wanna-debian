@@ -32,10 +32,9 @@ def scan_packages(repo_path):
         logging.info(f"Repository folder is empty {repo_path}")
         return
     logging.info(f"Scanning packages in {repo_path}")
-    cmd = f"dpkg-scanpackages . > Packages"
-    return run_command(cmd, cwd=repo_path)
-    cmd = f"gzip -c Packages > Packages.gz"
-    return run_command(cmd, cwd=repo_path)
+    run_command("dpkg-scanpackages . > Packages", cwd=repo_path)
+    run_command("dpkg-scansources . > Sources", cwd=repo_path)
+
 
 def update_packages(filtering_pkgs=None):
     logging.info("Update packages")
@@ -223,7 +222,10 @@ def process_line(line, args):
 
 def add_local_repo_sources(repo_path):
     """Add local repository to apt sources using pure Python"""
-    repo_entry = f"deb [trusted=yes] file://{os.path.abspath(repo_path)} ./"
+    repo_entry = f'''
+        deb [trusted=yes] file://{os.path.abspath(repo_path)} ./
+        deb-src [trusted=yes] file://{os.path.abspath(repo_path)} ./
+    '''
     sources_file = "/etc/apt/sources.list.d/simplebuilder.list"
     with open(sources_file, 'w') as f:
         f.write(repo_entry + '\n')
