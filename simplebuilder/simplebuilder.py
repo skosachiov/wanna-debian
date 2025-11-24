@@ -31,6 +31,8 @@ def scan_packages(repo_path):
     logging.info(f"Scanning packages in {repo_path}")
     cmd = f"dpkg-scanpackages . > Packages"
     return run_command(cmd, cwd=repo_path)
+    cmd = f"gzip -c Packages > Packages.gz"
+    return run_command(cmd, cwd=repo_path)
 
 def update_packages(filtering_pkgs=None):
     logging.info("Update packages")
