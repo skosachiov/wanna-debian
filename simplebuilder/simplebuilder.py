@@ -117,8 +117,8 @@ def copy_to_repo(file_url, repo_dir):
         except subprocess.CalledProcessError as e:
             logging.error(f"Failed to download {file_url}: {e}")
             return False
-    elif file_url.startswith('file://'):
-        local_path = file_url[7:]
+    else:
+        local_path = file_url[7:] if file_url.startswith('file://') else file_url
         if os.path.exists(local_path):
             shutil.copy2(local_path, repo_dir)
             logging.info(f"Successfully copied: {local_path}")
