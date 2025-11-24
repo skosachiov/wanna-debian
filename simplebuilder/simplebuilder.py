@@ -34,9 +34,6 @@ def scan_packages(repo_path):
     logging.info(f"Scanning packages in {repo_path}")
     run_command("dpkg-scanpackages . > Packages", cwd=repo_path)
     run_command("dpkg-scansources . > Sources", cwd=repo_path)
-
-
-def update_packages(filtering_pkgs=None):
     logging.info("Update packages")
     env = os.environ.copy()
     env['DEBIAN_FRONTEND'] = 'noninteractive'
@@ -46,8 +43,6 @@ def update_packages(filtering_pkgs=None):
 
 def clone_and_build_gbp(repo_url, build_dir, repo_dir):
     """Clone and build with gbp-buildpackage."""
-    update_packages()
-
     logging.info(f"Cloning and building with gbp-buildpackage: {repo_url}")
 
     # Extract repo name from URL
@@ -68,8 +63,6 @@ def clone_and_build_gbp(repo_url, build_dir, repo_dir):
 
 def download_and_build_dpkg(url, build_dir, repo_dir, rebuild=False):
     """Download and build with dpkg-buildpackage."""
-    update_packages()
-
     logging.info(f"Downloading and building: {url}")
 
     with tempfile.TemporaryDirectory(dir=build_dir) as temp_dir:
@@ -94,10 +87,6 @@ def download_and_build_dpkg(url, build_dir, repo_dir, rebuild=False):
                 break
 
     return False
-
-
-import subprocess
-import os
 
 def copy_to_repo(file_url, repo_dir):
     """Copy file to repository using wget for URLs."""
