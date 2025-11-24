@@ -192,14 +192,14 @@ def add_local_repo_sources(repo_path):
     sources_file = "/etc/apt/sources.list.d/simplebuilder.list"
     with open(sources_file, 'a') as f:
         f.write(repo_entry + '\n')
-        logger.info("Successfully added local repository to sources")
+        logging.info("Successfully added local repository to sources")
 
 def remove_local_repo_sources():
     """Remove local repository from apt sources"""
     sources_file = "/etc/apt/sources.list.d/simplebuilder.list"
     if os.path.exists(sources_file):
         os.remove(sources_file)
-        logger.info("Successfully removed local repository from sources")
+        logging.info("Successfully removed local repository from sources")
 
 def main():
     """Main function."""
