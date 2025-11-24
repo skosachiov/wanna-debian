@@ -32,8 +32,14 @@ def scan_packages(repo_path):
     cmd = f"dpkg-scanpackages . > Packages"
     return run_command(cmd, cwd=repo_path)
 
+def update_packages(filtering_pkgs=None):
+    logging.info("Update packages")
+    run_command("apt update && apt upgrade")
+
 def clone_and_build_gbp(repo_url, build_dir, repo_dir):
     """Clone and build with gbp-buildpackage."""
+    update_packages()
+
     logging.info(f"Cloning and building with gbp-buildpackage: {repo_url}")
 
     # Extract repo name from URL
@@ -45,13 +51,15 @@ def clone_and_build_gbp(repo_url, build_dir, repo_dir):
         return False
 
     # Build with gbp-buildpackage
-    if run_command("gbp buildpackage -uc -us --no-pristine-tar", cwd=clone_dir):
+    if run_command("gbp buildpackage -uc -us --git-no-pristine-tar", cwd=clone_dir):
         # Copy built packages to repository
         return copy_built_packages(clone_dir, repo_dir)
     return False
 
 def download_and_build_dpkg(url, build_dir, repo_dir, rebuild=False):
     """Download and build with dpkg-buildpackage."""
+    update_packages()
+
     logging.info(f"Downloading and building: {url}")
 
     with tempfile.TemporaryDirectory(dir=build_dir) as temp_dir:
@@ -178,12 +186,28 @@ def process_line(line, args):
         logging.error(f"Error processing {url}: {e}")
         return False
 
+def add_local_repo_sources(repo_path):
+    """Add local repository to apt sources using pure Python"""
+    repo_entry = f"deb [trusted=yes] file:{repo_path} ./"
+    sources_file = "/etc/apt/sources.list.d/simplebuilder.list"
+    with open(sources_file, 'a') as f:
+        f.write(repo_entry + '\n')
+        logger.info("Successfully added local repository to sources")
+
+def remove_local_repo_sources():
+    """Remove local repository from apt sources"""
+    sources_file = "/etc/apt/sources.list.d/simplebuilder.list"
+    if os.path.exists(sources_file):
+        os.remove(sources_file)
+        logger.info("Successfully removed local repository from sources")
+
 def main():
     """Main function."""
     parser = argparse.ArgumentParser(description="Simple debbuild system with stdin job flow")
     parser.add_argument("--workspace", default="./workspace", help="Local workspace (default: %(default)s)")
     parser.add_argument("--repository", default="./workspace/repository", help="Local repository (default: %(default)s)")
     parser.add_argument("--build", default="./workspace/build", help="Local build folder (default: %(default)s)")
+    parser.add_argument("--filtering-pkgs", type=str, metavar='PATH', help="File containing a list of filtering packets for the apt manager")
     parser.add_argument("--log-level", default='INFO', choices=['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'], \
         help='Set the logging level (default: %(default)s)')
 
@@ -195,6 +219,8 @@ def main():
     os.makedirs(args.workspace, exist_ok=True)
     os.makedirs(args.repository, exist_ok=True)
     os.makedirs(args.build, exist_ok=True)
+
+    add_local_repo_sources(args.repository)
 
     logging.info(f"Starting build process. Workspace: {args.workspace}, Repository: {args.repository}")
 
@@ -215,6 +241,8 @@ def main():
             fail_count += 1
 
     logging.info(f"Build process completed. Success: {success_count}, Failed: {fail_count}")
+
+    remove_local_repo_sources()
 
     if fail_count > 0:
         sys.exit(1)
