@@ -28,6 +28,9 @@ def run_command(cmd, cwd=None, env=None):
 
 def scan_packages(repo_path):
     """Run dpkg-scanpackages to update local repository."""
+    if len(os.listdir(repo_path)) == 0:
+        logging.info(f"Repository folder is empty {repo_path}")
+        return
     logging.info(f"Scanning packages in {repo_path}")
     cmd = f"dpkg-scanpackages . > Packages"
     return run_command(cmd, cwd=repo_path)
@@ -93,21 +96,45 @@ def download_and_build_dpkg(url, build_dir, repo_dir, rebuild=False):
 
     return False
 
+
+import subprocess
+import os
+
 def copy_to_repo(file_url, repo_dir):
-    """Copy file to local repository."""
-    logging.info(f"Copying file to repository: {file_url}")
+    """Copy file to repository using wget for URLs."""
+    logging.info(f"Copying to repository: {file_url}")
 
-    if file_url.startswith('file://'):
-        local_path = file_url[7:]  # Remove file:// prefix
-    else:
-        local_path = file_url
+    # Ensure repo directory exists
+    os.makedirs(repo_dir, exist_ok=True)
 
-    if os.path.exists(local_path):
-        shutil.copy2(local_path, repo_dir)
-        return True
+    if file_url.startswith(('http://', 'https://')):
+        # Use wget for HTTP/HTTPS URLs
+        try:
+            result = subprocess.run(
+                ['wget', '-q', '-P', repo_dir, file_url],
+                capture_output=True,
+                text=True,
+                check=True
+            )
+            logging.info(f"Successfully downloaded: {file_url}")
+            return True
+        except subprocess.CalledProcessError as e:
+            logging.error(f"Failed to download {file_url}: {e}")
+            return False
     else:
-        logging.error(f"File not found: {local_path}")
-        return False
+        # Handle local files and file:// URLs
+        if file_url.startswith('file://'):
+            local_path = file_url[7:]
+        else:
+            local_path = file_url
+
+        if os.path.exists(local_path):
+            shutil.copy2(local_path, repo_dir)
+            logging.info(f"Successfully copied: {local_path}")
+            return True
+        else:
+            logging.error(f"File not found: {local_path}")
+            return False
 
 def copy_built_packages(source_dir, repo_dir):
     """Copy all .deb files from source directory to repository."""
