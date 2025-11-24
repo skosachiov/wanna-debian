@@ -45,7 +45,7 @@ def clone_and_build_gbp(repo_url, build_dir, repo_dir):
         return False
 
     # Build with gbp-buildpackage
-    if run_command("gbp buildpackage -uc -us", cwd=clone_dir):
+    if run_command("gbp buildpackage -uc -us --no-pristine-tar", cwd=clone_dir):
         # Copy built packages to repository
         return copy_built_packages(clone_dir, repo_dir)
     return False
