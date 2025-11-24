@@ -210,9 +210,9 @@ def remove_local_repo_sources():
 def main():
     """Main function."""
     parser = argparse.ArgumentParser(description="Simple debbuild system with stdin job flow")
-    parser.add_argument("--workspace", default="./workspace", help="Local workspace (default: %(default)s)")
-    parser.add_argument("--repository", default="./workspace/repository", help="Local repository (default: %(default)s)")
-    parser.add_argument("--build", default="./workspace/build", help="Local build folder (default: %(default)s)")
+    parser.add_argument("--workspace", default="/tmp/workspace", help="Local workspace (default: %(default)s)")
+    parser.add_argument("--repository", default="/tmp/workspace/repository", help="Local repository (default: %(default)s)")
+    parser.add_argument("--build", default="/tmp/workspace/build", help="Local build folder (default: %(default)s)")
     parser.add_argument("--filtering-pkgs", type=str, metavar='PATH', help="File containing a list of filtering packets for the apt manager")
     parser.add_argument("--log-level", default='INFO', choices=['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'], \
         help='Set the logging level (default: %(default)s)')
