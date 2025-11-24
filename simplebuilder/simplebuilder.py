@@ -36,7 +36,11 @@ def scan_packages(repo_path):
 
 def update_packages(filtering_pkgs=None):
     logging.info("Update packages")
-    run_command("apt update && apt upgrade")
+    env = os.environ.copy()
+    env['DEBIAN_FRONTEND'] = 'noninteractive'
+    env['NEEDRESTART_MODE'] = 'a'  # Auto restart mode
+    env['DEBCONF_NOWARNINGS'] = 'yes'
+    run_command("apt-get update && apt-get -o Dpkg::Options::=--force-confold -o Dpkg::Options::=--force-confdef -y upgrade", env=env)
 
 def clone_and_build_gbp(repo_url, build_dir, repo_dir):
     """Clone and build with gbp-buildpackage."""
