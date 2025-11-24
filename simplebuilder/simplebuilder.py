@@ -56,8 +56,10 @@ def clone_and_build_gbp(repo_url, build_dir, repo_dir):
     if not run_command(f"git clone {repo_url} {repo_name}", cwd=build_dir):
         return False
 
+    run_command("yes | mk-build-deps -i -r debian/control", cwd=build_dir):
+
     # Build with gbp-buildpackage
-    if run_command("gbp buildpackage -uc -us --git-no-pristine-tar", cwd=clone_dir):
+    if run_command("gbp buildpackage -uc -us --git-no-pristine-tar --git-ignore-new", cwd=clone_dir):
         # Copy built packages to repository
         return copy_built_packages(clone_dir, repo_dir)
     return False

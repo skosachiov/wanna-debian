@@ -7,7 +7,7 @@
 # Build from multiple sources
 ```
 http://deb.debian.org/debian/pool/main/h/hello/hello_2.10-5.dsc
-https://salsa.debian.org/debian/curl.git
+https://salsa.debian.org/debian/runit.git
 https://deb.debian.org/debian/pool/main/a/acct/acct_6.6.4-10.dsc
 https://deb.debian.org/debian/pool/main/h/hello/hello_2.10-3.dsc
 https://deb.debian.org/debian/pool/main/j/jq/jq_1.8.1-4.dsc
