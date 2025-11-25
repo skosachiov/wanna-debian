@@ -35,6 +35,9 @@ def scan_packages(repo_path):
     logging.info(f"Scanning packages in {repo_path}")
     run_command("dpkg-scanpackages . > Packages", cwd=repo_path)
     run_command("dpkg-scansources . > Sources", cwd=repo_path)
+    update_packages()
+
+def update_packages():
     logging.info("Update packages")
     env = os.environ.copy()
     env['DEBIAN_FRONTEND'] = 'noninteractive'
@@ -265,6 +268,7 @@ def main():
     os.makedirs(args.build, exist_ok=True)
 
     deb_src_apt_sources()
+    update_packages()
     add_local_repo_sources(args.repository)
 
     logging.info(f"Starting build process. Workspace: {args.workspace}, Repository: {args.repository}")
