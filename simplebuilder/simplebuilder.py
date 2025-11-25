@@ -195,6 +195,36 @@ def process_line(line, args):
         logging.error(f"Error processing {url}: {e}")
         return False
 
+def deb_src_apt_sources():
+    # Path to the sources.list.d directory
+    sources_dir = '/etc/apt/sources.list.d/'
+
+    # Find all files in the directory
+    pattern = os.path.join(sources_dir, '*')
+    files = glob.glob(pattern)
+
+    for file_path in files:
+        # Skip directories, only process files
+        if os.path.isfile(file_path):
+            try:
+                # Read the file content
+                with open(file_path, 'r') as f:
+                    content = f.read()
+
+                # Replace 'Types: deb' with 'Types: deb deb-src'
+                updated_content = content.replace('Types: deb', 'Types: deb deb-src')
+
+                # If content changed, write it back
+                if updated_content != content:
+                    with open(file_path, 'w') as f:
+                        f.write(updated_content)
+                    print(f"Updated: {file_path}")
+                else:
+                    print(f"No changes needed: {file_path}")
+
+            except Exception as e:
+                print(f"Error processing {file_path}: {e}")
+
 def add_local_repo_sources(repo_path):
     """Add local repository to apt sources using pure Python"""
     repo_entry = f'''
@@ -232,6 +262,7 @@ def main():
     os.makedirs(args.repository, exist_ok=True)
     os.makedirs(args.build, exist_ok=True)
 
+    deb_src_apt_sources()
     add_local_repo_sources(args.repository)
 
     logging.info(f"Starting build process. Workspace: {args.workspace}, Repository: {args.repository}")
