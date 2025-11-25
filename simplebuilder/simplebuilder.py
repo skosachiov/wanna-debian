@@ -83,6 +83,7 @@ def download_and_build_dpkg(url, build_dir, repo_dir, rebuild=False):
                     # Add version bump for rebuild
                     build_cmd = "DEB_BUILD_OPTIONS='nocheck' dpkg-buildpackage -uc -us -b --build=full"
 
+                run_command("yes | mk-build-deps -i -r debian/control", cwd=item_path)
                 if run_command(build_cmd, cwd=item_path):
                     return copy_built_packages(temp_dir, repo_dir)
                 break
