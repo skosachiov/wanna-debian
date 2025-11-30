@@ -222,12 +222,12 @@ def deb_src_apt_sources():
                 if updated_content != content:
                     with open(file_path, 'w') as f:
                         f.write(updated_content)
-                    print(f"Updated: {file_path}")
+                    logging.info(f"Updated: {file_path}")
                 else:
-                    print(f"No changes needed: {file_path}")
+                    logging.info(f"No changes needed: {file_path}")
 
             except Exception as e:
-                print(f"Error processing {file_path}: {e}")
+                logging.error(f"Error processing {file_path}: {e}")
 
 def add_local_repo_sources(repo_path):
     """Add local repository to apt sources using pure Python"""
