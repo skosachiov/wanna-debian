@@ -60,9 +60,9 @@ def clone_and_build_gbp(repo_url, build_dir, repo_dir):
     run_command(f"cd {repo_name}; yes | mk-build-deps -i -r debian/control", cwd=build_dir)
 
     # Build with gbp-buildpackage
-    if run_command("gbp buildpackage -uc -us --git-no-pristine-tar --git-ignore-new", cwd=clone_dir):
+    if run_command("gbp buildpackage -uc -us --git-no-pristine-tar --git-ignore-new --git-export-dir=../build-area", cwd=clone_dir):
         # Copy built packages to repository
-        return copy_built_packages(clone_dir, repo_dir)
+        return copy_built_packages(os.path.join(clone_dir, "../build-area"), repo_dir)
     return False
 
 def download_and_build_dpkg(url, build_dir, repo_dir, rebuild=False):
