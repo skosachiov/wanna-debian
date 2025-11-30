@@ -165,7 +165,8 @@ def process_line(line, args):
             # Git repository - clone and build with gbp-buildpackage
             success = clone_and_build_gbp(url, args.build, args.repository)
             if success:
-                success = scan_packages(args.repository)
+                # success = scan_packages(args.repository)
+                scan_packages(args.repository)
 
         elif url.endswith('.dsc'):
             # Source package
