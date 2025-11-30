@@ -122,17 +122,15 @@ def copy_to_repo(file_url, repo_dir):
             return False
 
 def copy_built_packages(source_dir, repo_dir):
-    """Copy all .deb files from source directory to repository."""
     copied = False
     for file in os.listdir(source_dir):
-        if file.endswith('.deb'):
+        if file.endswith(('.deb', '.dsc', '.tar.gz', '.tar.xz')):
             shutil.copy2(os.path.join(source_dir, file), repo_dir)
             logging.info(f"Copied {file} to repository")
             copied = True
 
     if not copied:
-        logging.warning("No .deb files found to copy")
-
+        logging.warning("No files found to copy")
     return copied
 
 def process_line(line, args):
