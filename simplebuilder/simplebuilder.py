@@ -215,7 +215,7 @@ def deb_src_apt_sources():
                     content = f.read()
 
                 # Replace 'Types: deb' with 'Types: deb deb-src'
-                updated_content = content.replace('Types: deb', 'Types: deb deb-src')
+                updated_content = content.replace('Types: deb\n', 'Types: deb deb-src\n')
 
                 # If content changed, write it back
                 if updated_content != content:
@@ -231,8 +231,8 @@ def deb_src_apt_sources():
 def add_local_repo_sources(repo_path):
     """Add local repository to apt sources using pure Python"""
     repo_entry = f'''
-        deb [trusted=yes] file://{os.path.abspath(repo_path)} ./
-        deb-src [trusted=yes] file://{os.path.abspath(repo_path)} ./
+deb [trusted=yes] file://{os.path.abspath(repo_path)} ./
+deb-src [trusted=yes] file://{os.path.abspath(repo_path)} ./
     '''
     sources_file = "/etc/apt/sources.list.d/simplebuilder.list"
     with open(sources_file, 'w') as f:
