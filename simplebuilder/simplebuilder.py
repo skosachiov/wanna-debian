@@ -177,7 +177,8 @@ def process_line(line, args):
                 success = download_and_build_dpkg(url, args.build, args.repository, rebuild=False)
 
             if success:
-                success = scan_packages(args.repository)
+                # success = scan_packages(args.repository)
+                scan_packages(args.repository)
 
         elif url.endswith('.deb'):
             # Binary package - copy to repository
