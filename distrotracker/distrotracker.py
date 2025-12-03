@@ -100,7 +100,7 @@ def parse_requirement_line(line):
     else:
         package_part = line
         operator = '>='
-        version = '0'
+        version = '0~'
         return (package_part, '>=', version)
 
     return None
@@ -162,7 +162,7 @@ def find_versions(fin, filename, dist = None, build = None, briefly = None, elem
             continue
 
         package_prev = None
-        version_prev = None
+        version_prev = "0~"
         for p in data_dict[package_name]:
             if check_version(p[version_key], operator, required_version):
                 item_str = json.dumps({k: v for k, v in p.items() if k in briefly_keys} if briefly else p)
