@@ -167,7 +167,7 @@ def find_versions(fin, filename, dist = None, build = None, briefly = None, elem
             if check_version(p[version_key], operator, required_version):
                 item_str = json.dumps({k: v for k, v in p.items() if k in briefly_keys} if briefly else p)
                 # if package_prev == p[index_key]:
-                if version_prev == p[version_key]:
+                if apt_pkg.version_compare(version_prev, p[version_key]) < 0:
                     if element == 'latest': items.pop()
                     if element == 'earliest': continue
                 items.append(f'  {item_str}')
