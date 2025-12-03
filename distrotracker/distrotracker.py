@@ -197,6 +197,8 @@ def original_metadata_is_newer(base_url, local_base_dir):
 
     updated = True
 
+    session = requests.Session()
+
     for metadata_dir in metadata_dirs:
         url = base_url + metadata_dir
         try:
@@ -214,7 +216,7 @@ def original_metadata_is_newer(base_url, local_base_dir):
                 local_mtime = os.path.getmtime(local_path)
 
                 # Get remote file headers to check last-modified
-                head_response = requests.head(url)
+                head_response = session.head(url)
                 head_response.raise_for_status()
 
                 if 'last-modified' in head_response.headers:
