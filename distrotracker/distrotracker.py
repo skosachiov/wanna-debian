@@ -100,7 +100,7 @@ def parse_requirement_line(line):
     else:
         package_part = line
         operator = '>='
-        version = '0~'
+        version = '0'
         return (package_part, '>=', version)
 
     return None
@@ -124,7 +124,7 @@ def check_version(version, required_op, required_version):
     else:
         return False
 
-def find_versions(fin, filename, dist = None, build = None, briefly = None, element = None, index_key = 'package'):
+def find_versions(fin, filename, dist = None, build = None, briefly = None, index_key = 'package'):
 
     version_key = "source_version" if index_key == "source" else "version"
 
@@ -162,19 +162,11 @@ def find_versions(fin, filename, dist = None, build = None, briefly = None, elem
             continue
 
         package_prev = None
-        version_prev = "0~"
         for p in data_dict[package_name]:
             if check_version(p[version_key], operator, required_version):
                 item_str = json.dumps({k: v for k, v in p.items() if k in briefly_keys} if briefly else p)
-                # if package_prev == p[index_key]:
-                if apt_pkg.version_compare(version_prev, p[version_key]) < 0:
-                    if element == 'latest':
-                        if items: items.pop()
-                    if element == 'earliest':
-                        continue
                 items.append(f'  {item_str}')
                 package_prev = p[index_key]
-                version_prev = p[version_key]
         if not package_prev:
             logging.warning(f"Package versions found do not meet the conditions: {package_name} ({operator} {required_version})")
 
@@ -445,8 +437,6 @@ def main():
     parser.add_argument("--comp", default=['main'], nargs='+', help="Components main, universe, contrib, non-free, non-free-firmware etc. (default: main)")
     parser.add_argument("--build", default=['binary-amd64', 'source'], nargs='+', \
         help="Build binary-amd64, binary-arm64, source etc. (default: binary-amd64 source)")
-    parser.add_argument("--latest", action="store_true", help="Show only one latest suitable version of a package")
-    parser.add_argument("--earliest", action="store_true", help="Show only one earliest suitable version")
     parser.add_argument("--force", action="store_true", help="Force update even if remote files are older")
     parser.add_argument("--hold", action="store_true", help="Do not attempt to update metadata")
     parser.add_argument("--find", action="store_true", \
@@ -503,7 +493,6 @@ def main():
             logging.info("Metadata update completed!")
     if args.find:
         find_versions(sys.stdin, args.local_dir + "/index.json", args.dist, args.build, args.briefly, \
-            'latest' if args.latest else 'earliest' if args.earliest else None, \
             "package" if not args.source else "source")
 
 
