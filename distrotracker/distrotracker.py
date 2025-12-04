@@ -223,7 +223,7 @@ def original_metadata_is_newer(base_url, local_base_dir):
                     if remote_time > local_mtime:
                         logging.info(f"Updating (remote is newer): {url_path}")
                         # Download the updated file
-                        file_response = requests.get(url)
+                        file_response = session.get(url)
                         file_response.raise_for_status()
 
                         with open(local_path, 'wb') as f:
@@ -242,7 +242,7 @@ def original_metadata_is_newer(base_url, local_base_dir):
             else:
                 # File doesn't exist locally, download it
                 logging.info(f"Downloading new file: {url_path}")
-                file_response = requests.get(url)
+                file_response = session.get(url)
                 file_response.raise_for_status()
 
                 with open(local_path, 'wb') as f:
