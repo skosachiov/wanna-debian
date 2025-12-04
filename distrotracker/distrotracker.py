@@ -174,7 +174,7 @@ def find_versions(fin, filename, dist = None, build = None, briefly = None, inde
     print(',\n'.join(items))
     print("]")
 
-def original_metadata_is_newer(base_url, local_base_dir):
+def original_metadata_is_newer(base_url, local_base_dir, session):
     """
     Check if specific Debian metadata files are newer than local ones and update if needed.
     Builds local paths from URL structure.
@@ -193,8 +193,6 @@ def original_metadata_is_newer(base_url, local_base_dir):
     os.makedirs(local_base_dir, exist_ok=True)
 
     updated = True
-
-    session = requests.Session()
 
     for metadata_dir in metadata_dirs:
         url = base_url + metadata_dir
@@ -262,10 +260,10 @@ def original_metadata_is_newer(base_url, local_base_dir):
 
     return updated
 
-def get_distributions(base_url):
+def get_distributions(base_url, session):
     """Get list of distributions from the Debian repository"""
     try:
-        response = requests.get(base_url)
+        response = session.get(base_url)
         response.raise_for_status()
 
         # Parse distributions from the directory listing
@@ -298,12 +296,12 @@ def should_download_file(local_path, remote_last_modified):
 
     return local_time < remote_time
 
-def download_file(url, local_path):
+def download_file(url, local_path, session):
     """Download a file if local version is older or doesn't exist"""
     logging.info(f"Trying to download: {url}")
     try:
         # Get file info first to check last-modified
-        head_response = requests.head(url)
+        head_response = session.head(url)
         head_response.raise_for_status()
 
         last_modified = head_response.headers.get('last-modified')
@@ -313,7 +311,7 @@ def download_file(url, local_path):
 
         if should_download_file(local_path, last_modified):
             logging.info(f"Downloading: {url}")
-            response = requests.get(url)
+            response = session.get(url)
             response.raise_for_status()
 
             # Create directory if it doesn't exist
@@ -360,7 +358,7 @@ def extract_compressed_file(compressed_path, extract_path, remote_time=None):
     logging.error(f"Unsupported file extension: {compressed_path}")
     return False
 
-def update_metadata(base_url, local_base_dir, dists, components, builds):
+def update_metadata(base_url, local_base_dir, dists, components, builds, session):
     """Main function to update Debian repository metadata"""
 
     try:
@@ -369,7 +367,7 @@ def update_metadata(base_url, local_base_dir, dists, components, builds):
         pass
 
     logging.info("Fetching distributions list...")
-    distributions = get_distributions(base_url + "/dists/")
+    distributions = get_distributions(base_url + "/dists/", session)
 
     if not distributions:
         logging.error("No distributions found!")
@@ -400,7 +398,7 @@ def update_metadata(base_url, local_base_dir, dists, components, builds):
                     file_path = component + "/" + metadata_file + extension
                     remote_url = urljoin(dist_url, file_path)
                     local_z_path = os.path.join(dist_dir, file_path)
-                    download_status = download_file(remote_url, local_z_path)
+                    download_status = download_file(remote_url, local_z_path, session)
                     if download_status is not None:
                         break
 
@@ -485,11 +483,13 @@ def main():
 
     apt_pkg.init()
 
+    session = requests.Session()
+
     if not args.hold:
-        if original_metadata_is_newer(args.base_url, args.local_dir) or args.force or \
+        if original_metadata_is_newer(args.base_url, args.local_dir, session) or args.force or \
                 not os.path.exists(status_file):
             logging.info("Starting metadata update...")
-            update_metadata(args.base_url, args.local_dir, args.dist, args.comp, ['binary-amd64', 'source'])
+            update_metadata(args.base_url, args.local_dir, args.dist, args.comp, ['binary-amd64', 'source'], session)
             logging.info("Metadata update completed!")
     if args.find:
         find_versions(sys.stdin, args.local_dir + "/index.json", args.dist, args.build, args.briefly, \
