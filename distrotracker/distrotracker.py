@@ -100,8 +100,8 @@ def parse_requirement_line(line):
     else:
         package_part = line
         operator = '>='
-        version = '0'
-        return (package_part, '>=', version)
+        version = '0~~'
+        return (package_part, operator, version)
 
     return None
 
