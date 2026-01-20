@@ -174,7 +174,7 @@ def find_versions(fin, filename, dist = None, build = None, briefly = None, inde
         if p_items:
             if selection == "latest": v = p_items[-1][version_key]
             if selection == "earliest": v = p_items[0][version_key]
-        if v is not None: p_items = [p for p in p_items if p.get[version_key] == v]
+        if v is not None: p_items = [p for p in p_items if p.get(version_key) == v]
 
         s_items = []
         for p in p_items:
