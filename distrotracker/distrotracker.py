@@ -172,8 +172,8 @@ def find_versions(fin, filename, dist = None, build = None, briefly = None, inde
             logging.warning(f"Package versions found do not meet the conditions: {package_name} ({operator} {required_version})")
 
         v = None
-        if selection == "latest": v = p_items[-1:][version_key]
-        if selection == "earliest": v = p_items = p_items[:0][version_key]
+        if selection == "latest": v = p_items[-1][version_key]
+        if selection == "earliest": v = p_items = p_items[0][version_key]
         if v is not None: p_items = [p for p in p_items if p.get[version_key] == v]
         items.extend(p_items)
 
