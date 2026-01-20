@@ -124,7 +124,7 @@ def check_version(version, required_op, required_version):
     else:
         return False
 
-def find_versions(fin, filename, dist = None, build = None, briefly = None, index_key = 'package'):
+def find_versions(fin, filename, dist = None, build = None, briefly = None, index_key = 'package', selection = None):
 
     version_key = "source_version" if index_key == "source" else "version"
 
@@ -162,13 +162,18 @@ def find_versions(fin, filename, dist = None, build = None, briefly = None, inde
             continue
 
         package_prev = None
+        p_items = []
         for p in data_dict[package_name]:
             if check_version(p[version_key], operator, required_version):
                 item_str = json.dumps({k: v for k, v in p.items() if k in briefly_keys} if briefly else p)
-                items.append(f'  {item_str}')
+                p_items.append(f'  {item_str}')
                 package_prev = p[index_key]
         if not package_prev:
             logging.warning(f"Package versions found do not meet the conditions: {package_name} ({operator} {required_version})")
+
+        if selection == "latest": p_items = p_items[-1:]
+        if selection == "earliest": p_items = p_items[:0]
+        items.expand(p_items)
 
     print("[")
     print(',\n'.join(items))
@@ -440,6 +445,8 @@ def main():
     parser.add_argument("--find", action="store_true", \
         help="Read stdin and find a minimum version index packages that satisfies the conditions, \
         example: libpython3.13 (>= 3.13.0~rc3)")
+    parser.add_argument("--earliest", action="store_true", help="Display the oldest version that matches the criteria")
+    parser.add_argument("--latest", action="store_true", help="Display the newest version that matches the criteria")
     parser.add_argument("--source", action="store_true", help="Use the Source field for searching, not the Package field")
     parser.add_argument("--briefly", action="store_true", help="Display only basic fields")
     parser.add_argument("--log-level", default='INFO', choices=['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'], \
@@ -481,6 +488,10 @@ def main():
     if not args.dist:
         args.dist = None
 
+    selection = None
+    if args.latest: selection = "latest"
+    elif args.earliest: selection = "earliest"
+
     apt_pkg.init()
 
     session = requests.Session()
@@ -493,7 +504,7 @@ def main():
             logging.info("Metadata update completed!")
     if args.find:
         find_versions(sys.stdin, args.local_dir + "/index.json", args.dist, args.build, args.briefly, \
-            "package" if not args.source else "source")
+            "package" if not args.source else "source", selection)
 
 
 if __name__ == "__main__":
