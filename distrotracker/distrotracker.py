@@ -173,7 +173,7 @@ def find_versions(fin, filename, dist = None, build = None, briefly = None, inde
 
         if selection == "latest": p_items = p_items[-1:]
         if selection == "earliest": p_items = p_items[:0]
-        items.expand(p_items)
+        items.extend(p_items)
 
     print("[")
     print(',\n'.join(items))
