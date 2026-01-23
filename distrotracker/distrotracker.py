@@ -397,8 +397,6 @@ def update_metadata(base_url, local_base_dir, dists, components, builds, session
             metadata_files.append(build + "/Packages")
 
     for dist in distributions:
-        if dists and dist not in dists:
-            continue
         logging.info(f"Processing distribution: {dist}")
         dist_url = urljoin(base_url, "dists/" + dist + "/")
         dist_dir = os.path.join(local_base_dir, "dists/" + dist)
@@ -410,6 +408,8 @@ def update_metadata(base_url, local_base_dir, dists, components, builds, session
                     file_path = component + "/" + metadata_file + extension
                     remote_url = urljoin(dist_url, file_path)
                     local_z_path = os.path.join(dist_dir, file_path)
+                    if dists and dist not in dists:
+                        break
                     download_status = download_file(remote_url, local_z_path, session)
                     if download_status is not None:
                         break
