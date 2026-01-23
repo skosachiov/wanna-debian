@@ -504,7 +504,7 @@ def main():
     session = requests.Session()
 
     if not args.hold:
-        if original_metadata_is_newer(args.base_url, args.local_dir, session) or args.force or \
+        if args.force or original_metadata_is_newer(args.base_url, args.local_dir, session) or \
                 not os.path.exists(status_file):
             logging.info("Starting metadata update...")
             update_metadata(args.base_url, args.local_dir, args.dist, args.comp, ['binary-amd64', 'source'], session)
