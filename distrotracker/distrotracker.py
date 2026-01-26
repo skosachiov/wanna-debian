@@ -27,7 +27,7 @@ def update_metadata_index(packagefile, data_list, dist, comp, build, dry_run = F
     packages = []
     packagefile_index = packagefile + '.json'
 
-    if dry_run:
+    if dry_run and os.path.exists(packagefile_index):
         logging.info(f'Load component index: {packagefile_index}')
         with open(packagefile_index, 'r', encoding='utf-8') as f:
             packages = json.load(f)
