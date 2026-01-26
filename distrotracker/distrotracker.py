@@ -22,8 +22,16 @@ def write_metadata_index(filename, data_list):
     except IOError as e:
         logging.error(f"Error writing to file: {e}")
 
-def update_metadata_index(packagefile, data_list, dist, comp, build):
-    packages = data_list
+def update_metadata_index(packagefile, data_list, dist, comp, build, dry_run = False):
+
+    packages = []
+    packagefile_index = packagefile + '.json'
+
+    if dry_run:
+        with open(packagefile_index, 'r', encoding='utf-8') as f:
+            packages = json.load(f)
+        return data_list.extend(packages)
+
     with open(packagefile, 'rt', encoding='utf-8') as f:
         content = f.read()
         # Split into individual package blocks
@@ -78,7 +86,12 @@ def update_metadata_index(packagefile, data_list, dist, comp, build):
                     'source': source, 'source_version': source_version, \
                     'filename': filename if filename else directory + "/" + pkg_name + "_" + version.split(":")[-1] + ".dsc" })
     logging.debug(f'In the file {packagefile} processed packets: {len(packages)}')
-    return packages
+
+    logging.debug(f'Save index of one component {packagefile_index}')
+    with open(packagefile_index, "w") as f:
+        json.dump(packages, f)
+
+    return data_list.extend(packages)
 
 def parse_requirement_line(line):
 
@@ -423,7 +436,7 @@ def update_metadata(base_url, local_base_dir, dists, components, builds, session
                     extract_compressed_file(local_z_path, output_path)
 
                 if download_status is not None:
-                    update_metadata_index(output_path, data_list, dist, component, metadata_file.split("/")[0])
+                    update_metadata_index(output_path, data_list, dist, component, metadata_file.split("/")[0], download_status == False)
                 else:
                     logging.warning(f"Can not download: {urljoin(dist_url, file_path)[:-2]}[gz|xz])")
 
@@ -444,7 +457,8 @@ def main():
     parser.add_argument("--base-url", help="Base URL for Debian metadata (example: https://ftp.debian.org/debian/)")
     parser.add_argument("--local-dir", default="./metadata", help="Local directory to store metadata files (default: %(default)s)")
     parser.add_argument("--dist", default=[], nargs='+', help="Distributions (default: all)")
-    parser.add_argument("--comp", default=['main'], nargs='+', help="Components main, universe, contrib, non-free, non-free-firmware etc. (default: main)")
+    parser.add_argument("--comp", default=['main', 'contrib', 'non-free', 'non-free-firmware'], nargs='+', \
+        help="Components main, universe, contrib, non-free, non-free-firmware etc. (default: main contrib non-free non-free-firmware)")
     parser.add_argument("--build", default=['binary-amd64', 'source'], nargs='+', \
         help="Build binary-amd64, binary-arm64, source etc. (default: binary-amd64 source)")
     parser.add_argument("--force", action="store_true", help="Force update even if remote files are older")
