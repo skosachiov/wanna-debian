@@ -28,6 +28,7 @@ def update_metadata_index(packagefile, data_list, dist, comp, build, dry_run = F
     packagefile_index = packagefile + '.json'
 
     if dry_run:
+        logging.info(f'Load component index: {packagefile_index}')
         with open(packagefile_index, 'r', encoding='utf-8') as f:
             packages = json.load(f)
         return data_list.extend(packages)
@@ -87,7 +88,7 @@ def update_metadata_index(packagefile, data_list, dist, comp, build, dry_run = F
                     'filename': filename if filename else directory + "/" + pkg_name + "_" + version.split(":")[-1] + ".dsc" })
     logging.debug(f'In the file {packagefile} processed packets: {len(packages)}')
 
-    logging.debug(f'Save index of one component {packagefile_index}')
+    logging.info(f'Save component index: {packagefile_index}')
     with open(packagefile_index, "w") as f:
         json.dump(packages, f)
 
