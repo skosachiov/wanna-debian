@@ -207,7 +207,7 @@ def original_metadata_is_newer(base_url, local_base_dir, session):
     Returns True if remote updated, False if no update needed.
     """
     # Specific metadata files to check
-    metadata_dirs = [
+    metadata_files = [
         # 'db/references.db',
         'ls-lR.gz',
         'db/release.caches.db',
@@ -220,8 +220,8 @@ def original_metadata_is_newer(base_url, local_base_dir, session):
 
     updated = True
 
-    for metadata_dir in metadata_dirs:
-        url = base_url + metadata_dir
+    for metadata_file in metadata_files:
+        url = base_url + metadata_file
         try:
             # Build local path from URL
             parsed_url = urlparse(url)
