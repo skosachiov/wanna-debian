@@ -454,6 +454,7 @@ def update_metadata(base_url, local_base_dir, dists, components, builds, session
                         with open(hash_file_path, 'r') as f:
                             hash_file_content = f.read().strip()
                             if hash_file_content in hashes:
+                                logging.info(f"Skipping (index file already contains a hash): {hash_file_path}")
                                 download_status = False
                                 break
                     # Normal processing
@@ -476,6 +477,7 @@ def update_metadata(base_url, local_base_dir, dists, components, builds, session
                             digest = hashlib.file_digest(f, 'sha256').hexdigest()
                             with open(hash_file_path, 'w') as f_hash:
                                 f_hash.write(digest)
+                                logging.info(f"Hash of the new data is saved in the file: {hash_file_path}")
 
                 if download_status is not None:
                     update_metadata_index(output_path, data_list, dist, component, metadata_file.split("/")[0], download_status == False)
