@@ -223,7 +223,7 @@ def extract_hashes(filename, hashes):
         data = f.read()
         text = data.decode('utf-8', errors='ignore')
         hash_block = set(re.findall(pattern, text))
-        hashes.add(hash_block)
+        hashes.update(hash_block)
 
 def original_metadata_is_newer(base_url, local_base_dir, session, hashes):
     """
