@@ -10,7 +10,7 @@ config = {
     "base_url": "",
     "local_dir": "metadata",
     "index_file": "index.json",
-    "config_file": "status",
+    "config_file": "config.json",
     "builds": ['binary-amd64', 'source'],
     "arch": 'amd64',
     "loglevel": 'INFO',
@@ -529,7 +529,7 @@ def main():
             config.update(json.load(f))
     except FileNotFoundError:
             if not args.base_url:
-                logging.error("Status file missing, base url required")
+                logging.error("Config file missing, base url required")
                 return
             else:
                 if args.base_url: config["base_url"] = args.base_url
