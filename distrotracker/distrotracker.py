@@ -447,7 +447,7 @@ def update_metadata(base_url, local_base_dir, dists, components, builds, session
         for component in components:
             for metadata_file in metadata_files:
                 download_status = None
-                hash_file_path = f"{component}/{metadata_file}.sha256"
+                hash_file_path = f"{dist_dir}/{component}/{metadata_file}.sha256"
                 for extension in ['.gz', '.xz']:
                     # The hash has not changed
                     if os.path.exists(hash_file_path):
