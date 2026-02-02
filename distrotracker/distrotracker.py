@@ -449,6 +449,9 @@ def update_metadata(base_url, local_base_dir, dists, components, builds, session
                 download_status = None
                 hash_file_path = f"{dist_dir}/{component}/{metadata_file}.sha256"
                 for extension in ['.gz', '.xz']:
+                    file_path = component + "/" + metadata_file + extension
+                    remote_url = urljoin(dist_url, file_path)
+                    local_z_path = os.path.join(dist_dir, file_path)
                     # The hash has not changed
                     if os.path.exists(hash_file_path):
                         with open(hash_file_path, 'r') as f:
@@ -458,9 +461,6 @@ def update_metadata(base_url, local_base_dir, dists, components, builds, session
                                 download_status = False
                                 break
                     # Normal processing
-                    file_path = component + "/" + metadata_file + extension
-                    remote_url = urljoin(dist_url, file_path)
-                    local_z_path = os.path.join(dist_dir, file_path)
                     download_status = download_file(remote_url, local_z_path, session)
                     if download_status is not None:
                         break
