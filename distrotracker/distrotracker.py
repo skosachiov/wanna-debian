@@ -450,8 +450,8 @@ def update_metadata(base_url, local_base_dir, dists, components, builds, session
                 hash_file_path = f"{component}/{metadata_file}.sha256"
                 for extension in ['.gz', '.xz']:
                     # The hash has not changed
-                    if os.path.exists(file_path):
-                        with open(file_path, 'r') as f:
+                    if os.path.exists(hash_file_path):
+                        with open(hash_file_path, 'r') as f:
                             hash_file_content = f.read().strip()
                             if hash_file_content in hashes:
                                 download_status = False
