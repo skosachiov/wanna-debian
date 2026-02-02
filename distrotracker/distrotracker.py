@@ -6,16 +6,19 @@ from urllib.parse import urljoin, urlparse
 from datetime import datetime
 from functools import cmp_to_key
 
-_config = {
+config = {
+    "base_url": "",
     "local_dir": "metadata",
     "index_file": "index.json",
-    "status_file": "status",
-    "default_builds": ['binary-amd64', 'source'],
-    "default_arch": 'amd64',
-    "default_loglevel": 'INFO',
+    "config_file": "status",
+    "builds": ['binary-amd64', 'source'],
+    "arch": 'amd64',
+    "loglevel": 'INFO',
     "min_version": "0~~",
     "briefly_keys": ['package', 'version', 'dist', 'build', 'source'],
-    "default_comp": ['main', 'contrib', 'non-free', 'non-free-firmware']
+    "comp": ['main', 'contrib', 'non-free', 'non-free-firmware'],
+    "dist": [],
+    'timestamp': str(time.time())
 }
 
 def write_metadata_index(filename, data_list):
@@ -125,7 +128,7 @@ def parse_requirement_line(line):
     else:
         package_part = line
         operator = '>='
-        version = _config["min_version"]
+        version = config["min_version"]
         return (package_part, operator, version)
 
     return None
@@ -174,7 +177,7 @@ def find_versions(fin, filename, dist = None, build = None, briefly = None, inde
     for key in data_dict:
         data_dict[key].sort(key=cmp_to_key(lambda a, b: apt_pkg.version_compare(a[version_key], b[version_key])))
 
-    briefly_keys = _config["briefly_keys"]
+    briefly_keys = config["briefly_keys"]
     items = []
     for line in fin:
         req = parse_requirement_line(line)
@@ -236,7 +239,7 @@ def original_metadata_is_newer(base_url, local_base_dir, session, hashes):
         # 'db/references.db',
         'ls-lR.gz',
         'db/release.caches.db',
-        'indices/files/arch-' + _config["default_arch"] + '.files',
+        'indices/files/arch-' + config["arch"] + '.files',
         'indices/files/components/source.list.gz'
     ]
 
@@ -415,7 +418,7 @@ def update_metadata(base_url, local_base_dir, dists, components, builds, session
     """Main function to update Debian repository metadata"""
 
     try:
-        os.remove(local_base_dir + "/" + _config["status_file"])
+        os.remove(local_base_dir + "/" + config["config_file"])
     except Exception as e:
         pass
 
@@ -489,22 +492,19 @@ def update_metadata(base_url, local_base_dir, dists, components, builds, session
                 remote_url = urljoin(dist_url, file_path)
                 local_z_path = os.path.join(dist_dir, file_path)
 
-    write_metadata_index(local_base_dir + "/" + _config["index_file"], data_list)
-
-    with open(local_base_dir + "/" + _config["status_file"], "w") as f:
-        json.dump({'base_url': base_url, 'comp': components, 'timestamp': str(time.time())}, f)
+    write_metadata_index(local_base_dir + "/" + config["index_file"], data_list)
 
 def main():
     """Main entry point"""
 
     parser = argparse.ArgumentParser(description="Update Debian metadata files from the Debian repository")
     parser.add_argument("--base-url", help="Base URL for Debian metadata (example: https://ftp.debian.org/debian/)")
-    parser.add_argument("--local-dir", default="./" + _config["local_dir"], help="Local directory to store metadata files (default: %(default)s)")
+    parser.add_argument("--local-dir", default="./" + config["local_dir"], help="Local directory to store metadata files (default: %(default)s)")
     parser.add_argument("--dist", default=[], nargs='+', help="Distributions (default: all)")
-    parser.add_argument("--comp", default=_config["default_comp"], nargs='+', \
-        help=f"Components main, universe, contrib, non-free, non-free-firmware etc. (default: {" ".join(_config["default_comp"])})")
-    parser.add_argument("--build", default=_config["default_builds"], nargs='+', \
-        help=f"Build binary-amd64, binary-arm64, source etc. (default: {" ".join(_config["default_builds"])})")
+    parser.add_argument("--comp", default=config["comp"], nargs='+', \
+        help=f"Components main, universe, contrib, non-free, non-free-firmware etc. (default: {" ".join(config["comp"])})")
+    parser.add_argument("--build", default=config["builds"], nargs='+', \
+        help=f"Build binary-amd64, binary-arm64, source etc. (default: {" ".join(config["builds"])})")
     parser.add_argument("--force", action="store_true", help="Force update even if remote files are older")
     parser.add_argument("--hold", action="store_true", help="Do not attempt to update metadata")
     parser.add_argument("--find", action="store_true", \
@@ -514,48 +514,38 @@ def main():
     parser.add_argument("--latest", action="store_true", help="Display the newest version that matches the criteria")
     parser.add_argument("--source", action="store_true", help="Use the Source field for searching, not the Package field")
     parser.add_argument("--briefly", action="store_true", help="Display only basic fields")
-    parser.add_argument("--log-level", default=_config["default_loglevel"], choices=['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'], \
+    parser.add_argument("--log-level", default=config["loglevel"], choices=['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'], \
         help='Set the logging level (default: %(default)s)')
 
     args = parser.parse_args()
 
     logging.basicConfig(level=getattr(logging, args.log_level), format='%(asctime)s %(levelname)s %(message)s')
-    status_file = args.local_dir + "/" + _config["status_file"]
 
-    if args.base_url:
-        try:
-            with open(status_file, "r") as f:
-                saved_status = json.load(f)
-                if args.base_url != saved_status['base_url'] or args.comp != saved_status['comp']:
-                    logging.error(f"Saved base_url and components: {saved_status['base_url']} {saved_status['comp']}")
-                    logging.error(f"New base_url and components: {args.base_url} {args.comp}")
-                    logging.error("New options detected. Please remove metadata and repeat or use new --local-dir.")
-                    return
-        except FileNotFoundError:
-            pass
-        except Exception as e:
-            logging.error(f"Try deleting the file status: {status_file}")
-            return
-    if not args.base_url:
-        try:
-            with open(status_file, "r") as f:
-                saved_status = json.load(f)
-                args.base_url = saved_status['base_url']
-                args.comp = saved_status['comp']
-        except FileNotFoundError:
-            logging.error("Status file missing, base url required")
-            return
-        except Exception as e:
-            logging.error(f"Try deleting the file status: {status_file}")
-            return
+    config_file = args.local_dir + "/" + config["config_file"]
+
+    try:
+        with open(config_file, "r") as f:
+            config.update(json.load(f))
+    except FileNotFoundError:
+            if not args.base_url:
+                logging.error("Status file missing, base url required")
+                return
+            else:
+                if args.base_url: config["base_url"] = args.base_url
+                if args.local_dir: config["local_dir"] = args.local_dir
+                if args.dist: config["dist"] = args.dist
+                if args.comp: config["comp"] = args.comp
+                if args.arch: config["arch"] = args.arch
+
     if not args.base_url.endswith("/"):
         args.base_url += "/"
+
     if not args.dist:
         args.dist = None
 
-    selection = None
     if args.latest: selection = "latest"
     elif args.earliest: selection = "earliest"
+    else: selection = None
 
     apt_pkg.init()
 
@@ -563,13 +553,16 @@ def main():
     hashes = set()
 
     if not args.hold:
-        if args.force or original_metadata_is_newer(args.base_url, args.local_dir, session, hashes) or \
-                not os.path.exists(status_file):
+        if args.force or original_metadata_is_newer(config["base_url"], config["local_dir"], session, hashes) or \
+                not os.path.exists(config_file):
             logging.info("Starting metadata update...")
-            update_metadata(args.base_url, args.local_dir, args.dist, args.comp, _config["default_builds"], session, hashes)
+            update_metadata(config["base_url"], config["local_dir"], config["dist"], config["comp"], config["builds"], session, hashes)
             logging.info("Metadata update completed!")
+            with open(local_base_dir + "/" + config["config_file"], "w") as f:
+                json.dump(config, f, indent=4)
+
     if args.find:
-        find_versions(sys.stdin, args.local_dir + "/" + _config["index_file"], args.dist, args.build, args.briefly, \
+        find_versions(sys.stdin, args.local_dir + "/" + config["index_file"], args.dist, args.build, args.briefly, \
             "package" if not args.source else "source", selection)
 
 
