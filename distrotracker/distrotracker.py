@@ -559,7 +559,7 @@ def main():
             logging.info("Starting metadata update...")
             update_metadata(config["base_url"], config["local_dir"], config["dist"], config["comp"], config["builds"], session, hashes)
             logging.info("Metadata update completed!")
-            with open(local_base_dir + "/" + config["config_file"], "w") as f:
+            with open(config["local_dir"] + "/" + config["config_file"], "w") as f:
                 json.dump(config, f, indent=4)
 
     if args.find:
