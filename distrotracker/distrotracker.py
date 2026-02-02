@@ -10,7 +10,6 @@ _config = {
     "local_dir": "metadata",
     "index_file": "index.json",
     "status_file": "status",
-    "hash_file": "hashes",
     "default_builds": ['binary-amd64', 'source'],
     "default_arch": 'amd64',
     "default_loglevel": 'INFO',
@@ -224,6 +223,7 @@ def extract_hashes(filename, hashes):
         text = data.decode('utf-8', errors='ignore')
         hash_block = set(re.findall(pattern, text))
         hashes.update(hash_block)
+        logging.info(f"Hashes read from the index: {len(hashes)}")
 
 def original_metadata_is_newer(base_url, local_base_dir, session, hashes):
     """
