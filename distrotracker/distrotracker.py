@@ -7,17 +7,17 @@ from datetime import datetime
 from functools import cmp_to_key
 
 config = {
+    "config_file": "config.json",
     "base_url": "",
     "local_dir": "metadata",
     "index_file": "index.json",
-    "config_file": "config.json",
     "builds": ['binary-amd64', 'source'],
+    "dist": [],
+    "comp": ['main', 'contrib', 'non-free', 'non-free-firmware'],
     "arch": 'amd64',
     "loglevel": 'INFO',
     "min_version": "0~~",
     "briefly_keys": ['package', 'version', 'dist', 'build', 'source'],
-    "comp": ['main', 'contrib', 'non-free', 'non-free-firmware'],
-    "dist": [],
     'timestamp': str(time.time())
 }
 
