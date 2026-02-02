@@ -42,7 +42,7 @@ def update_metadata_index(packagefile, data_list, dist, comp, build, dry_run = F
     packagefile_index = packagefile + '.json'
 
     if dry_run and os.path.exists(packagefile_index):
-        logging.info(f'Load component index: {packagefile_index}')
+        logging.debug(f'Load component index: {packagefile_index}')
         with open(packagefile_index, 'r', encoding='utf-8') as f:
             packages = json.load(f)
         return data_list.extend(packages)
@@ -354,7 +354,7 @@ def should_download_file(local_path, remote_last_modified):
 
 def download_file(url, local_path, session):
     """Download a file if local version is older or doesn't exist"""
-    logging.info(f"Trying to download: {url}")
+    logging.debug(f"Trying to download: {url}")
     try:
         # Get file info first to check last-modified
         head_response = session.head(url)
@@ -384,7 +384,7 @@ def download_file(url, local_path, session):
 
             return True
         else:
-            logging.info(f"Skipping (up to date): {os.path.basename(local_path)}")
+            logging.debug(f"Skipping (up to date): {os.path.basename(local_path)}")
             return False
 
     except requests.RequestException as e:
@@ -460,7 +460,7 @@ def update_metadata(base_url, local_base_dir, dists, components, builds, session
                         with open(hash_file_path, 'r') as f:
                             hash_file_content = f.read().strip()
                             if hash_file_content in hashes:
-                                logging.info(f"Skipping (index file already contains a hash): {hash_file_path}")
+                                logging.debug(f"Skipping (index file already contains a hash): {hash_file_path}")
                                 download_status = False
                                 break
                     # Normal processing
