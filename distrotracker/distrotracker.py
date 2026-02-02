@@ -544,6 +544,9 @@ def main():
 
     if not args.dist:
         args.dist = None
+    else:
+        if config["dist"] and not set(args.dist).issubset(config["dist"]):
+            logging.warning("One or more distributions are missing in the config")
 
     if args.latest: selection = "latest"
     elif args.earliest: selection = "earliest"
