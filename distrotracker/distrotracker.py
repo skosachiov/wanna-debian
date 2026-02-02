@@ -537,8 +537,9 @@ def main():
                 if args.comp: config["comp"] = args.comp
                 if args.arch: config["arch"] = args.arch
 
-    if not args.base_url.endswith("/"):
-        args.base_url += "/"
+    if args.base_url:
+        if not args.base_url.endswith("/"):
+            args.base_url += "/"
 
     if not args.dist:
         args.dist = None
