@@ -473,7 +473,7 @@ def update_metadata(base_url, local_base_dir, dists, components, builds, session
                     if extract_compressed_file(local_z_path, output_path):
                         # Add hash
                         with open(local_z_path, 'rb') as f:
-                            digest = hashlib.file_digest(f, 'sha256')
+                            digest = hashlib.file_digest(f, 'sha256').hexdigest()
                             with open(hash_file_path, 'w') as f_hash:
                                 f_hash.write(digest)
 
