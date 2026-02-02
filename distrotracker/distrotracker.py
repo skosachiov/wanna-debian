@@ -514,6 +514,7 @@ def main():
     parser.add_argument("--latest", action="store_true", help="Display the newest version that matches the criteria")
     parser.add_argument("--source", action="store_true", help="Use the Source field for searching, not the Package field")
     parser.add_argument("--briefly", action="store_true", help="Display only basic fields")
+    parser.add_argument("--arch", default=config["arch"], help='System architecture amd64, arm64, etc. (default: %(default)s)')
     parser.add_argument("--log-level", default=config["loglevel"], choices=['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'], \
         help='Set the logging level (default: %(default)s)')
 
