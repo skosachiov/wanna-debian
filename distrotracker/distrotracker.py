@@ -12,6 +12,7 @@ _config = {
     "status_file": "status",
     "hash_file": "hashes",
     "default_builds": ['binary-amd64', 'source'],
+    "default_arch": 'amd64',
     "default_loglevel": 'INFO',
     "min_version": "0~~",
     "briefly_keys": ['package', 'version', 'dist', 'build', 'source'],
@@ -211,7 +212,20 @@ def find_versions(fin, filename, dist = None, build = None, briefly = None, inde
     print(',\n'.join(items))
     print("]")
 
-def original_metadata_is_newer(base_url, local_base_dir, session):
+def extract_hashes(filename, hashes):
+    if "ls-lR" in filename:
+        pattern = r'(?:Packages|Sources).*SHA256/([a-fA-F0-9]{64})'
+    elif "release.caches.db" in filename:
+        pattern = r':2:([a-fA-F0-9]{64})'
+    else:
+        return
+    with open(filename, 'rb') as f:
+        data = f.read()
+        text = data.decode('utf-8', errors='ignore')
+        hash_block = set(re.findall(pattern, text))
+        hashes.add(hash_block)
+
+def original_metadata_is_newer(base_url, local_base_dir, session, hashes):
     """
     Check if specific Debian metadata files are newer than local ones and update if needed.
     Builds local paths from URL structure.
@@ -222,7 +236,7 @@ def original_metadata_is_newer(base_url, local_base_dir, session):
         # 'db/references.db',
         'ls-lR.gz',
         'db/release.caches.db',
-        'indices/files/arch-amd64.files',
+        'indices/files/arch-' + _config["default_arch"] + '.files',
         'indices/files/components/source.list.gz'
     ]
 
@@ -267,7 +281,8 @@ def original_metadata_is_newer(base_url, local_base_dir, session):
                         # Update local modification time to match remote
                         os.utime(local_path, (remote_time, remote_time))
 
-                        extract_compressed_file(local_path, local_path[:-3], remote_time)
+                        if extract_compressed_file(local_path, local_path[:-3], remote_time):
+                            extract_hashes(local_path[:-3], hashes)
 
                     else:
                         logging.info(f"Url is up to date: {url_path}")
@@ -289,7 +304,8 @@ def original_metadata_is_newer(base_url, local_base_dir, session):
                     remote_time = datetime.strptime(remote_time_str, '%a, %d %b %Y %H:%M:%S %Z').timestamp()
                     os.utime(local_path, (remote_time, remote_time))
 
-                extract_compressed_file(local_path, local_path[:-3], remote_time)
+                if extract_compressed_file(local_path, local_path[:-3], remote_time):
+                    extract_hashes(local_path[:-3], hashes)
 
         except requests.RequestException as e:
             logging.warning(f"No processing {url}: {e}")
@@ -395,7 +411,7 @@ def extract_compressed_file(compressed_path, extract_path, remote_time=None):
     logging.error(f"Unsupported file extension: {compressed_path}")
     return False
 
-def update_metadata(base_url, local_base_dir, dists, components, builds, session):
+def update_metadata(base_url, local_base_dir, dists, components, builds, session, hashes):
     """Main function to update Debian repository metadata"""
 
     try:
@@ -431,7 +447,16 @@ def update_metadata(base_url, local_base_dir, dists, components, builds, session
         for component in components:
             for metadata_file in metadata_files:
                 download_status = None
+                hash_file_path = f"{component}/{metadata_file}.sha256"
                 for extension in ['.gz', '.xz']:
+                    # The hash has not changed
+                    if os.path.exists(file_path):
+                        with open(file_path, 'r') as f:
+                            hash_file_content = f.read().strip()
+                            if hash_file_content in hashes:
+                                download_status = False
+                                break
+                    # Normal processing
                     file_path = component + "/" + metadata_file + extension
                     remote_url = urljoin(dist_url, file_path)
                     local_z_path = os.path.join(dist_dir, file_path)
@@ -445,7 +470,12 @@ def update_metadata(base_url, local_base_dir, dists, components, builds, session
                 output_path = os.path.join(output_dir, output_filename)
 
                 if download_status:
-                    extract_compressed_file(local_z_path, output_path)
+                    if extract_compressed_file(local_z_path, output_path):
+                        # Add hash
+                        with open(local_z_path, 'rb') as f:
+                            digest = hashlib.file_digest(f, 'sha256')
+                            with open(hash_file_path, 'w') as f_hash:
+                                f_hash.write(digest)
 
                 if download_status is not None:
                     update_metadata_index(output_path, data_list, dist, component, metadata_file.split("/")[0], download_status == False)
@@ -528,12 +558,13 @@ def main():
     apt_pkg.init()
 
     session = requests.Session()
+    hashes = set()
 
     if not args.hold:
-        if args.force or original_metadata_is_newer(args.base_url, args.local_dir, session) or \
+        if args.force or original_metadata_is_newer(args.base_url, args.local_dir, session, hashes) or \
                 not os.path.exists(status_file):
             logging.info("Starting metadata update...")
-            update_metadata(args.base_url, args.local_dir, args.dist, args.comp, _config["default_builds"], session)
+            update_metadata(args.base_url, args.local_dir, args.dist, args.comp, _config["default_builds"], session, hashes)
             logging.info("Metadata update completed!")
     if args.find:
         find_versions(sys.stdin, args.local_dir + "/" + _config["index_file"], args.dist, args.build, args.briefly, \
