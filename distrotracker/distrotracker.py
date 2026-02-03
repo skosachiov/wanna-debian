@@ -531,6 +531,9 @@ def main():
     try:
         with open(config_file, "r") as f:
             config.update(json.load(f))
+            if args.base_url and args.base_url != config["base_url"]:
+                logging.error("Base url is specified, but at the same time configuration with a different url")
+                return
     except FileNotFoundError:
             if not args.base_url:
                 logging.error("Config file missing, base url required")
