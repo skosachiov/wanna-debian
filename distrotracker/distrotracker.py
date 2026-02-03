@@ -524,6 +524,10 @@ def main():
 
     config_file = args.local_dir + "/" + config["config_file"]
 
+    if args.base_url:
+        if not args.base_url.endswith("/"):
+            args.base_url += "/"
+
     try:
         with open(config_file, "r") as f:
             config.update(json.load(f))
@@ -537,10 +541,6 @@ def main():
                 if args.dist: config["dist"] = args.dist
                 if args.comp: config["comp"] = args.comp
                 if args.arch: config["arch"] = args.arch
-
-    if args.base_url:
-        if not args.base_url.endswith("/"):
-            args.base_url += "/"
 
     if not args.dist:
         args.dist = None
