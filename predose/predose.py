@@ -60,6 +60,7 @@ def parse_metadata(filepath, src_dict = None, prov_dict = None, bin_dict = None)
                     if key in ('Build-Depends', 'Build-Depends-Indep', 'Build-Depends-Arch', 'Depends', 'Pre-Depends'):
                         deps_pkgs = [p.strip().split()[0].split(":")[0] for p in value.split(',') if p.strip()]
                         for p in deps_pkgs:
+                            # Remove the dependency on yourself since the build stages are not taken into account
                             if p == pkg_name:
                                 logging.warning(f'Package depends on itself, '
                                     f'package name is excluded from dependencies: {pkg_name}')
