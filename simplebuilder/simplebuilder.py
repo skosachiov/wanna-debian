@@ -141,18 +141,14 @@ def process_line(line, args):
 
     # Extract URL and comment
     if '#' in line:
-        url_part, comment = line.split('#', 1)
-        url_part = url_part.strip()
+        url, comment = line.split('#', 1)
+        url = url.strip()
         comment = comment.strip()
     else:
-        url_part = line
-        comment = ""
+        url = line
 
-    if not url_part:
+    if not url:
         return True  # Skip lines with only comments
-
-    url = url_part
-    logging.info(f"Processing: {url} (comment: '{comment}')")
 
     # Ensure directories exist
     os.makedirs(args.build, exist_ok=True)
