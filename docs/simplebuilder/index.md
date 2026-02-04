@@ -11,10 +11,10 @@ https://salsa.debian.org/debian/runit.git
 https://deb.debian.org/debian/pool/main/a/acct/acct_6.6.4-10.dsc
 https://deb.debian.org/debian/pool/main/h/hello/hello_2.10-3.dsc
 https://deb.debian.org/debian/pool/main/j/jq/jq_1.8.1-4.dsc
-http://ftp.debian.org/debian/pool/main/p/pcre2/libpcre2-8-0_10.46-1_amd64.deb
-http://ftp.debian.org/debian/pool/main/libs/libsepol/libsepol2_3.9-2_amd64.deb
-file:///tmp/libsepol2_3.9-2_amd64.deb
-http://deb.debian.org/debian/pool/main/libs/libselinux/libselinux_3.9-2.dsc
+http://ftp.debian.org/debian/pool/main/p/pcre2/libpcre2-8-0_10.46-1~deb13u1_amd64.deb
+https://ftp.debian.org/debian/pool/main/p/pcre2/libpcre2-dev_10.46-1~deb13u1_amd64.deb
+http://ftp.debian.org/debian/pool/main/libs/libsepol/libsepol2_3.8.1-1_amd64.deb
+http://deb.debian.org/debian/pool/main/libs/libselinux/libselinux_3.8.1-1.dsc
 https://deb.debian.org/debian/pool/main/h/hello-traditional/hello-traditional_2.10-6.dsc
 ```
 
