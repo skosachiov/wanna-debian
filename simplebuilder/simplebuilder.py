@@ -166,6 +166,7 @@ def process_line(line, args):
 
         elif url.endswith('.dsc'):
             # Source package
+            # apt install -s vim=2:9.1.1230-2; echo $?
             success = download_and_build_dpkg(url, args.build, args.repository, rebuild=False)
 
             if success:
