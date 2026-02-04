@@ -166,12 +166,7 @@ def process_line(line, args):
 
         elif url.endswith('.dsc'):
             # Source package
-            if 'rebuild' in comment.lower():
-                # Rebuild with version bump
-                success = download_and_build_dpkg(url, args.build, args.repository, rebuild=True)
-            else:
-                # Normal build
-                success = download_and_build_dpkg(url, args.build, args.repository, rebuild=False)
+            success = download_and_build_dpkg(url, args.build, args.repository, rebuild=False)
 
             if success:
                 # success = scan_packages(args.repository)
