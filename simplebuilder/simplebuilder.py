@@ -81,6 +81,8 @@ def download_and_build_dpkg(url, build_dir, repo_dir, rebuild=False):
         for item in os.listdir(temp_dir):
             item_path = os.path.join(temp_dir, item)
             if os.path.isdir(item_path) and item != filename:
+                os.environ['DEBEMAIL'] = os.environ.get('DEBEMAIL', 'simplebuilder@localhost')
+                os.environ['DEBFULLNAME'] = os.environ.get('DEBFULLNAME', 'simplebuilder')
                 if rebuild:
                     build_cmd = "dch --bin-nmu 'Rebuild' && dpkg-buildpackage -uc -us"
                 else:
