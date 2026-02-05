@@ -165,10 +165,14 @@ def process_line(line, args):
                 scan_packages(args.repository)
 
         elif url.endswith('.dsc'):
-            # Source package
-            # apt install -s vim=2:9.1.1230-2; echo $?
-            success = download_and_build_dpkg(url, args.build, args.repository, rebuild=False)
-
+            # Check source is in repo
+            match = re.match(r'^(.+)_([^_]+)\.dsc$', url)
+            if match:
+                package = match.group(1)
+                version = match.group(2)
+            rebuild = run_command(f"apt-get source -s {package}={version}")
+            # Build or rebuild
+            success = download_and_build_dpkg(url, args.build, args.repository, rebuild)
             if success:
                 # success = scan_packages(args.repository)
                 scan_packages(args.repository)
