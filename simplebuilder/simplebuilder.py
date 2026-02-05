@@ -161,6 +161,8 @@ def process_line(line, args):
     if not url:
         return True  # Skip lines with only comments
 
+    os.environ['BUILDLOG'] = url.split('/')[-1] + ".log" 
+
     # Ensure directories exist
     os.makedirs(args.build, exist_ok=True)
     os.makedirs(args.repository, exist_ok=True)
@@ -181,7 +183,6 @@ def process_line(line, args):
             if match:
                 package = match.group(1)
                 version = match.group(2)
-            os.environ['BUILDLOG'] = url.split('/')[-1] + ".log" 
             rebuild = run_command(f"apt-get source -s {package}={version}")
             if rebuild: logging.info(f"The required version is present in the repository, use bin-nmu rebuild")
             # Build or rebuild
