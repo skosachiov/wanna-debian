@@ -135,7 +135,7 @@ def copy_to_repo(file_url, repo_dir):
 def copy_built_packages(source_dir, repo_dir):
     copied = False
     for file in os.listdir(source_dir):
-        if file.endswith(('.deb', '.dsc', '.tar.gz', '.tar.xz', '.log')):
+        if file.endswith(('.deb', '.dsc', '.tar.gz', '.tar.xz')):
             shutil.copy2(os.path.join(source_dir, file), repo_dir)
             logging.info(f"Copied {file} to repository")
             copied = True
