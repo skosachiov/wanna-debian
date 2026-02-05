@@ -81,10 +81,10 @@ def download_and_build_dpkg(url, build_dir, repo_dir, rebuild=False):
         for item in os.listdir(temp_dir):
             item_path = os.path.join(temp_dir, item)
             if os.path.isdir(item_path) and item != filename:
-                build_cmd = "dpkg-buildpackage -uc -us"
                 if rebuild:
-                    # Add version bump for rebuild
-                    build_cmd = "DEB_BUILD_OPTIONS='nocheck' dpkg-buildpackage -uc -us -b --build=full"
+                    build_cmd = "dch --bin-nmu 'Rebuild' && dpkg-buildpackage -uc -us"
+                else:
+                    build_cmd = "dpkg-buildpackage -uc -us"
 
                 run_command("yes | mk-build-deps -i -r debian/control", cwd=item_path)
                 if run_command(build_cmd, cwd=item_path):
