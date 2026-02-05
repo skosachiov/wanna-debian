@@ -1,10 +1,14 @@
-# Build from a single .dsc file
+# simplebuilder
+
+The Simple Debian package builder handles different source types based on URL patterns provided. The build task is received via stdin. Each line of the task is a link to a Debian package or its source code. After building or downloading each package, the artifacts are placed in a local repository and connected to the build environment, thus satisfying build dependencies for packages from subsequent lines. If a package version is already available in the connected repositories, a bin-nmu rebuild is automatically triggered.
+
+## Build from a single .dsc file
 `echo "https://example.com/package.dsc" | simplebuilder`
 
-# Build from a Git repository
+## Build from a Git repository
 `echo "https://github.com/user/repo.git" | simplebuilder`
 
-# Build from multiple sources
+## Build from multiple sources
 ```
 http://deb.debian.org/debian/pool/main/h/hello/hello_2.10-3.dsc
 http://deb.debian.org/debian/pool/main/c/cowsay/cowsay_3.03+dfsg2-8.dsc
@@ -21,7 +25,7 @@ http://deb.debian.org/debian/pool/main/f/figlet/figlet_2.2.5-3.1.dsc
 https://deb.debian.org/debian/pool/main/h/hello-traditional/hello-traditional_2.10-6.dsc
 ```
 
-# Docker run
+## Docker run
 ```
 docker run -it --rm \
   -v $(pwd)/repository:/workspace/repository \
