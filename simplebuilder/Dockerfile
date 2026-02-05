@@ -16,6 +16,8 @@ RUN apt-get update && apt-get install -y \
     pbuilder \
     git \
     apt-utils \
+    git-buildpackage \
+    pristine-tar \
     && rm -rf /var/lib/apt/lists/*
 
 # Install additional common build dependencies

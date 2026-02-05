@@ -12,9 +12,11 @@ http://deb.debian.org/debian/pool/main/h/hello/hello_2.10-5.dsc
 https://salsa.debian.org/debian/runit.git
 https://deb.debian.org/debian/pool/main/a/acct/acct_6.6.4-10.dsc
 https://deb.debian.org/debian/pool/main/j/jq/jq_1.8.1-4.dsc
-http://deb.debian.org/debian/pool/main/r/rust-zoxide/rust-zoxide_0.9.8-1.dsc
+http://deb.debian.org/debian/pool/main/h/htop/htop_3.2.2-2.dsc
+https://salsa.debian.org/debian/dash.git
 http://ftp.debian.org/debian/pool/main/libs/libsepol/libsepol2_3.8.1-1_amd64.deb
 http://deb.debian.org/debian/pool/main/libs/libselinux/libselinux_3.8.1-1.dsc
+http://deb.debian.org/debian/pool/main/m/miller/miller_6.16.0-1.dsc
 http://deb.debian.org/debian/pool/main/f/figlet/figlet_2.2.5-3.1.dsc
 https://deb.debian.org/debian/pool/main/h/hello-traditional/hello-traditional_2.10-6.dsc
 ```

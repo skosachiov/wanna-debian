@@ -73,7 +73,7 @@ def download_and_build_dpkg(url, build_dir, repo_dir, rebuild=False):
         filename = url.split('/')[-1]
         local_path = os.path.join(temp_dir, filename)
 
-        if not run_command(f"dget {url}", cwd=temp_dir):
+        if not run_command(f"dget --allow-unauthenticated {url}", cwd=temp_dir):
             return False
 
         # Find extracted directory
