@@ -23,8 +23,7 @@ def run_command(cmd, cwd=None, env=None):
             logging.debug(f"Command stderr: {result.stderr}")
         return True
     except subprocess.CalledProcessError as e:
-        logging.error(f"Command failed: {e}")
-        logging.error(f"Error output: {e.stderr}")
+        logging.warning(f"Command failed: {e}")
         return False
 
 def scan_packages(repo_path):
@@ -84,7 +83,7 @@ def download_and_build_dpkg(url, build_dir, repo_dir, rebuild=False):
                 os.environ['DEBEMAIL'] = os.environ.get('DEBEMAIL', 'simplebuilder@localhost')
                 os.environ['DEBFULLNAME'] = os.environ.get('DEBFULLNAME', 'simplebuilder')
                 if rebuild:
-                    build_cmd = "dch --bin-nmu 'Rebuild' && dpkg-buildpackage -uc -us"
+                    build_cmd = "dch --bin-nmu 'Rebuild' && dpkg-buildpackage -uc -us -b"
                 else:
                     build_cmd = "dpkg-buildpackage -uc -us"
 
