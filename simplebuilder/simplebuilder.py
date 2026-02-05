@@ -24,7 +24,7 @@ def run_command(cmd, cwd=None, env=None):
             logging.debug(f"Command stderr: {result.stderr}")
         return True
     except subprocess.CalledProcessError as e:
-        if result.returncode != 100:
+        if result and result.returncode != 100:
             logging.warning(f"Command failed: {e}")
         return False
 
