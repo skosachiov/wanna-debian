@@ -32,7 +32,7 @@ def run_command(cmd, cwd=None, env=None):
     logfile = os.environ.get('BUILDLOG', str(time.time()) + ".log" )
     with open (logfile, 'a') as f:
         f.write(result.stdout)
-        t.write(result.stderr)
+        f.write(result.stderr)
     return rc
 
 
