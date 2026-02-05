@@ -30,7 +30,7 @@ def run_command(cmd, cwd=None, env=None):
             logging.warning(f"Command failed: {e}")
         rc = False
     logfile = os.environ.get('BUILDLOG', str(time.time()) + ".log" )
-    with open (logfile, 'a') as f:
+    with open (cwd + '/' + logfile, 'a') as f:
         f.write(result.stdout)
         f.write(result.stderr)
     return rc
@@ -82,8 +82,6 @@ def download_and_build_dpkg(url, build_dir, repo_dir, rebuild=False):
         # Download file
         filename = url.split('/')[-1]
         local_path = os.path.join(temp_dir, filename)
-
-        os.environ['BUILDLOG'] = filename + ".log" 
 
         if not run_command(f"dget --allow-unauthenticated {url}", cwd=temp_dir):
             return False
@@ -183,6 +181,7 @@ def process_line(line, args):
             if match:
                 package = match.group(1)
                 version = match.group(2)
+            os.environ['BUILDLOG'] = url.split('/')[-1] + ".log" 
             rebuild = run_command(f"apt-get source -s {package}={version}")
             if rebuild: logging.info(f"The required version is present in the repository, use bin-nmu rebuild")
             # Build or rebuild
