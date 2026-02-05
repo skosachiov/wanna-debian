@@ -16,7 +16,7 @@ http://deb.debian.org/debian/pool/main/h/htop/htop_3.2.2-2.dsc
 https://salsa.debian.org/debian/dash.git
 http://ftp.debian.org/debian/pool/main/libs/libsepol/libsepol2_3.8.1-1_amd64.deb
 http://deb.debian.org/debian/pool/main/libs/libselinux/libselinux_3.8.1-1.dsc
-http://deb.debian.org/debian/pool/main/m/miller/miller_6.16.0-1.dsc
+http://deb.debian.org/debian/pool/main/m/miller/miller_6.13.0-1.dsc
 http://deb.debian.org/debian/pool/main/f/figlet/figlet_2.2.5-3.1.dsc
 https://deb.debian.org/debian/pool/main/h/hello-traditional/hello-traditional_2.10-6.dsc
 ```

@@ -23,7 +23,8 @@ def run_command(cmd, cwd=None, env=None):
             logging.debug(f"Command stderr: {result.stderr}")
         return True
     except subprocess.CalledProcessError as e:
-        logging.warning(f"Command failed: {e}")
+        if result.returncode != 100:
+            logging.warning(f"Command failed: {e}")
         return False
 
 def scan_packages(repo_path):
@@ -172,6 +173,7 @@ def process_line(line, args):
                 package = match.group(1)
                 version = match.group(2)
             rebuild = run_command(f"apt-get source -s {package}={version}")
+            if rebuild: logging.info(f"")
             # Build or rebuild
             success = download_and_build_dpkg(url, args.build, args.repository, rebuild)
             if success:
@@ -273,6 +275,8 @@ def main():
     # Read from stdin
     success_count = 0
     fail_count = 0
+    success_items = []
+    fail_items = []
 
     for line_num, line in enumerate(sys.stdin, 1):
         line = line.strip()
@@ -283,10 +287,13 @@ def main():
 
         if process_line(line, args):
             success_count += 1
+            success_items.append(line.split('/')[-1])
         else:
             fail_count += 1
+            fail_items.append(line.split('/')[-1])
 
     logging.info(f"Build process completed. Success: {success_count}, Failed: {fail_count}")
+    logging.info(f"Success items: {success_items}, Failed: {fail_items}")
 
     remove_local_repo_sources()
 
