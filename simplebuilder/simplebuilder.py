@@ -166,7 +166,7 @@ def process_line(line, args):
 
         elif url.endswith('.dsc'):
             # Check source is in repo
-            match = re.match(r'^(.+)_([^_]+)\.dsc$', url)
+            match = re.match(r'([^/]+)_(.+).dsc$', url)
             if match:
                 package = match.group(1)
                 version = match.group(2)
