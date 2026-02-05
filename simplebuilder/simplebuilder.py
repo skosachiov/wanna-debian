@@ -174,7 +174,7 @@ def process_line(line, args):
                 package = match.group(1)
                 version = match.group(2)
             rebuild = run_command(f"apt-get source -s {package}={version}")
-            if rebuild: logging.info(f"")
+            if rebuild: logging.info(f"The required version is present in the repository, use bin-nmu rebuild")
             # Build or rebuild
             success = download_and_build_dpkg(url, args.build, args.repository, rebuild)
             if success:
