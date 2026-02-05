@@ -30,7 +30,7 @@ def run_command(cmd, cwd=None, env=None):
             logging.warning(f"Command failed: {e}")
         rc = False
     logfile = os.environ.get('BUILDLOG', str(time.time()) + ".log" )
-    with open (logfile, 'wa') as f:
+    with open (logfile, 'a') as f:
         f.write(result.stdout)
         t.write(result.stderr)
     return rc
