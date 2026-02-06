@@ -27,7 +27,7 @@ https://deb.debian.org/debian/pool/main/h/hello-traditional/hello-traditional_2.
 
 ## Rebuid with suffix
 
-`cat <file> | simplebuilder --suffix "\-1ubuntu"`
+`cat <file> | simplebuilder --suffix="ubuntu"`
 
 ## Docker run
 ```
