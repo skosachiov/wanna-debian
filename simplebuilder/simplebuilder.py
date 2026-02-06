@@ -63,11 +63,9 @@ def clone_and_build_gbp(repo_url, build_dir, repo_dir):
 
     # Build with gbp-buildpackage
     if os.environ['LOCALSUFFIX']:
-        dch_cmd = f"dch --local {os.environ['LOCALSUFFIX']} 'Add suffix' && "
-    else:
-        dch_cmd = ""
-    if run_command(dch_cmd + \
-        "gbp buildpackage -uc -us --git-no-pristine-tar --git-ignore-new --git-export-dir=../build-area", cwd=clone_dir):
+        run_command(f"cd {repo_name}; dch --local {os.environ['LOCALSUFFIX']} 'Add suffix'", cwd=build_dir)
+    
+    if run_command("gbp buildpackage -uc -us --git-no-pristine-tar --git-ignore-new --git-export-dir=../build-area", cwd=clone_dir):
         # Copy built packages to repository
         return copy_built_packages(os.path.join(clone_dir, "../build-area"), repo_dir)
     return False
@@ -262,7 +260,7 @@ def main():
     parser.add_argument("--repository", default="/tmp/workspace/repository", help="Local repository (default: %(default)s)")
     parser.add_argument("--build", default="/tmp/workspace/build", help="Local build folder (default: %(default)s)")
     parser.add_argument("--profiles", default=["nocheck", "nostrip"], nargs="+", \
-        help="Build profiles (default: %(default)s)")
+        help="Build profiles (default: nocheck nostrip")
     parser.add_argument("--suffix", default='', help="Local suffix (default: %(default)s)")
     parser.add_argument("--filtering-pkgs", type=str, metavar='PATH', \
         help="File containing a list of filtering packets for the apt manager")
