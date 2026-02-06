@@ -70,7 +70,12 @@ def clone_and_build_gbp(repo_url, build_dir, repo_dir):
     run_command(f"cd {repo_name}; yes | mk-build-deps -i -r debian/control", cwd=build_dir)
 
     # Build with gbp-buildpackage
-    if run_command("gbp buildpackage -uc -us --git-no-pristine-tar --git-ignore-new --git-export-dir=../build-area", cwd=clone_dir):
+    if os.environ['LOCALSUFFIX']:
+        dch_cmd = f"dch --local {os.environ['LOCALSUFFIX']} && "
+    else:
+        dch_cmd = ""
+    if run_command(dch_cmd + \
+        "gbp buildpackage -uc -us --git-no-pristine-tar --git-ignore-new --git-export-dir=../build-area", cwd=clone_dir):
         # Copy built packages to repository
         return copy_built_packages(os.path.join(clone_dir, "../build-area"), repo_dir)
     return False
@@ -93,10 +98,13 @@ def download_and_build_dpkg(url, build_dir, repo_dir, rebuild=False):
             if os.path.isdir(item_path) and item != filename:
                 os.environ['DEBEMAIL'] = os.environ.get('DEBEMAIL', 'simplebuilder@localhost')
                 os.environ['DEBFULLNAME'] = os.environ.get('DEBFULLNAME', 'simplebuilder')
-                if rebuild:
-                    build_cmd = "dch --bin-nmu 'Rebuild' && dpkg-buildpackage -uc -us -b"
+                if os.environ['LOCALSUFFIX']:
+                    build_cmd = f"dch --local {os.environ['LOCALSUFFIX']} && dpkg-buildpackage -uc -us -b"
                 else:
-                    build_cmd = "dpkg-buildpackage -uc -us"
+                    if rebuild:
+                        build_cmd = "dch --bin-nmu 'Rebuild' && dpkg-buildpackage -uc -us -b"
+                    else:
+                        build_cmd = "dpkg-buildpackage -uc -us"
 
                 run_command("yes | mk-build-deps -i -r debian/control", cwd=item_path)
                 if run_command(build_cmd, cwd=item_path):
@@ -162,7 +170,7 @@ def process_line(line, args):
     if not url:
         return True  # Skip lines with only comments
 
-    os.environ['BUILDLOG'] = url.split('/')[-1] + ".log" 
+    os.environ['BUILDLOG'] = url.split('/')[-1] + ".log"
 
     # Ensure directories exist
     os.makedirs(args.build, exist_ok=True)
@@ -265,7 +273,11 @@ def main():
     parser.add_argument("--workspace", default="/tmp/workspace", help="Local workspace (default: %(default)s)")
     parser.add_argument("--repository", default="/tmp/workspace/repository", help="Local repository (default: %(default)s)")
     parser.add_argument("--build", default="/tmp/workspace/build", help="Local build folder (default: %(default)s)")
-    parser.add_argument("--filtering-pkgs", type=str, metavar='PATH', help="File containing a list of filtering packets for the apt manager")
+    parser.add_argument("--profiles", default=["nocheck", "nostrip"], nargs="+", \
+        help="Build profiles (default: %(default)s)")
+    parser.add_argument("--suffix", default='', help="Local suffix (default: %(default)s)")
+    parser.add_argument("--filtering-pkgs", type=str, metavar='PATH', \
+        help="File containing a list of filtering packets for the apt manager")
     parser.add_argument("--log-level", default='INFO', choices=['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'], \
         help='Set the logging level (default: %(default)s)')
 
@@ -277,6 +289,9 @@ def main():
     os.makedirs(args.workspace, exist_ok=True)
     os.makedirs(args.repository, exist_ok=True)
     os.makedirs(args.build, exist_ok=True)
+
+    os.environ['LOCALSUFFIX'] = args.suffix     
+    os.environ['DEB_BUILD_OPTIONS'] = " ".join(args.profiles)
 
     deb_src_apt_sources()
     update_packages()
