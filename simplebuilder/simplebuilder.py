@@ -63,7 +63,7 @@ def clone_and_build_gbp(repo_url, build_dir, repo_dir):
 
     # Build with gbp-buildpackage
     if os.environ['LOCALSUFFIX']:
-        run_command(f"cd {repo_name}; dch --local={os.environ['LOCALSUFFIX']} 'Add suffix'; \
+        run_command(f"cd {repo_name}; dch -l {os.environ['LOCALSUFFIX']} 'Add suffix'; \
             git -c user.name={os.environ['DEBFULLNAME']} -c user.email={os.environ['DEBEMAIL']} commit -am 'Add suffix'", \
             cwd=build_dir)
     
@@ -91,7 +91,7 @@ def download_and_build_dpkg(url, build_dir, repo_dir, rebuild=False):
             item_path = os.path.join(temp_dir, item)
             if os.path.isdir(item_path) and item != filename:
                 if os.environ['LOCALSUFFIX']:
-                    build_cmd = f"dch --local={os.environ['LOCALSUFFIX']} 'Add suffix' && dpkg-buildpackage -uc -us -b"
+                    build_cmd = f"dch -l {os.environ['LOCALSUFFIX']} 'Add suffix' && dpkg-buildpackage -uc -us -b"
                 else:
                     if rebuild:
                         build_cmd = "dch --bin-nmu 'Rebuild' && dpkg-buildpackage -uc -us -b"
