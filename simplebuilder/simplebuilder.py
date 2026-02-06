@@ -88,8 +88,6 @@ def download_and_build_dpkg(url, build_dir, repo_dir, rebuild=False):
         for item in os.listdir(temp_dir):
             item_path = os.path.join(temp_dir, item)
             if os.path.isdir(item_path) and item != filename:
-                os.environ['DEBEMAIL'] = os.environ.get('DEBEMAIL', 'simplebuilder@localhost')
-                os.environ['DEBFULLNAME'] = os.environ.get('DEBFULLNAME', 'simplebuilder')
                 if os.environ['LOCALSUFFIX']:
                     build_cmd = f"dch --local {os.environ['LOCALSUFFIX']} 'Add suffix' && dpkg-buildpackage -uc -us -b"
                 else:
@@ -280,6 +278,8 @@ def main():
     os.makedirs(args.repository, exist_ok=True)
     os.makedirs(args.build, exist_ok=True)
 
+    os.environ['DEBEMAIL'] = os.environ.get('DEBEMAIL', 'simplebuilder@localhost')
+    os.environ['DEBFULLNAME'] = os.environ.get('DEBFULLNAME', 'simplebuilder')
     os.environ['LOCALSUFFIX'] = args.suffix     
     os.environ['DEB_BUILD_OPTIONS'] = " ".join(args.profiles)
 

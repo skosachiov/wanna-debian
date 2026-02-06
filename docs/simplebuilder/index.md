@@ -25,6 +25,10 @@ http://deb.debian.org/debian/pool/main/f/figlet/figlet_2.2.5-3.1.dsc
 https://deb.debian.org/debian/pool/main/h/hello-traditional/hello-traditional_2.10-6.dsc
 ```
 
+## Rebuid with suffix
+
+`cat <file> | simplebuilder --suffix "\-1ubuntu"`
+
 ## Docker run
 ```
 docker run -it --rm \
