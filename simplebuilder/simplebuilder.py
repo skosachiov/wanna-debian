@@ -27,6 +27,8 @@ def run_command(cmd, cwd=None, env=None):
     except subprocess.CalledProcessError as e:
         if result and result.returncode != 100:
             logging.warning(f"Command failed: {e}")
+        if result:
+            logging.error(f"Command failed: {e}")    
         return False
 
 def scan_packages(repo_path):
