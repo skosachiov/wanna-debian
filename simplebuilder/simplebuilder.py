@@ -63,9 +63,11 @@ def clone_and_build_gbp(repo_url, build_dir, repo_dir):
 
     # Build with gbp-buildpackage
     if os.environ['LOCALSUFFIX']:
-        run_command(f"cd {repo_name}; dch --local {os.environ['LOCALSUFFIX']} 'Add suffix'", cwd=build_dir)
+        run_command(f"cd {repo_name}; gbp dch --local {os.environ['LOCALSUFFIX']} 'Add suffix'; \
+            git -c user.name='simplebuilder' -c user.email='simplebuilder@localhost' commit -am 'Add suffix'", \
+            cwd=build_dir)
     
-    if run_command("gbp buildpackage -uc -us --git-no-pristine-tar --git-no-ignore-new --git-export-dir=../build-area", cwd=clone_dir):
+    if run_command("gbp buildpackage -uc -us --git-no-pristine-tar --git-ignore-new --git-export-dir=../build-area", cwd=clone_dir):
         # Copy built packages to repository
         return copy_built_packages(os.path.join(clone_dir, "../build-area"), repo_dir)
     return False
