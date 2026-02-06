@@ -63,7 +63,7 @@ def clone_and_build_gbp(repo_url, build_dir, repo_dir):
 
     # Build with gbp-buildpackage
     if os.environ['LOCALSUFFIX']:
-        dch_cmd = f"dch --local {os.environ['LOCALSUFFIX']} && "
+        dch_cmd = f"dch --local {os.environ['LOCALSUFFIX']} 'Add suffix' && "
     else:
         dch_cmd = ""
     if run_command(dch_cmd + \
