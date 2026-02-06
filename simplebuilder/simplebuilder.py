@@ -16,26 +16,17 @@ from pathlib import Path
 def run_command(cmd, cwd=None, env=None):
     """Run a shell command and return success status."""
     logging.debug(f"Running command: {cmd} in {cwd}")
-    result = None
-    rc = None
     try:
         result = subprocess.run(cmd, shell=True, cwd=cwd, env=env,
                               capture_output=True, text=True, check=True)
         logging.debug(f"Command output: {result.stdout}")
         if result.stderr:
             logging.debug(f"Command stderr: {result.stderr}")
-        rc = True
+        return True
     except subprocess.CalledProcessError as e:
         if result and result.returncode != 100:
             logging.warning(f"Command failed: {e}")
-        rc = False
-    logfile = os.environ.get('BUILDLOG', str(time.time()) + ".log" )
-    if result:
-        with open(logfile, 'a') as f:
-            f.write(result.stdout)
-            f.write(result.stderr)
-    return rc
-
+        return False
 
 def scan_packages(repo_path):
     """Run dpkg-scanpackages to update local repository."""
@@ -99,7 +90,7 @@ def download_and_build_dpkg(url, build_dir, repo_dir, rebuild=False):
                 os.environ['DEBEMAIL'] = os.environ.get('DEBEMAIL', 'simplebuilder@localhost')
                 os.environ['DEBFULLNAME'] = os.environ.get('DEBFULLNAME', 'simplebuilder')
                 if os.environ['LOCALSUFFIX']:
-                    build_cmd = f"dch --local {os.environ['LOCALSUFFIX']} && dpkg-buildpackage -uc -us -b"
+                    build_cmd = f"dch --local {os.environ['LOCALSUFFIX']} 'Add suffix' && dpkg-buildpackage -uc -us -b"
                 else:
                     if rebuild:
                         build_cmd = "dch --bin-nmu 'Rebuild' && dpkg-buildpackage -uc -us -b"
@@ -144,7 +135,7 @@ def copy_to_repo(file_url, repo_dir):
 def copy_built_packages(source_dir, repo_dir):
     copied = False
     for file in os.listdir(source_dir):
-        if file.endswith(('.deb', '.dsc', '.tar.gz', '.tar.xz')):
+        if file.endswith(('.deb', '.dsc', '.tar.gz', '.tar.xz', '.buildinfo', '.changes')):
             shutil.copy2(os.path.join(source_dir, file), repo_dir)
             logging.info(f"Copied {file} to repository")
             copied = True
@@ -169,8 +160,6 @@ def process_line(line, args):
 
     if not url:
         return True  # Skip lines with only comments
-
-    os.environ['BUILDLOG'] = url.split('/')[-1] + ".log"
 
     # Ensure directories exist
     os.makedirs(args.build, exist_ok=True)
