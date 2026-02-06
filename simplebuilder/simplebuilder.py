@@ -63,7 +63,7 @@ def clone_and_build_gbp(repo_url, build_dir, repo_dir):
 
     # Build with gbp-buildpackage
     if os.environ['LOCALSUFFIX']:
-        run_command(f"cd {repo_name}; gbp dch --local={os.environ['LOCALSUFFIX']} 'Add suffix'; \
+        run_command(f"cd {repo_name}; dch --local={os.environ['LOCALSUFFIX']} 'Add suffix'; \
             git -c user.name={os.environ['DEBFULLNAME']} -c user.email={os.environ['DEBEMAIL']} commit -am 'Add suffix'", \
             cwd=build_dir)
     
