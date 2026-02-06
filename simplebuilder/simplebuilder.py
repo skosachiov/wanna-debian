@@ -16,6 +16,7 @@ from pathlib import Path
 def run_command(cmd, cwd=None, env=None):
     """Run a shell command and return success status."""
     logging.debug(f"Running command: {cmd} in {cwd}")
+    result = None
     try:
         result = subprocess.run(cmd, shell=True, cwd=cwd, env=env,
                               capture_output=True, text=True, check=True)
