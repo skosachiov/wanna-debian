@@ -11,9 +11,10 @@ The Simple Debian package builder handles different source types based on URL pa
 ## Build from multiple sources
 ```
 http://deb.debian.org/debian/pool/main/h/hello/hello_2.10-3.dsc
+https://salsa.debian.org/debian/runit.git
+https://deb.debian.org/debian/pool/main/b/bcel/bcel_6.10.0-1.dsc
 http://deb.debian.org/debian/pool/main/c/cowsay/cowsay_3.03+dfsg2-8.dsc
 http://deb.debian.org/debian/pool/main/h/hello/hello_2.10-5.dsc
-https://salsa.debian.org/debian/runit.git
 https://deb.debian.org/debian/pool/main/a/acct/acct_6.6.4-10.dsc
 https://deb.debian.org/debian/pool/main/j/jq/jq_1.8.1-4.dsc
 http://deb.debian.org/debian/pool/main/h/htop/htop_3.2.2-2.dsc
