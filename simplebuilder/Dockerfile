@@ -8,6 +8,7 @@ ENV LANG=C.UTF-8
 # Update package lists and install essential build tools
 RUN apt-get update && apt-get install -y \
     build-essential \
+    default-jdk \
     devscripts \
     debhelper \
     dh-make \

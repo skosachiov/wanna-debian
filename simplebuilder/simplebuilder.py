@@ -17,6 +17,7 @@ def run_command(cmd, cwd=None, env=None):
     """Run a shell command and return success status."""
     logging.debug(f"Running command: {cmd} in {cwd}")
     result = None
+    cmd += f" | tee {os.environ['LOG_FILE']}"
     try:
         result = subprocess.run(cmd, shell=True, cwd=cwd, env=env,
                               capture_output=True, text=True, check=True)
@@ -63,7 +64,7 @@ def clone_and_build_gbp(repo_url, build_dir, repo_dir):
 
     # Build with gbp-buildpackage
     if os.environ['LOCALSUFFIX']:
-        run_command(f"cd {repo_name}; dch --local {os.environ['LOCALSUFFIX']} 'Add suffix'; \
+        run_command(f"cd {repo_name}; dch -v $(dpkg-parsechangelog -S Version){os.environ['LOCALSUFFIX']} 'Add suffix'; \
             git -c user.name={os.environ['DEBFULLNAME']} -c user.email={os.environ['DEBEMAIL']} commit -am 'Add suffix'", \
             cwd=build_dir)
     
@@ -91,7 +92,7 @@ def download_and_build_dpkg(url, build_dir, repo_dir, rebuild=False):
             item_path = os.path.join(temp_dir, item)
             if os.path.isdir(item_path) and item != filename:
                 if os.environ['LOCALSUFFIX']:
-                    build_cmd = f"dch --local {os.environ['LOCALSUFFIX']} 'Add suffix' && dpkg-buildpackage -uc -us -b"
+                    build_cmd = f"dch -v $(dpkg-parsechangelog -S Version){os.environ['LOCALSUFFIX']} 'Add suffix' && dpkg-buildpackage -uc -us -b"
                 else:
                     if rebuild:
                         build_cmd = "dch --bin-nmu 'Rebuild' && dpkg-buildpackage -uc -us -b"
@@ -279,6 +280,7 @@ def main():
     parser.add_argument("--profiles", default=["nocheck", "nostrip"], nargs="+", \
         help="Build profiles (default: nocheck nostrip")
     parser.add_argument("--suffix", default='', help="Local suffix (default: %(default)s)")
+    parser.add_argument("--log-file", default='simplebuilder.log', help="Log file (default: %(default)s)")
     parser.add_argument("--filtering-pkgs", type=str, metavar='PATH', \
         help="File containing a list of filtering packets for the apt manager")
     parser.add_argument("--log-level", default='INFO', choices=['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'], \
@@ -295,7 +297,8 @@ def main():
 
     os.environ['DEBEMAIL'] = os.environ.get('DEBEMAIL', 'simplebuilder@localhost')
     os.environ['DEBFULLNAME'] = os.environ.get('DEBFULLNAME', 'simplebuilder')
-    os.environ['LOCALSUFFIX'] = args.suffix     
+    os.environ['LOCALSUFFIX'] = args.suffix
+    os.environ['LOG_FILE'] = args.log_file    
     os.environ['DEB_BUILD_OPTIONS'] = " ".join(args.profiles)
 
     deb_src_apt_sources()
