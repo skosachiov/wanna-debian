@@ -17,13 +17,17 @@ def run_command(cmd, cwd=None, env=None):
     """Run a shell command and return success status."""
     logging.debug(f"Running command: {cmd} in {cwd}")
     result = None
-    cmd += f" 2>&1 | tee -a {os.environ['LOG_FILE']}"
+    with open(os.environ['LOG_FILE'], 'a') as f:
+        f.write(time.time())
+    cmd += f" | tee -a {os.environ['LOG_FILE']}"
     try:
         result = subprocess.run(cmd, shell=True, cwd=cwd, env=env,
                               capture_output=True, text=True, check=True)
         logging.debug(f"Command output: {result.stdout}")
         if result.stderr:
-            logging.debug(f"Command stderr: {result.stderr}")
+            logging.error(f"Command stderr: {result.stderr}")
+            with open(os.environ['LOG_FILE'], 'a') as f:
+                f.write(result.stderr)
         return True
     except subprocess.CalledProcessError as e:
         if result and result.returncode != 100:
