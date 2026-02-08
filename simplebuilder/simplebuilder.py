@@ -23,11 +23,11 @@ def run_command(cmd, cwd=None, env=None):
     try:
         result = subprocess.run(cmd, shell=True, cwd=cwd, env=env,
                               capture_output=True, text=True, check=True)
-        logging.debug(f"Command output: {result.stdout.decode()}")
+        logging.debug(f"Command output: {result.stdout}")
         if result.stderr:
-            logging.debug(f"Command stderr: {result.stderr.decode()}")
+            logging.debug(f"Command stderr: {result.stderr}")
             with open(os.environ['LOG_FILE'], 'a') as f:
-                f.write(result.stderr.decode())
+                f.write(result.stderr.)
         return True
     except subprocess.CalledProcessError as e:
         if result and result.returncode != 100:
