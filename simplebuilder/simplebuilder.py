@@ -23,11 +23,11 @@ def run_command(cmd, cwd=None, env=None):
     try:
         result = subprocess.run(cmd, shell=True, cwd=cwd, env=env,
                               capture_output=True, text=True, check=True)
-        logging.debug(f"Command output: {result.stdout}")
+        logging.debug(f"Command output: {result.stdout.decode()}")
         if result.stderr:
-            logging.error(f"Command stderr: {result.stderr}")
+            logging.debug(f"Command stderr: {result.stderr.decode()}")
             with open(os.environ['LOG_FILE'], 'a') as f:
-                f.write(result.stderr)
+                f.write(result.stderr.decode())
         return True
     except subprocess.CalledProcessError as e:
         if result and result.returncode != 100:
@@ -284,7 +284,7 @@ def main():
     parser.add_argument("--profiles", default=["nocheck", "nostrip"], nargs="+", \
         help="Build profiles (default: nocheck nostrip")
     parser.add_argument("--suffix", default='', help="Local suffix (default: %(default)s)")
-    parser.add_argument("--log-file", default='simplebuilder.log', help="Log file (default: %(default)s)")
+    parser.add_argument("--log-file", default='simplebuilder.log', help="Log workspace file  (default: %(default)s)")
     parser.add_argument("--filtering-pkgs", type=str, metavar='PATH', \
         help="File containing a list of filtering packets for the apt manager")
     parser.add_argument("--log-level", default='INFO', choices=['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'], \
@@ -302,7 +302,7 @@ def main():
     os.environ['DEBEMAIL'] = os.environ.get('DEBEMAIL', 'simplebuilder@localhost')
     os.environ['DEBFULLNAME'] = os.environ.get('DEBFULLNAME', 'simplebuilder')
     os.environ['LOCALSUFFIX'] = args.suffix
-    os.environ['LOG_FILE'] = args.log_file    
+    os.environ['LOG_FILE'] = args.workspace + '/' + args.log_file    
     os.environ['DEB_BUILD_OPTIONS'] = " ".join(args.profiles)
 
     deb_src_apt_sources()
