@@ -28,14 +28,12 @@ https://deb.debian.org/debian/pool/main/h/hello-traditional/hello-traditional_2.
 
 ## Rebuid with suffix
 
-`cat <file> | simplebuilder --suffix="ubuntu"`
+`cat <file> | simplebuilder --suffix="+ubuntu1"`
 
 ## Docker build
-`docker build --build-arg BASE_IMAGE=debian:12 -t my-builder:debian-12`
-
+`docker build -f simplebuilder/Dockerfile --build-arg BASE_IMAGE=debian:12 -t my-builder:debian-12`
 or
-
-`docker build --build-arg BASE_IMAGE=debian:13 -t my-builder:debian-13`
+`docker build -f simplebuilder/Dockerfile --build-arg BASE_IMAGE=debian:13 -t my-builder:debian-13`
 
 ## Docker run
 ```
