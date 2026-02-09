@@ -5,32 +5,92 @@ ENV DEBIAN_FRONTEND=noninteractive
 ENV LC_ALL=C.UTF-8
 ENV LANG=C.UTF-8
 
-# Update package lists and install essential build tools
-RUN apt-get update && apt-get install -y \
+# Update package
+RUN apt-get update
+
+# Core build tools
+RUN apt-get install -y \
     build-essential \
-    default-jdk \
     devscripts \
     debhelper \
     dh-make \
     fakeroot \
+    equivs \
+    cdbs \
+    quilt
+# Package management and building
+RUN apt-get install -y \
+    dpkg-dev \
     lintian \
+    debian-archive-keyring \
+    debootstrap \
     pbuilder \
+    sbuild \
+    cowbuilder
+# Version control
+RUN apt-get install -y \
     git \
-    apt-utils \
     git-buildpackage \
-    pristine-tar \
-    && rm -rf /var/lib/apt/lists/*
-
-# Install additional common build dependencies
-RUN apt-get update && apt-get install -y \
-    autoconf \
+    subversion \
+    mercurial
+# Compression and archiving
+RUN apt-get install -y \
+    gzip \
+    bzip2 \
+    xz-utils \
+    zip \
+    unzip \
+    tar \
+    pristine-tar
+# Network and utilities
+RUN apt-get install -y \
+    wget \
+    curl \
+    gnupg \
+    apt-transport-https \
+    ca-certificates \
+    lsb-release \
+    sudo \
+    vim \
+    less \
+    bash-completion
+# Build systems
+RUN apt-get install -y \
+    cmake \
     automake \
+    autoconf \
     libtool \
     pkg-config \
-    cmake \
     meson \
-    ninja-build \
-    && rm -rf /var/lib/apt/lists/*
+    ninja-build
+# Language support
+RUN apt-get install -y \
+    python3 \
+    python3-dev \
+    python3-pip \
+    python3-venv \
+    python3-setuptools \
+    ruby \
+    ruby-dev \
+    golang \
+    nodejs \
+    npm \
+    default-jdk
+# Libraries often needed
+RUN apt-get install -y \
+    libssl-dev \
+    zlib1g-dev \
+    libncurses5-dev \
+    libreadline-dev \
+    libyaml-dev \
+    libffi-dev \
+    libgdbm-dev \
+    libxml2-dev \
+    libxslt1-dev \
+    libcurl4-openssl-dev \
+    libpq-dev
+
+RUN rm -rf /var/lib/apt/lists/*
 
 # Create a non-root user for building packages
 RUN useradd -m -s /bin/bash builder && \
