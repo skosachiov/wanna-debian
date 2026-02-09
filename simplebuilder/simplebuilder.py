@@ -78,11 +78,9 @@ def clone_and_build_gbp(repo_url, build_dir, repo_dir):
             git -c user.name={os.environ['DEBFULLNAME']} -c user.email={os.environ['DEBEMAIL']} commit -am 'Add suffix'", \
             cwd=build_dir)
 
-    if run_command("gbp buildpackage -uc -us --git-no-pristine-tar --git-ignore-new --git-export-dir=../build-area", cwd=clone_dir):
-        # Copy built packages to repository
-        return copy_built_packages(os.path.join(clone_dir, "../build-area"), repo_dir)
-    else:
-        return copy_log(os.path.join(clone_dir, "../build-area"), repo_dir)
+    run_command("gbp buildpackage -uc -us --git-no-pristine-tar --git-ignore-new --git-export-dir=../build-area", cwd=clone_dir)
+    # Copy built packages to repository
+    return copy_built_packages(os.path.join(clone_dir, "../build-area"), repo_dir)
     return False
 
 def download_and_build_dpkg(url, build_dir, repo_dir, rebuild=False):
@@ -111,10 +109,8 @@ def download_and_build_dpkg(url, build_dir, repo_dir, rebuild=False):
                         build_cmd = "dpkg-buildpackage -uc -us"
 
                 run_command("yes | mk-build-deps -i -r debian/control", cwd=item_path)
-                if run_command(build_cmd, cwd=item_path):
-                    return copy_built_packages(temp_dir, repo_dir)
-                else:
-                    return copy_log(temp_dir, repo_dir)
+                run_command(build_cmd, cwd=item_path)
+                return copy_built_packages(temp_dir, repo_dir)
                 break
 
     return False
@@ -148,27 +144,15 @@ def copy_to_repo(file_url, repo_dir):
             return False
 
 def copy_built_packages(source_dir, repo_dir):
-    copied = False
+    deb_copied = False
     for file in os.listdir(source_dir):
         if file.endswith(('.deb', '.dsc', '.tar.gz', '.tar.xz', '.buildinfo', '.changes')):
             shutil.copy2(os.path.join(source_dir, file), repo_dir)
             logging.info(f"Copied {file} to repository")
-            copied = True
-
-    if not copied:
-        logging.warning("No files found to copy")
-    return copied
-
-def copy_log(source_dir, repo_dir):
-    copied = False
-    for file in os.listdir(source_dir):
-        if file.endswith(('.buildinfo', '.changes')):
-            shutil.copy2(os.path.join(source_dir, file), repo_dir)
-            logging.info(f"Copied {file} to repository")
-            copied = True
-    if not copied:
-        logging.warning("No files found to copy")
-    return copied
+            if file.endswith('.deb'): copied = True
+    if not deb_copied:
+        logging.warning("No deb files found to copy")
+    return deb_copied
 
 def process_line(line, args):
     """Process a single input line."""
