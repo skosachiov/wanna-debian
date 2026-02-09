@@ -19,7 +19,8 @@ def run_command(cmd, cwd=None, env=None):
     logging.debug(f"Running command: {cmd} in {cwd}")
     result = None
     with open(os.environ['LOG_FILE'], 'a') as f:
-        f.write(datetime.now().isoformat() + "\n" + cmd)
+        print(f'Timestamp: {datetime.now().isoformat()}', file=f)
+        print(f'Command: {cmd}', file=f)
     cmd += f" | tee -a {os.environ['LOG_FILE']}"
     try:
         result = subprocess.run(cmd, shell=True, cwd=cwd, env=env,
