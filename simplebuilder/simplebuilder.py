@@ -30,7 +30,11 @@ def run_command(cmd, cwd=None, env=None):
             logging.debug(f"Command stderr: {result.stderr}")
             with open(os.environ['LOG_FILE'], 'a') as f:
                 f.write(result.stderr)
-        return True
+        if result.returncode == 0:
+            return True
+        else:
+            logging.warning(f"Command exit code {result.returncode}")
+            return False
     except subprocess.CalledProcessError as e:
         if result and result.returncode != 100:
             logging.warning(f"Command failed: {e}")

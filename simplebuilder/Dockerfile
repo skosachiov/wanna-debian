@@ -62,7 +62,8 @@ RUN apt-get update && \
         libtool \
         pkg-config \
         meson \
-        ninja-build && \
+        ninja-build \
+        maven && \
     # Language support
     apt-get install -y \
         python3 \
