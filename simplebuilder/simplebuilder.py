@@ -71,7 +71,7 @@ def clone_and_build_gbp(repo_url, build_dir, repo_dir):
         run_command(f"cd {repo_name}; dch -v $(dpkg-parsechangelog -S Version){os.environ['LOCALSUFFIX']} 'Add suffix'; \
             git -c user.name={os.environ['DEBFULLNAME']} -c user.email={os.environ['DEBEMAIL']} commit -am 'Add suffix'", \
             cwd=build_dir)
-    
+
     if run_command("gbp buildpackage -uc -us --git-no-pristine-tar --git-ignore-new --git-export-dir=../build-area", cwd=clone_dir):
         # Copy built packages to repository
         return copy_built_packages(os.path.join(clone_dir, "../build-area"), repo_dir)
@@ -302,7 +302,7 @@ def main():
     os.environ['DEBEMAIL'] = os.environ.get('DEBEMAIL', 'simplebuilder@localhost')
     os.environ['DEBFULLNAME'] = os.environ.get('DEBFULLNAME', 'simplebuilder')
     os.environ['LOCALSUFFIX'] = args.suffix
-    os.environ['LOG_FILE'] = args.workspace + '/' + args.log_file    
+    os.environ['LOG_FILE'] = args.workspace + '/' + args.log_file
     os.environ['DEB_BUILD_OPTIONS'] = " ".join(args.profiles)
 
     deb_src_apt_sources()
@@ -312,15 +312,18 @@ def main():
     logging.info(f"Starting build process. Workspace: {args.workspace}, Repository: {args.repository}")
 
     # Read from stdin
+    lines = []
     success_count = 0
     fail_count = 0
     success_items = []
     fail_items = []
 
-    for line_num, line in enumerate(sys.stdin, 1):
+    for line in sys.stdin:
         line = line.strip()
-        if not line:
-            continue
+        if line:
+            lines.append(line)
+
+    for line_num, line in enumerate(lines, 1):
 
         logging.info(f"Processing line {line_num}: {line}")
 
@@ -330,6 +333,8 @@ def main():
         else:
             fail_count += 1
             fail_items.append(line.split('/')[-1])
+
+        logging.info(f"Statistics: {success_count} processed successfully, {fail_count} unsuccessfully, {len(lines)-line_num} remaining")
 
     logging.info(f"Build process completed. Success: {success_count}, Failed: {fail_count}")
     logging.info(f"Success items: {success_items}, Failed: {fail_items}")
