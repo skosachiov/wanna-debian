@@ -340,7 +340,7 @@ def main():
             fail_count += 1
             fail_items.append(line.split('/')[-1])
 
-        logging.info(f"Statistics on processed: {success_count} successfully, {fail_count} unsuccessfully, {len(lines)-line_num} remaining")
+        logging.info(f"Statistics on processed: successfully {success_count}, unsuccessfully {fail_count}, remaining {len(lines)-line_num}")
 
     logging.info(f"Build process completed. Success: {success_count}, Failed: {fail_count}")
     logging.info(f"Success items: {success_items}, Failed: {fail_items}")
