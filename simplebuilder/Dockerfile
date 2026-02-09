@@ -1,4 +1,5 @@
-FROM debian:13
+ARG BASE_IMAGE=debian:13
+FROM ${BASE_IMAGE}
 
 # Set environment variables
 ENV DEBIAN_FRONTEND=noninteractive
