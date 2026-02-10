@@ -52,7 +52,7 @@ packages = [
 ]
 
 [tool.setuptools.package-data]
-"*" = ["*.sh"]
+"*" = ["*.sh", "Dockerfile"]
 
 [tool.pytest.ini_options]
 # Add the project root to Python path
