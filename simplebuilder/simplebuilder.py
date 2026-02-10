@@ -146,6 +146,9 @@ def copy_built_packages(source_dir, repo_dir):
     moved = False
     for file in os.listdir(source_dir):
         if file.endswith(('.deb', '.dsc', '.tar.gz', '.tar.xz', '.buildinfo', '.changes')):
+            destination = os.path.join(repo_dir, file)
+            if os.path.exists(destination) and os.path.isfile(destination):
+                os.remove(destination)
             shutil.move(os.path.join(source_dir, file), repo_dir)
             logging.info(f"Moved {file} to repository")
             if file.endswith('.deb'): moved = True
