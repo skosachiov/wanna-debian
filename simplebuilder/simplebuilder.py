@@ -136,22 +136,22 @@ def copy_to_repo(file_url, repo_dir):
         local_path = file_url[7:] if file_url.startswith('file://') else file_url
         if os.path.exists(local_path):
             shutil.copy2(local_path, repo_dir)
-            logging.info(f"Successfully copied: {local_path}")
+            logging.info(f"Successfully moved: {local_path}")
             return True
         else:
             logging.error(f"File not found: {local_path}")
             return False
 
 def copy_built_packages(source_dir, repo_dir):
-    copied = False
+    moved = False
     for file in os.listdir(source_dir):
         if file.endswith(('.deb', '.dsc', '.tar.gz', '.tar.xz', '.buildinfo', '.changes')):
-            shutil.copy2(os.path.join(source_dir, file), repo_dir)
-            logging.info(f"Copied {file} to repository")
-            if file.endswith('.deb'): copied = True
-    if not copied:
+            shutil.move(os.path.join(source_dir, file), repo_dir)
+            logging.info(f"Moved {file} to repository")
+            if file.endswith('.deb'): moved = True
+    if not moved:
         logging.warning("No deb files found to copy")
-    return copied
+    return moved
 
 def process_line(line, args):
     """Process a single input line."""
