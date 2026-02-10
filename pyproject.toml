@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "wanna-debian"
-version = "0.1.50"
+version = "0.1.51"
 description = "Debian package management utilities"
 readme = "README.md"
 license = {text = "GPL-3.0-only OR BSD-3-Clause"}
