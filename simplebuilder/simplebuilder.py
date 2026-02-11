@@ -291,6 +291,8 @@ def main():
     os.makedirs(args.repository, exist_ok=True)
     os.makedirs(args.build, exist_ok=True)
 
+    os.environ['LC_ALL'] = 'C.UTF-8'
+    os.environ['LANG'] = 'en_US.UTF-8'
     os.environ['DEBEMAIL'] = os.environ.get('DEBEMAIL', 'simplebuilder@localhost')
     os.environ['DEBFULLNAME'] = os.environ.get('DEBFULLNAME', 'simplebuilder')
     os.environ['LOCALSUFFIX'] = args.suffix
