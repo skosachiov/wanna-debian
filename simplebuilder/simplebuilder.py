@@ -309,8 +309,8 @@ def main():
     os.environ['DEB_BUILD_OPTIONS'] = " ".join(args.profiles)
 
     deb_src_apt_sources()
-    update_packages()
     add_local_repo_sources(args.repository)
+    update_packages()
 
     logging.info(f"Starting build process. Workspace: {args.workspace}, Repository: {args.repository}")
 
