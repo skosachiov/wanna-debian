@@ -261,11 +261,20 @@ deb-src [trusted=yes] file://{os.path.abspath(repo_path)} ./
         logging.info("Successfully added local repository to sources")
 
 def remove_local_repo_sources():
-    """Remove local repository from apt sources"""
+    """Remove local repository from apt sources by commenting out entries"""
     sources_file = "/etc/apt/sources.list.d/simplebuilder.list"
     if os.path.exists(sources_file):
-        os.remove(sources_file)
-        logging.info("Successfully removed local repository from sources")
+        with open(sources_file, 'r') as f:
+            lines = f.readlines()
+
+        # Comment out each line that isn't already commented
+        with open(sources_file, 'w') as f:
+            for line in lines:
+                if line.strip() and not line.strip().startswith('#'):
+                    f.write(f'# {line}')
+                else:
+                    f.write(line)
+        logging.info("Successfully commented out local repository entries")
 
 def main():
     """Main function."""
