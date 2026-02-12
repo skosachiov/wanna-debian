@@ -56,8 +56,6 @@ def update_packages():
     env['NEEDRESTART_MODE'] = 'a'  # Auto restart mode
     env['DEBCONF_NOWARNINGS'] = 'yes'
     run_command("apt-get update && apt-get -o Dpkg::Options::=--force-confold -o Dpkg::Options::=--force-confdef -y upgrade", env=env)
-    # Remove temporary build-dependencies
-    run_command("dpkg -l | grep 'build-dependencies for' | cut -f 3 -d ' ' | xargs -I {} dpkg -r {}", env=env)
 
 def clone_and_build_gbp(repo_url, build_dir, repo_dir):
     """Clone and build with gbp-buildpackage."""
@@ -336,6 +334,7 @@ def main():
         logging.info(f"Processing line {line_num}: {line}")
 
         os.environ['LOG_FILE'] = args.repository + '/' + line.split('/')[-1] + '.log'
+        logging.info(f"The build logs for a specific package: {os.environ['LOG_FILE']}")
 
         if process_line(line, args):
             success_count += 1
@@ -343,6 +342,9 @@ def main():
         else:
             fail_count += 1
             fail_items.append(line.split('/')[-1])
+
+        # Remove temporary build-dependencies
+        run_command("dpkg -l | grep 'build-dependencies for' | cut -f 3 -d ' ' | xargs -I {} dpkg -r {}", env=env)
 
         logging.info(f"Statistics on processed: successfully {success_count}, unsuccessfully {fail_count}, remaining {len(lines)-line_num}")
 
