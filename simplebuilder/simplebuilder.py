@@ -148,7 +148,7 @@ def copy_built_packages(source_dir, repo_dir):
         if file.endswith(('.deb', '.dsc', \
             '.tar.gz', '.tar.xz', '.tar.bz2', \
             '.tar.gz.asc', '.tar.xz.asc', '.tar.bz2.asc', \
-            '.buildinfo', '.changes')):
+            '.buildinfo', '.changes', '.log')):
             destination = os.path.join(repo_dir, file)
             if os.path.exists(destination) and os.path.isfile(destination):
                 os.remove(destination)
@@ -332,6 +332,8 @@ def main():
     for line_num, line in enumerate(lines, 1):
 
         logging.info(f"Processing line {line_num}: {line}")
+
+        os.environ['LOG_FILE'] = args.repository + '/' + line.split('/')[-1] + '.log'
 
         if process_line(line, args):
             success_count += 1
