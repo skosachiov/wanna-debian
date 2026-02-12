@@ -46,7 +46,7 @@ def scan_packages(repo_path):
         logging.info(f"Repository folder is empty {repo_path}")
         return
     logging.info(f"Scanning packages in {repo_path}")
-    run_command("apt-ftparchive packages . > Packages & apt-ftparchive sources . > Sources & wait", cwd=repo_path)
+    run_command("apt-ftparchive packages . > Packages & dpkg-scansources . > Sources & wait", cwd=repo_path)
     update_packages()
 
 def update_packages():
