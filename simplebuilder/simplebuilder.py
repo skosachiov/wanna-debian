@@ -344,6 +344,7 @@ def main():
             fail_items.append(line.split('/')[-1])
 
         # Remove temporary build-dependencies
+        env = os.environ.copy()
         run_command("dpkg -l | grep 'build-dependencies for' | cut -f 3 -d ' ' | xargs -I {} dpkg -r {}", env=env)
 
         logging.info(f"Statistics on processed: successfully {success_count}, unsuccessfully {fail_count}, remaining {len(lines)-line_num}")
