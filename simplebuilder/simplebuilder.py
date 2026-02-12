@@ -56,6 +56,8 @@ def update_packages():
     env['NEEDRESTART_MODE'] = 'a'  # Auto restart mode
     env['DEBCONF_NOWARNINGS'] = 'yes'
     run_command("apt-get update && apt-get -o Dpkg::Options::=--force-confold -o Dpkg::Options::=--force-confdef -y upgrade", env=env)
+    # Remove temporary build-dependencies
+    run_command("dpkg -l | grep 'build-dependencies for' | cut -f 3 -d ' ' | xargs -I {} dpkg -r {}", env=env)
 
 def clone_and_build_gbp(repo_url, build_dir, repo_dir):
     """Clone and build with gbp-buildpackage."""
