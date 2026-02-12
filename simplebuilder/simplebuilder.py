@@ -148,7 +148,7 @@ def copy_built_packages(source_dir, repo_dir):
         if file.endswith(('.deb', '.dsc', \
             '.tar.gz', '.tar.xz', '.tar.bz2', \
             '.tar.gz.asc', '.tar.xz.asc', '.tar.bz2.asc', \
-            '.buildinfo', '.changes', '.log')):
+            '.buildinfo', '.changes')):
             destination = os.path.join(repo_dir, file)
             if os.path.exists(destination) and os.path.isfile(destination):
                 os.remove(destination)
