@@ -279,7 +279,7 @@ def remove_local_repo_sources():
                     f.write(f'# {line}')
                 else:
                     f.write(line)
-        logging.info("Successfully commented out local repository entries")
+        logging.info(f"Successfully commented out local repository entries: {sources_file}")
 
 def main():
     """Main function."""
