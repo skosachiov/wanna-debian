@@ -2,10 +2,14 @@
 
 The Simple Debian package builder handles different source types based on URL patterns provided. The build task is received via stdin. Each line of the task is a link to a Debian package or its source code. After building or downloading each package, the artifacts are placed in a local repository and connected to the build environment, thus satisfying build dependencies for packages from subsequent lines. If a package version is already available in the connected repositories, a bin-nmu rebuild is automatically triggered. By default, the local `repository` and the log file `simplebuilder.log` will be located in `/tmp/workspace`. The build logs for a specific package are located in the repository and have the `.log` extension.
 
+A successful build is indicated by the presence of `.deb` packages. The source package is copied to the local repository even if the build fails.
+
 ## Build from a single .dsc file
+
 `echo "https://example.com/package.dsc" | simplebuilder`
 
 ## Build from a Git repository
+
 `echo "ssh://git@github.com/user/repo.git" | simplebuilder`
 or
 `echo "https://github.com/user/repo.git" | simplebuilder`
@@ -31,6 +35,13 @@ https://deb.debian.org/debian/pool/main/h/hello-traditional/hello-traditional_2.
 ## Rebuid with suffix
 
 `cat <file> | simplebuilder --suffix="+ubuntu1"`
+
+## Build from connected APT sources (todo)
+
+If the string does not contain a URI scheme, the apt source operation will be called
+To do this, you must connect the deb-src sources.
+
+`echo vim | simplebuilder`
 
 ## Docker build
 `docker build -f simplebuilder/Dockerfile --build-arg BASE_IMAGE=debian:12 -t my-builder:debian-12`
