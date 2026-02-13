@@ -210,7 +210,10 @@ cat /tmp/bootstrap.list | backport bootstrap trixie empty
 
 `dose-builddebcheck --latest 1 --deb-native-arch=amd64 -e -f bootstrap_Packages bootstrap_Sources`
 
-`dose-debcheck --latest 1 --deb-native-arch=amd64 -e -f bootstrap_Packages | grep "unsat-" | sort | uniq -c | sort -nr`
+```
+dose-debcheck --latest 1 --deb-native-arch=amd64 -e -f bootstrap_Packages \
+        | grep -P "^\s{6}(unsat-|package:)" | paste - - | sort | uniq -c | sort -nr
+```
 
 ```
 dose-debcheck --latest 1 --deb-native-arch=amd64 -e -f bootstrap_Packages | grep -B 3 -P "^\s{6}unsat-" \
