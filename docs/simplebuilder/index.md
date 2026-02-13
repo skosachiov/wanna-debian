@@ -44,3 +44,8 @@ docker run -it --rm \
   debian-pkg-builder \
   bash -c "cat urls.txt | python3 simplebuilder.py"
 ```
+
+## Big local repository
+
+If your local repository has grown and the time it takes to scan binary packages has become long, or you've managed to stabilize the set of packages, you can rename the repository folder, for example, to `repository-stable`, connect it to the list of sources similar to the source file `/etc/apt/sources.list.d/simplebuilder.list`, and continue experimenting in the cleaned up `repository` folder.
+

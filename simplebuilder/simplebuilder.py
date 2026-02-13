@@ -350,7 +350,8 @@ def main():
         logging.info(f"Statistics on processed: successfully {success_count}, unsuccessfully {fail_count}, remaining {len(lines)-line_num}")
 
     logging.info(f"Build process completed. Success: {success_count}, Failed: {fail_count}")
-    logging.info(f"Success items: {success_items}, Failed: {fail_items}")
+    logging.info(f"Success items: {success_items}")
+    logging.warning(f"Failed items: {fail_items}")
 
     remove_local_repo_sources()
 
