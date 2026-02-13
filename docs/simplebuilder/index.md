@@ -6,6 +6,8 @@ The Simple Debian package builder handles different source types based on URL pa
 `echo "https://example.com/package.dsc" | simplebuilder`
 
 ## Build from a Git repository
+`echo "ssh://git@github.com/user/repo.git" | simplebuilder`
+or
 `echo "https://github.com/user/repo.git" | simplebuilder`
 
 ## Build from multiple sources
