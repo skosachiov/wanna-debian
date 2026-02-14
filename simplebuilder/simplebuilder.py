@@ -206,7 +206,7 @@ def process_line(line, args):
             if match:
                 package = match.group(1)
                 version = match.group(2)
-            rebuild = run_command(f"apt-get source -s {package}={version}")
+            rebuild = run_command(f"apt-get source -s {package}={version}{os.environ['LOCALSUFFIX']}")
             # Build or rebuild
             success = download_and_build_dpkg(url, args.build, args.repository, rebuild)
             if success:
