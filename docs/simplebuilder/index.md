@@ -14,6 +14,13 @@ A successful build is indicated by the presence of `.deb` packages. The source p
 or
 `echo "https://github.com/user/repo.git" | simplebuilder`
 
+## Build from connected APT sources
+
+If the string does *not contain a URI scheme*, the apt source operation will be called
+To do this, you must connect the deb-src sources.
+
+`echo vim | simplebuilder`
+
 ## Build from multiple sources
 ```
 http://deb.debian.org/debian/pool/main/h/hello/hello_2.10-3.dsc
@@ -38,13 +45,6 @@ https://deb.debian.org/debian/pool/main/h/hello-traditional/hello-traditional_2.
 
 `cat <file> | simplebuilder --suffix="+ubuntu1"`
 
-## Build from connected APT sources
-
-If the string does not contain a URI scheme, the apt source operation will be called
-To do this, you must connect the deb-src sources.
-
-`echo vim | simplebuilder`
-
 ## Docker build
 `docker build -f simplebuilder/Dockerfile --build-arg BASE_IMAGE=debian:12 -t my-builder:debian-12`
 or
@@ -62,3 +62,12 @@ docker run -it --rm \
 
 If your local repository has grown and the time it takes to scan binary packages has become long, or you've managed to stabilize the set of packages, you can rename the repository folder, for example, to `repository-stable`, connect it to the list of sources similar to the source file `/etc/apt/sources.list.d/simplebuilder.list`, and continue experimenting in the cleaned up `repository` folder.
 
+## Never prefer the package from the specified repository
+
+File /etc/apt/preferences.d/99-block-php-repo:
+
+```
+Package: php*
+Pin: origin "your-repo-origin.com"
+Pin-Priority: -1
+```
