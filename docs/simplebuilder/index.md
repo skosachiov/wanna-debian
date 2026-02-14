@@ -64,7 +64,7 @@ If your local repository has grown and the time it takes to scan binary packages
 
 ## Never prefer the package from the specified repository
 
-File /etc/apt/preferences.d/99-block-php-repo:
+File `/etc/apt/preferences.d/99-block-php-repo`:
 
 ```
 Package: php*
