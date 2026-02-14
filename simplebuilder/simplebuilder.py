@@ -183,6 +183,16 @@ def process_line(line, args):
     success = False
 
     try:
+        # Convert app name to url
+        if '://' not in url:
+            result = subprocess.run(['apt', 'source', '--print-uris', url], capture_output=True, text=True, check=True)
+            for line in result.stdout.split('\n'):
+                if line:
+                    line = line.split()[0].strip("'")
+                    if line.startswith('http') and line.endswith('.dsc'):
+                        url = line
+                        break 
+
         if url.endswith('.git'):
             # Git repository - clone and build with gbp-buildpackage
             success = clone_and_build_gbp(url, args.build, args.repository)
@@ -288,9 +298,7 @@ def main():
     parser.add_argument("--profiles", default=["nocheck", "nostrip"], nargs="+", \
         help="Build profiles (default: nocheck nostrip")
     parser.add_argument("--suffix", default='', help="Local suffix (default: %(default)s)")
-    parser.add_argument("--log-file", default='simplebuilder.log', help="Log workspace file  (default: %(default)s)")
-    parser.add_argument("--filtering-pkgs", type=str, metavar='PATH', \
-        help="File containing a list of filtering packets for the apt manager")
+    parser.add_argument("--log-file", default='simplebuilder.log', help="Log workspace file (default: %(default)s)")
     parser.add_argument("--log-level", default='INFO', choices=['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'], \
         help='Set the logging level (default: %(default)s)')
 
