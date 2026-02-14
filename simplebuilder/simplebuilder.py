@@ -98,14 +98,14 @@ def download_and_build_dpkg(url, build_dir, repo_dir, rebuild=False):
         for item in os.listdir(temp_dir):
             item_path = os.path.join(temp_dir, item)
             if os.path.isdir(item_path) and item != filename:
-                if os.environ['LOCALSUFFIX']:
-                    build_cmd = f"dch -v $(dpkg-parsechangelog -S Version){os.environ['LOCALSUFFIX']} 'Add suffix' && dpkg-buildpackage -uc -us -b"
+                if rebuild:
+                    build_cmd = "dch --bin-nmu 'Rebuild' && dpkg-buildpackage -uc -us -b"
+                    logging.info(f"The required version is present in the repository, use bin-nmu rebuild")
+                elif os.environ['LOCALSUFFIX']:
+                    build_cmd = f"dch -v $(dpkg-parsechangelog -S Version){os.environ['LOCALSUFFIX']} 'Add suffix' \
+                        && dpkg-buildpackage -uc -us -b"
                 else:
-                    if rebuild:
-                        build_cmd = "dch --bin-nmu 'Rebuild' && dpkg-buildpackage -uc -us -b"
-                        logging.info(f"The required version is present in the repository, use bin-nmu rebuild")
-                    else:
-                        build_cmd = "dpkg-buildpackage -uc -us"
+                    build_cmd = "dpkg-buildpackage -uc -us"
 
                 run_command("yes | mk-build-deps -i -r debian/control", cwd=item_path)
                 run_command(build_cmd, cwd=item_path)
