@@ -99,7 +99,7 @@ def download_and_build_dpkg(url, build_dir, repo_dir, rebuild=False):
             item_path = os.path.join(temp_dir, item)
             if os.path.isdir(item_path) and item != filename:
                 if rebuild:
-                    build_cmd = "dch --bin-nmu 'Rebuild' && dpkg-buildpackage -uc -us"
+                    build_cmd = "dch --bin-nmu 'Rebuild' && dpkg-buildpackage -uc -us -b"
                     logging.info(f"The required version is present in the repository, bin-nmu rebuild will be used")
                 elif os.environ['LOCALSUFFIX']:
                     build_cmd = f"dch -v $(dpkg-parsechangelog -S Version){os.environ['LOCALSUFFIX']} 'Add suffix' \
