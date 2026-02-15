@@ -13,6 +13,7 @@ import urllib.parse
 import time
 from datetime import datetime
 from pathlib import Path
+from urllib.parse import unquote
 
 def run_command(cmd, cwd=None, env=None):
     """Run a shell command and return success status."""
@@ -191,7 +192,7 @@ def process_line(line, args):
                 if line:
                     line = line.split()[0].strip("'")
                     if line.startswith(('http://', 'https://', 'file:/')) and line.endswith('.dsc'):
-                        url = line
+                        url = unquote(line)
                         logging.info(f"Package name was converted to a url: {url}")
                         break 
 
