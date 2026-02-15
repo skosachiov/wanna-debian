@@ -79,8 +79,9 @@ def clone_and_build_gbp(repo_url, build_dir, repo_dir):
 
     run_command("gbp buildpackage -uc -us --git-no-pristine-tar --git-ignore-new --git-export-dir=../build-area", cwd=clone_dir)
     # Copy built packages to repository
-    return copy_built_packages(os.path.join(clone_dir, "../build-area"), repo_dir)
-    return False
+    rc = copy_built_packages(os.path.join(clone_dir, "../build-area"), repo_dir)
+    shutil.rmtree(clone_dir)
+    return rc
 
 def download_and_build_dpkg(url, build_dir, repo_dir, rebuild=False):
     """Download and build with dpkg-buildpackage."""
@@ -191,6 +192,7 @@ def process_line(line, args):
                     line = line.split()[0].strip("'")
                     if line.startswith('http') and line.endswith('.dsc'):
                         url = line
+                        logging.info(f"Package name was converted to a url: {url}")
                         break 
 
         if url.endswith('.git'):
