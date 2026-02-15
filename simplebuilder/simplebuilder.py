@@ -149,7 +149,7 @@ def copy_built_packages(source_dir, repo_dir):
         if file.endswith(('.deb', '.dsc', \
             '.tar.gz', '.tar.xz', '.tar.bz2', \
             '.tar.gz.asc', '.tar.xz.asc', '.tar.bz2.asc', \
-            '.buildinfo', '.changes')):
+            '.buildinfo', '.changes', 'build')):
             destination = os.path.join(repo_dir, file)
             if os.path.exists(destination) and os.path.isfile(destination):
                 os.remove(destination)
@@ -190,7 +190,7 @@ def process_line(line, args):
             for line in result.stdout.split('\n'):
                 if line:
                     line = line.split()[0].strip("'")
-                    if line.startswith('http') and line.endswith('.dsc'):
+                    if line.startswith(('http://', 'https://', 'file:/')) and line.endswith('.dsc'):
                         url = line
                         logging.info(f"Package name was converted to a url: {url}")
                         break 
