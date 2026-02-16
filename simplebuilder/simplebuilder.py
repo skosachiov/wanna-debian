@@ -41,16 +41,10 @@ def run_command(cmd, cwd=None, env=None):
             logging.warning(f"Command failed: {e}")
         return False
 
-def scan_packages(repo_path):
+def scan_and_upgrade_packages(repo_path):
     """Run dpkg-scanpackages to update local repository."""
-    if len(os.listdir(repo_path)) == 0:
-        logging.info(f"Repository folder is empty {repo_path}")
-        return
     logging.info(f"Scanning packages in {repo_path}")
     run_command("apt-ftparchive packages . > Packages & dpkg-scansources . > Sources & wait", cwd=repo_path)
-    update_packages()
-
-def update_packages():
     logging.info("Update packages")
     env = os.environ.copy()
     env['DEBIAN_FRONTEND'] = 'noninteractive'
@@ -200,8 +194,8 @@ def process_line(line, args):
             # Git repository - clone and build with gbp-buildpackage
             success = clone_and_build_gbp(url, args.build, args.repository)
             if success:
-                # success = scan_packages(args.repository)
-                scan_packages(args.repository)
+                # success = scan_and_upgrade_packages(args.repository)
+                scan_and_upgrade_packages(args.repository)
 
         elif url.endswith('.dsc'):
             # Check source is in repo
@@ -213,12 +207,14 @@ def process_line(line, args):
             # Build or rebuild
             success = download_and_build_dpkg(url, args.build, args.repository, rebuild)
             if success:
-                # success = scan_packages(args.repository)
-                scan_packages(args.repository)
+                # success = scan_and_upgrade_packages(args.repository)
+                scan_and_upgrade_packages(args.repository)
 
         elif url.endswith('.deb'):
             # Binary package - copy to repository
             success = copy_to_repo(url, args.repository)
+            if success:
+                scan_and_upgrade_packages(args.repository)
 
         else:
             logging.warning(f"Unknown file type: {url}")
@@ -324,7 +320,7 @@ def main():
 
     deb_src_apt_sources()
     add_local_repo_sources(args.repository)
-    update_packages()
+    scan_and_upgrade_packages()
 
     logging.info(f"Starting build process. Workspace: {args.workspace}, Repository: {args.repository}")
 
