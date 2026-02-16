@@ -76,7 +76,12 @@ RUN apt-get update && \
         golang \
         nodejs \
         npm \
-        default-jdk && \
+        default-jdk \
+        libmaven-compiler-plugin-java \
+        libsurefire-java \
+        libmaven-jar-plugin-java \
+        libmaven-resources-plugin-java \
+        libmaven-dependency-tree-java && \
     # Libraries often needed
     apt-get install -y \
         libssl-dev \
