@@ -320,7 +320,7 @@ def main():
 
     deb_src_apt_sources()
     add_local_repo_sources(args.repository)
-    scan_and_upgrade_packages()
+    scan_and_upgrade_packages(args.repository)
 
     logging.info(f"Starting build process. Workspace: {args.workspace}, Repository: {args.repository}")
 
