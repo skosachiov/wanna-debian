@@ -94,7 +94,13 @@ RUN apt-get update && \
         libxml2-dev \
         libxslt1-dev \
         libcurl4-openssl-dev \
-        libpq-dev && \
+        libpq-dev \
+        gnome-common \
+        libatk1.0-dev \
+        libatk-bridge2.0-dev \
+        libatspi2.0-dev \
+        libdbus-1-dev \
+        libglib2.0-dev && \
     # Clean up
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
