@@ -25,6 +25,8 @@ To do this, you must connect the deb-src sources.
 
 `maven-debian-helper.rm`
 
+The next step will not install build dependencies.
+
 ## Build from multiple sources
 ```
 http://deb.debian.org/debian/pool/main/h/hello/hello_2.10-3.dsc
