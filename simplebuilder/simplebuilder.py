@@ -180,7 +180,7 @@ def process_line(line, args):
 
     try:
         # Convert app name to url
-        if '://' not in url:
+        if '://' not in url and not url.endswith('.rm'):
             result = subprocess.run(['apt', 'source', '--print-uris', url], capture_output=True, text=True, check=True)
             for line in result.stdout.split('\n'):
                 if line:
@@ -220,6 +220,7 @@ def process_line(line, args):
             # Remove package
             success = run_command(f"apt-get purge -y --force-yes -f {url[:-3]}")
             if success:
+                logging.info(f"Remove package: {url[:-3]}")
                 scan_and_upgrade_packages(args.repository)
 
         else:
