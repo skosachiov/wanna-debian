@@ -22,15 +22,13 @@ def run_command(cmd, cwd=None, env=None):
     with open(os.environ['LOG_FILE'], 'a') as f:
         print(f'Timestamp: {datetime.now().isoformat()}', file=f)
         print(f'Command: {cmd}', file=f)
-    cmd = f"set -o pipefail; {cmd} | tee -a {os.environ['LOG_FILE']}"
+    cmd = f"set -o pipefail; {cmd} 2>&1 | tee -a {os.environ['LOG_FILE']}"
     try:
         result = subprocess.run(cmd, shell=True, cwd=cwd, env=env,
                               capture_output=True, text=True, check=True)
         logging.debug(f"Command output: {result.stdout}")
         if result.stderr:
             logging.debug(f"Command stderr: {result.stderr}")
-            with open(os.environ['LOG_FILE'], 'a') as f:
-                f.write(result.stderr)
         if result.returncode == 0:
             return True
         else:
