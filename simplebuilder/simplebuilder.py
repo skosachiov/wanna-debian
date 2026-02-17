@@ -63,6 +63,7 @@ def clone_and_build_gbp(repo_url, build_dir, repo_dir, skip_deps=False):
         return False
 
     if not skip_deps:
+        logging.info(f"Make and install build dependencies")
         run_command(f"cd {repo_name}; yes | mk-build-deps -i -r debian/control", cwd=build_dir)
 
     # Build with gbp-buildpackage
@@ -103,6 +104,7 @@ def download_and_build_dpkg(url, build_dir, repo_dir, rebuild=False, skip_deps=F
                     build_cmd = "dpkg-buildpackage -uc -us"
 
                 if not skip_deps:
+                    logging.info(f"Make and install build dependencies")
                     run_command("yes | mk-build-deps -i -r debian/control", cwd=item_path)
                 run_command(build_cmd, cwd=item_path)
                 return copy_built_packages(temp_dir, repo_dir)
