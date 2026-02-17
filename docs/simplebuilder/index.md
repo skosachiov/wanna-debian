@@ -21,6 +21,10 @@ To do this, you must connect the deb-src sources.
 
 `echo vim | simplebuilder`
 
+## Remove package
+
+`maven-debian-helper.rm`
+
 ## Build from multiple sources
 ```
 http://deb.debian.org/debian/pool/main/h/hello/hello_2.10-3.dsc

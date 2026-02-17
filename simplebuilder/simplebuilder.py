@@ -188,7 +188,7 @@ def process_line(line, args):
                     if line.startswith(('http://', 'https://', 'file:/')) and line.endswith('.dsc'):
                         url = unquote(line)
                         logging.info(f"Package name was converted to a url: {url}")
-                        break 
+                        break
 
         if url.endswith('.git'):
             # Git repository - clone and build with gbp-buildpackage
@@ -213,6 +213,12 @@ def process_line(line, args):
         elif url.endswith('.deb'):
             # Binary package - copy to repository
             success = copy_to_repo(url, args.repository)
+            if success:
+                scan_and_upgrade_packages(args.repository)
+
+        elif url.endswith('.rm'):
+            # Remove package
+            success = run_command(f"apt-get purge -y --force-yes -f {url[:-3]}")
             if success:
                 scan_and_upgrade_packages(args.repository)
 
