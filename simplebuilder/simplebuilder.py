@@ -349,7 +349,7 @@ def main():
         if line:
             lines.append(line)
 
-    skip_deps[0] = False
+    skip_deps = [False]
 
     for line_num, line in enumerate(lines, 1):
 
