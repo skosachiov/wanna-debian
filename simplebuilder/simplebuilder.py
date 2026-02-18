@@ -139,12 +139,14 @@ def copy_to_repo(file_url, repo_dir):
             return False
 
 def copy_built_packages(source_dir, repo_dir):
+    copy_ext = ['.buildinfo', '.changes', 'build']
+    deb_files = [f for f in os.listdir(source_dir) if f.endswith('.deb')]
+    if deb_files:
+        copy_ext.extend(['.deb', '.dsc', '.tar.gz', '.tar.xz', '.tar.bz2', \
+            '.tar.gz.asc', '.tar.xz.asc', '.tar.bz2.asc'])
     moved = False
     for file in os.listdir(source_dir):
-        if file.endswith(('.deb', '.dsc', \
-            '.tar.gz', '.tar.xz', '.tar.bz2', \
-            '.tar.gz.asc', '.tar.xz.asc', '.tar.bz2.asc', \
-            '.buildinfo', '.changes', 'build')):
+        if file.endswith(tuple(copy_ext)):
             destination = os.path.join(repo_dir, file)
             if os.path.exists(destination) and os.path.isfile(destination):
                 os.remove(destination)
@@ -152,7 +154,7 @@ def copy_built_packages(source_dir, repo_dir):
             logging.info(f"Moved {file} to repository")
             if file.endswith('.deb'): moved = True
     if not moved:
-        logging.warning("No deb files found to copy")
+        logging.warning("Since no deb files were found, only logs were copied to the repository")
     return moved
 
 def process_line(line, args):
