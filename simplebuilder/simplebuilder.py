@@ -180,7 +180,7 @@ def process_line(line, args):
 
     try:
         # Convert app name to url
-        if '://' not in url and not url.endswith('.rm'):
+        if '://' not in url:
             result = subprocess.run(['apt', 'source', '--print-uris', url], capture_output=True, text=True, check=True)
             for line in result.stdout.split('\n'):
                 if line:
