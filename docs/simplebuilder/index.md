@@ -55,8 +55,8 @@ EOF
 ```
 
 ## Docker build
-`docker build -f simplebuilder/Dockerfile --build-arg BASE_IMAGE=debian:12 -t my-builder:debian-12`
-or
+`docker build -f simplebuilder/Dockerfile --build-arg BASE_IMAGE=debian:12 -t my-builder:debian-12` \
+or \
 `docker build -f simplebuilder/Dockerfile --build-arg BASE_IMAGE=debian:13 -t my-builder:debian-13`
 
 ## Docker run
