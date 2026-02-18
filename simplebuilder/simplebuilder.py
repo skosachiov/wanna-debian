@@ -203,7 +203,15 @@ def process_line(line, args):
             if match:
                 package = match.group(1)
                 version = match.group(2)
-            rebuild = run_command(f"apt-get source -s {package}={version}{os.environ['LOCALSUFFIX']}")
+            # Get state
+            src_exists = run_command(f"apt-get source -s {package}={version}{os.environ['LOCALSUFFIX']}")
+            bin_exists = run_command(f"apt-cache show \
+                $(apt-cache showsrc {package} | grep ^Binary: | cut -f 2 -d ' ' | cut -f 1 -d ',')={version}{os.environ['LOCALSUFFIX']} \
+                | grep 'Filename:'")
+            if src_exists and bin_exists:
+                logging.warning(f"Skip processing, source and binary package exists: {package}={version}{os.environ['LOCALSUFFIX']}")
+                return None
+            rebuild = bin_exists
             # Build or rebuild
             success = download_and_build_dpkg(url, args.build, args.repository, rebuild)
             if success:
@@ -327,10 +335,13 @@ def main():
 
     # Read from stdin
     lines = []
+
     success_count = 0
     fail_count = 0
+    skip_count = 0
     success_items = []
     fail_items = []
+    skip_items = []
 
     for line in sys.stdin:
         line = line.strip()
@@ -344,7 +355,12 @@ def main():
         os.environ['LOG_FILE'] = args.repository + '/' + line.split('/')[-1] + '.log'
         logging.info(f"The build logs for a specific package: {os.environ['LOG_FILE']}")
 
-        if process_line(line, args):
+        result = process_line(line, args)
+
+        if result is None:
+            skip_count += 1
+            skip_items.append(line.split('/')[-1])
+        elif result:
             success_count += 1
             success_items.append(line.split('/')[-1])
         else:
@@ -355,11 +371,13 @@ def main():
         env = os.environ.copy()
         run_command("dpkg -l | grep 'build-dependencies for' | cut -f 3 -d ' ' | xargs -I {} dpkg -r {}", env=env)
 
-        logging.info(f"Statistics on processed: successfully {success_count}, unsuccessfully {fail_count}, remaining {len(lines)-line_num}")
+        logging.info(f"Statistics on processed: successfully {success_count}, unsuccessfully {fail_count}, \
+            skip {skip_count}, remaining {len(lines)-line_num}")
 
     logging.info(f"Build process completed. Success: {success_count}, Failed: {fail_count}")
     logging.info(f"Success items: {success_items}")
     logging.warning(f"Failed items: {fail_items}")
+    logging.warning(f"Skiped items: {skip_items}")
 
     remove_local_repo_sources()
 
