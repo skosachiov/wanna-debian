@@ -25,7 +25,7 @@ To do this, you must connect the deb-src sources.
 
 `cat <file> | simplebuilder --suffix="+ubuntu1"`
 
-## Build from multiple sources
+## Bash-aware build from multiple sources
 ```
 #!/bin/bash
 
