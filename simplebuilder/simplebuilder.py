@@ -50,7 +50,7 @@ def scan_and_upgrade_packages(repo_path):
     env['DEBCONF_NOWARNINGS'] = 'yes'
     run_command("apt-get update && apt-get -o Dpkg::Options::=--force-confold -o Dpkg::Options::=--force-confdef -y upgrade", env=env)
 
-def clone_and_build_gbp(repo_url, build_dir, repo_dir, skip_deps=[False]):
+def clone_and_build_gbp(repo_url, build_dir, repo_dir):
     """Clone and build with gbp-buildpackage."""
     logging.info(f"Cloning and building with gbp-buildpackage: {repo_url}")
 
@@ -62,9 +62,8 @@ def clone_and_build_gbp(repo_url, build_dir, repo_dir, skip_deps=[False]):
     if not run_command(f"git clone {repo_url} {repo_name}", cwd=build_dir):
         return False
 
-    if not skip_deps[0]:
-        logging.info(f"Make and install build dependencies")
-        run_command(f"cd {repo_name}; yes | mk-build-deps -i -r debian/control", cwd=build_dir)
+    logging.info(f"Make and install build dependencies")
+    run_command(f"cd {repo_name}; yes | mk-build-deps -i -r debian/control", cwd=build_dir)
 
     # Build with gbp-buildpackage
     if os.environ['LOCALSUFFIX']:
@@ -78,7 +77,7 @@ def clone_and_build_gbp(repo_url, build_dir, repo_dir, skip_deps=[False]):
     shutil.rmtree(clone_dir)
     return rc
 
-def download_and_build_dpkg(url, build_dir, repo_dir, rebuild=False, skip_deps=[False]):
+def download_and_build_dpkg(url, build_dir, repo_dir, rebuild=False):
     """Download and build with dpkg-buildpackage."""
     logging.info(f"Downloading and building: {url}")
 
@@ -103,9 +102,8 @@ def download_and_build_dpkg(url, build_dir, repo_dir, rebuild=False, skip_deps=[
                 else:
                     build_cmd = "dpkg-buildpackage -uc -us"
 
-                if not skip_deps[0]:
-                    logging.info(f"Make and install build dependencies")
-                    run_command("yes | mk-build-deps -i -r debian/control", cwd=item_path)
+                logging.info(f"Make and install build dependencies")
+                run_command("yes | mk-build-deps -i -r debian/control", cwd=item_path)
                 run_command(build_cmd, cwd=item_path)
                 return copy_built_packages(temp_dir, repo_dir)
                 break
@@ -157,7 +155,7 @@ def copy_built_packages(source_dir, repo_dir):
         logging.warning("No deb files found to copy")
     return moved
 
-def process_line(line, args, skip_deps):
+def process_line(line, args):
     """Process a single input line."""
     line = line.strip()
     if not line or line.startswith('#'):
@@ -194,8 +192,7 @@ def process_line(line, args, skip_deps):
 
         if url.endswith('.git'):
             # Git repository - clone and build with gbp-buildpackage
-            success = clone_and_build_gbp(url, args.build, args.repository, skip_deps)
-            skip_deps[0] = False
+            success = clone_and_build_gbp(url, args.build, args.repository)
             if success:
                 # success = scan_and_upgrade_packages(args.repository)
                 scan_and_upgrade_packages(args.repository)
@@ -208,8 +205,7 @@ def process_line(line, args, skip_deps):
                 version = match.group(2)
             rebuild = run_command(f"apt-get source -s {package}={version}{os.environ['LOCALSUFFIX']}")
             # Build or rebuild
-            success = download_and_build_dpkg(url, args.build, args.repository, rebuild, skip_deps)
-            skip_deps[0] = False
+            success = download_and_build_dpkg(url, args.build, args.repository, rebuild)
             if success:
                 # success = scan_and_upgrade_packages(args.repository)
                 scan_and_upgrade_packages(args.repository)
@@ -217,16 +213,7 @@ def process_line(line, args, skip_deps):
         elif url.endswith('.deb'):
             # Binary package - copy to repository
             success = copy_to_repo(url, args.repository)
-            skip_deps[0] = False
             if success:
-                scan_and_upgrade_packages(args.repository)
-
-        elif url.endswith('.rm'):
-            # Remove package
-            success = run_command(f"apt-get purge -y --force-yes -f {url[:-3]}")
-            skip_deps[0] = True
-            if success:
-                logging.info(f"Remove package: {url[:-3]}")
                 scan_and_upgrade_packages(args.repository)
 
         else:
@@ -349,8 +336,6 @@ def main():
         if line:
             lines.append(line)
 
-    skip_deps = [False]
-
     for line_num, line in enumerate(lines, 1):
 
         logging.info(f"Processing line {line_num}: {line}")
@@ -358,7 +343,7 @@ def main():
         os.environ['LOG_FILE'] = args.repository + '/' + line.split('/')[-1] + '.log'
         logging.info(f"The build logs for a specific package: {os.environ['LOG_FILE']}")
 
-        if process_line(line, args, skip_deps):
+        if process_line(line, args):
             success_count += 1
             success_items.append(line.split('/')[-1])
         else:

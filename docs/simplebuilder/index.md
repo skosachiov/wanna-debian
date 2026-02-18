@@ -21,21 +21,27 @@ To do this, you must connect the deb-src sources.
 
 `echo vim | simplebuilder`
 
-## Remove package
+## Rebuid with suffix
 
-`maven-debian-helper.rm`
-
-The next step will not install build dependencies.
+`cat <file> | simplebuilder --suffix="+ubuntu1"`
 
 ## Build from multiple sources
 ```
+#!/bin/bash
+
+simplebuilder --suffix "-ubuntu1" <<EOF
 http://deb.debian.org/debian/pool/main/h/hello/hello_2.10-3.dsc
 https://salsa.debian.org/debian/runit.git
-flask
+EOF
+apt-mark hold maven-debian-helper
+simplebuilder --suffix "-ubuntu1" <<EOF
 https://deb.debian.org/debian/pool/main/b/bcel/bcel_6.10.0-1.dsc
 http://deb.debian.org/debian/pool/main/c/cowsay/cowsay_3.03+dfsg2-8.dsc
 http://deb.debian.org/debian/pool/main/h/hello/hello_2.10-5.dsc
-nano
+EOF
+apt-mark unhold maven-debian-helper
+apt-get purge -y --force-yes -f nano
+simplebuilder --suffix "-ubuntu2" <<EOF
 https://deb.debian.org/debian/pool/main/a/acct/acct_6.6.4-10.dsc
 https://deb.debian.org/debian/pool/main/j/jq/jq_1.8.1-4.dsc
 http://deb.debian.org/debian/pool/main/h/htop/htop_3.2.2-2.dsc
@@ -45,11 +51,8 @@ http://deb.debian.org/debian/pool/main/libs/libselinux/libselinux_3.8.1-1.dsc
 http://deb.debian.org/debian/pool/main/m/miller/miller_6.13.0-1.dsc
 http://deb.debian.org/debian/pool/main/f/figlet/figlet_2.2.5-3.1.dsc
 https://deb.debian.org/debian/pool/main/h/hello-traditional/hello-traditional_2.10-6.dsc
+EOF
 ```
-
-## Rebuid with suffix
-
-`cat <file> | simplebuilder --suffix="+ubuntu1"`
 
 ## Docker build
 `docker build -f simplebuilder/Dockerfile --build-arg BASE_IMAGE=debian:12 -t my-builder:debian-12`
