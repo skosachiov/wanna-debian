@@ -10,8 +10,8 @@ A successful build is indicated by the presence of `.deb` packages. The source p
 
 ## Build from a Git repository
 
-`echo "ssh://git@github.com/user/repo.git" | simplebuilder`
-or
+`echo "ssh://git@github.com/user/repo.git" | simplebuilder` \
+or \
 `echo "https://github.com/user/repo.git" | simplebuilder`
 
 ## Build from connected APT sources
