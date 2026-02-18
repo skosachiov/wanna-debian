@@ -303,7 +303,10 @@ def main():
 
     args = parser.parse_args()
 
-    logging.basicConfig(level=getattr(logging, args.log_level), format='%(asctime)s %(levelname)s %(message)s')
+    os.environ['LOG_FILE'] = args.workspace + '/' + args.log_file
+
+    logging.basicConfig(level=getattr(logging, args.log_level), format='%(asctime)s %(levelname)s %(message)s', \
+        handlers=[logging.StreamHandler(), logging.FileHandler(os.environ['LOG_FILE'])])
 
     # Create workspace directories
     os.makedirs(args.workspace, exist_ok=True)
@@ -315,7 +318,6 @@ def main():
     os.environ['DEBEMAIL'] = os.environ.get('DEBEMAIL', 'simplebuilder@localhost')
     os.environ['DEBFULLNAME'] = os.environ.get('DEBFULLNAME', 'simplebuilder')
     os.environ['LOCALSUFFIX'] = args.suffix
-    os.environ['LOG_FILE'] = args.workspace + '/' + args.log_file
     os.environ['DEB_BUILD_OPTIONS'] = " ".join(args.profiles)
 
     deb_src_apt_sources()
