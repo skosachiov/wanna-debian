@@ -205,6 +205,10 @@ def process_line(line, args):
             if match:
                 package = match.group(1)
                 version = match.group(2)
+            # Do not attempt to build if suffix in version number
+            if os.environ['LOCALSUFFIX'] in version:
+                logging.warning(f"Skip processing, because the suffix in the version number: {package}={version}")
+                return None
             # Get state
             src_exists = run_command(f"apt-get source -s {package}={version}{os.environ['LOCALSUFFIX']}")
             bin_exists = run_command(f"apt-cache show \
