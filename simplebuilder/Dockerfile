@@ -76,6 +76,9 @@ RUN apt-get update && \
         golang \
         nodejs \
         npm \
+        dh-sequence-phpcomposer \
+        phpab \
+        phpunit \
         default-jdk \
         libmaven-compiler-plugin-java \
         libsurefire-java \
