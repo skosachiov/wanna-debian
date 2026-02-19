@@ -209,7 +209,7 @@ def process_line(line, args):
             src_exists = run_command(f"apt-get source -s {package}={version}{os.environ['LOCALSUFFIX']}")
             bin_exists = run_command(f"apt-cache show \
                 $(apt-cache showsrc {package} | grep ^Binary: | cut -f 2 -d ' ' | cut -f 1 -d ',')={version}{os.environ['LOCALSUFFIX']} \
-                | grep 'Filename:'")
+                | grep '^Version: {version}{os.environ['LOCALSUFFIX']}$'")
             if src_exists and bin_exists:
                 logging.warning(f"Skip processing, source and binary package exists: {package}={version}{os.environ['LOCALSUFFIX']}")
                 return None
