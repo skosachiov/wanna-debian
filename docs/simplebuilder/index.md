@@ -4,6 +4,8 @@ The Simple Debian package builder handles different source types based on URL pa
 
 A successful build is indicated by the presence of `.deb` packages. The source package is copied to the local repository even if the build fails.
 
+Please note that the local repository is enabled in the `/etc/apt/sources.list.d/simplebuilder.list` file and is disabled after `simplebuilder` completes its process. If you want to keep the local repository permanently enabled, please move the local repository entries, for example, to the `/etc/apt/sources.list` file. This may be necessary for the convenient use of consistency-checking tools, such as `dose-debcheck`.
+
 ## Build from a single .dsc file
 
 `echo "https://example.com/package.dsc" | simplebuilder`
