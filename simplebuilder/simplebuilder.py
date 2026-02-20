@@ -118,7 +118,7 @@ def copy_to_repo(file_url, repo_dir):
         # Use wget for HTTP/HTTPS URLs
         try:
             result = subprocess.run(
-                ['wget', '-q', '-P', repo_dir, file_url],
+                ['wget', '-nc', '-q', '-P', repo_dir, file_url],
                 capture_output=True,
                 text=True,
                 check=True
