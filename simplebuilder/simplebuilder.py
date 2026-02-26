@@ -350,7 +350,7 @@ def main():
     skip_items = []
 
     for line in sys.stdin:
-        line = line.strip()
+        line = line.strip().split("#")[0]
         if line:
             lines.append(line)
 
