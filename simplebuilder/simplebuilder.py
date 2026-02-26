@@ -380,7 +380,7 @@ def main():
         logging.info(f"Statistics on processed: successfully {success_count}, "
             f"unsuccessfully {fail_count}, skip {skip_count}, remaining {len(lines)-line_num}")
 
-    logging.info(f"Build process completed. Success: {success_count}, Failed: {fail_count}")
+    logging.info(f"Build process completed. Success: {success_count}, Failed: {fail_count}, Skip: {skip_count}")
     logging.info(f"Success items: {success_items}")
     logging.warning(f"Failed items: {fail_items}")
     logging.warning(f"Skiped items: {skip_items}")
