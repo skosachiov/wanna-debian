@@ -286,22 +286,6 @@ deb-src [trusted=yes] file://{os.path.abspath(repo_path)} ./
         f.write(repo_entry + '\n')
         logging.info("Successfully added local repository to sources")
 
-def remove_local_repo_sources():
-    """Remove local repository from apt sources by commenting out entries"""
-    sources_file = "/etc/apt/sources.list.d/simplebuilder.list"
-    if os.path.exists(sources_file):
-        with open(sources_file, 'r') as f:
-            lines = f.readlines()
-
-        # Comment out each line that isn't already commented
-        with open(sources_file, 'w') as f:
-            for line in lines:
-                if line.strip() and not line.strip().startswith('#'):
-                    f.write(f'# {line}')
-                else:
-                    f.write(line)
-        logging.info(f"Successfully commented out local repository entries: {sources_file}")
-
 def main():
     """Main function."""
     parser = argparse.ArgumentParser(description="Simple debbuild system with stdin job flow")
@@ -385,7 +369,7 @@ def main():
     logging.warning(f"Failed items: {fail_items}")
     logging.warning(f"Skiped items: {skip_items}")
 
-    remove_local_repo_sources()
+    logging.info(f"Please note that the local repository remains connected: /etc/apt/sources.list.d/simplebuilder.list")
 
     if fail_count > 0:
         sys.exit(1)
