@@ -18,6 +18,7 @@ config = {
     "loglevel": 'INFO',
     "min_version": "0~~",
     "briefly_keys": ['package', 'version', 'dist', 'build', 'source'],
+    "consistency": True,
     'timestamp': str(time.time())
 }
 
@@ -416,11 +417,11 @@ def extract_compressed_file(compressed_path, extract_path, remote_time=None):
 
 def update_metadata(base_url, local_base_dir, dists, components, builds, session, hashes):
     """Main function to update Debian repository metadata"""
+    
+    config["consistency"] = False
 
-    try:
-        os.remove(local_base_dir + "/" + config["config_file"])
-    except Exception as e:
-        pass
+    with open(config["local_dir"] + "/" + config["config_file"], "w") as f:
+        json.dump(config, f, indent=4)
 
     logging.info("Fetching distributions list...")
     distributions = get_distributions(base_url + "/dists/", session)
@@ -494,6 +495,8 @@ def update_metadata(base_url, local_base_dir, dists, components, builds, session
 
     write_metadata_index(local_base_dir + "/" + config["index_file"], data_list)
 
+    config["consistency"] = True
+
 def main():
     """Main entry point"""
 
@@ -533,6 +536,10 @@ def main():
             config.update(json.load(f))
             if args.base_url and args.base_url != config["base_url"]:
                 logging.error("Base url is specified, but at the same time configuration with a different url")
+                return
+            if config["consistency"] == False and args.hold:
+                logging.error("During the last update operation, data consistency was lost, "
+                    "please retry the update or correct the consistency field in the config file")
                 return
     except FileNotFoundError:
             if not args.base_url:
