@@ -168,9 +168,10 @@ Filename: pool/main/a/another-package/another-package_2.0.0_amd64.deb
 
         with patch('builtins.open', mock_open(read_data=mock_file_content)):
             with patch('logging.debug') as mock_logging:
-                result = update_metadata_index(
+                update_metadata_index(
                     "test_file", packages, "buster", "main", "amd64"
                 )
+                result = packages
 
                 assert len(result) == 2
                 assert result[0]['package'] == 'test-package'
@@ -200,9 +201,10 @@ Filename: pool/main/b/binary-package/binary-package_1.5.0_amd64.deb
         packages = []
 
         with patch('builtins.open', mock_open(read_data=mock_file_content)):
-            result = update_metadata_index(
+            update_metadata_index(
                 "test_file", packages, "bullseye", "main", "amd64"
             )
+            result = packages
 
             assert len(result) == 1
             assert result[0]['package'] == 'binary-package'
@@ -284,7 +286,7 @@ class TestIntegration:
             find_versions(
                 sys.stdin,
                 "/tmp/test_index.json",
-                None, None, False, False, "package"
+                None, None, None, "package"
             )
 
             # Verify output was written to stdout
