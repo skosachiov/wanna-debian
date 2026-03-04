@@ -159,7 +159,11 @@ dose-ceve --deb-native-arch=amd64 -r build-essential -T deb --depth 1 \
 
 `echo build-essential | pre-dose --log-file build-essential.log -e 2 sid_Sources trixie_Sources > build-essential.list`
 
-`tac build-essential.list | pre-dose --log-file build-essential.log -t --dot build-essential.dot sid_Sources trixie_Sources > build-essential.toposort`
+```
+tac build-essential.list \
+        | pre-dose --log-file build-essential.log -t --dot build-essential.dot -p trixie_Packages sid_Sources trixie_Sources \
+        > build-essential.toposort
+```
 
 `xdot build-essential.dot`
 

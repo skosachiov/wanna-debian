@@ -293,8 +293,8 @@ def main():
     parser.add_argument("--workspace", default="/tmp/workspace", help="Local workspace (default: %(default)s)")
     parser.add_argument("--repository", default="/tmp/workspace/repository", help="Local repository (default: %(default)s)")
     parser.add_argument("--build", default="/tmp/workspace/build", help="Local build folder (default: %(default)s)")
-    parser.add_argument("--profiles", default=["nocheck", "nostrip"], nargs="+", \
-        help="Build profiles (default: nocheck nostrip")
+    parser.add_argument("--profiles", default=["nocheck", "nodoc", "nostrip"], nargs="+", \
+        help="Build profiles (default: nocheck nodoc nostrip")
     parser.add_argument("--suffix", default='', help="Local suffix (default: %(default)s)")
     parser.add_argument("--log-file", default='simplebuilder.log', help="Log workspace file (default: %(default)s)")
     parser.add_argument("--log-level", default='INFO', choices=['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'], \

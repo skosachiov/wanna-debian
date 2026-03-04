@@ -58,14 +58,24 @@ def parse_metadata(filepath, src_dict = None, prov_dict = None, bin_dict = None)
                         version = value.strip()
                     # Collect dependencies
                     if key in ('Build-Depends', 'Build-Depends-Indep', 'Build-Depends-Arch', 'Depends', 'Pre-Depends'):
-                        deps_pkgs = [p.strip().split()[0].split(":")[0] for p in value.split(',') if p.strip()]
+                        deps_pkgs = [p.strip() for p in value.split(',') if p.strip()]
                         for p in deps_pkgs:
                             # Remove the dependency on yourself since the build stages are not taken into account
-                            if p == pkg_name:
+                            if p.split()[0].split(":")[0] == pkg_name:
                                 logging.warning(f'Package depends on itself, '
                                     f'package name is excluded from dependencies: {pkg_name}')
                                 continue
-                            depends.append(p)
+                            # Conditional dependency that should be handled specially
+                            if any(profile in p for profile in ("<!nocheck>", "<!nodoc>")):
+                                logging.warning(f'Dependency with profile restrictions, '
+                                    f'package name is excluded from dependencies: {pkg_name}: {p}')
+                                continue
+                            # Remove dependencies with exact version matching
+                            if "(= " in p:
+                                logging.warning(f'Dependency has exact version, '
+                                    f'package name is excluded from dependencies: {pkg_name}: {p}')
+                                continue
+                            depends.append(p.split()[0].split(":")[0])
             # Store package metadata if valid
             if pkg_name is not None:
                 if pkg_name not in packages or apt_pkg.version_compare(version, packages[pkg_name]['version']) > 0:
