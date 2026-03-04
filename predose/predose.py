@@ -67,7 +67,7 @@ def parse_metadata(filepath, src_dict = None, prov_dict = None, bin_dict = None)
                                 continue
                             # Remove the dependency on some profiles
                             if any(profile in p for profile in ("<!nocheck>", "<!nodoc>")):
-                                logging.warning(f'Dependency with profile restrictions, '
+                                logging.debug(f'Dependency with profile restrictions, '
                                     f'package name is excluded from dependencies: {pkg_name}: {p}')
                                 continue
                             depends.append(p.split()[0].split(":")[0])
