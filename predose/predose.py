@@ -65,14 +65,9 @@ def parse_metadata(filepath, src_dict = None, prov_dict = None, bin_dict = None)
                                 logging.warning(f'Package depends on itself, '
                                     f'package name is excluded from dependencies: {pkg_name}')
                                 continue
-                            # Conditional dependency that should be handled specially
+                            # Remove the dependency on some profiles
                             if any(profile in p for profile in ("<!nocheck>", "<!nodoc>")):
                                 logging.warning(f'Dependency with profile restrictions, '
-                                    f'package name is excluded from dependencies: {pkg_name}: {p}')
-                                continue
-                            # Remove dependencies with exact version matching
-                            if "(= " in p:
-                                logging.warning(f'Dependency has exact version, '
                                     f'package name is excluded from dependencies: {pkg_name}: {p}')
                                 continue
                             depends.append(p.split()[0].split(":")[0])
