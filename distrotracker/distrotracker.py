@@ -93,7 +93,7 @@ def update_metadata_index(packagefile, data_list, dist, comp, build, dry_run = F
                     if key in ('Build-Depends', 'Build-Depends-Indep', 'Build-Depends-Arch', 'Depends', 'Pre-Depends'):
                         depends.append(value)
             # Store package metadata if valid
-            if pkg_name is not None:
+            if pkg_name is not None and (filename is not None or (directory is not None and version is not None)):
                 if source is None: source = pkg_name
                 if source_version is None: source_version = version
                 packages.append({ \
@@ -101,6 +101,8 @@ def update_metadata_index(packagefile, data_list, dist, comp, build, dry_run = F
                     'depends': hashlib.md5(",".join(depends).encode()).hexdigest()[:8], \
                     'source': source, 'source_version': source_version, \
                     'filename': filename if filename else directory + "/" + pkg_name + "_" + version.split(":")[-1] + ".dsc" })
+            else:
+                logging.error(f'Invalid metadata detected: {block}')
     logging.debug(f'In the file {packagefile} processed packets: {len(packages)}')
 
     logging.info(f'Save component index: {packagefile_index}')
@@ -417,7 +419,7 @@ def extract_compressed_file(compressed_path, extract_path, remote_time=None):
 
 def update_metadata(base_url, local_base_dir, dists, components, builds, session, hashes):
     """Main function to update Debian repository metadata"""
-    
+
     config["consistency"] = False
 
     with open(config["local_dir"] + "/" + config["config_file"], "w") as f:

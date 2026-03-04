@@ -52,7 +52,7 @@ class TestParseRequirementLine:
         """Test parsing line without version constraint"""
         line = "package-name"
         result = parse_requirement_line(line)
-        assert result == ("package-name", ">=", "0")
+        assert result == ("package-name", ">=", "0~~")
 
     def test_parse_empty_line(self):
         """Test parsing empty line"""
@@ -153,6 +153,7 @@ class TestUpdateMetadataIndex:
 Version: 1.0.0
 Architecture: amd64
 Depends: libc6 (>= 2.14), libssl1.1
+Filename: pool/main/t/test-package/test-package_1.0.0_amd64.deb
 
 Package: another-package
 Version: 2.0.0
@@ -160,6 +161,7 @@ Architecture: arm64
 Source: another-source
 Source-Version: 2.0.0
 Depends: libc6
+Filename: pool/main/a/another-package/another-package_2.0.0_amd64.deb
 
 """
         packages = []
@@ -192,6 +194,7 @@ Version: 1.5.0
 Source: source-package (1.5.0-1)
 Architecture: amd64
 Depends: dep1, dep2
+Filename: pool/main/b/binary-package/binary-package_1.5.0_amd64.deb
 
 """
         packages = []
