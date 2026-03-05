@@ -107,7 +107,6 @@ def download_and_build_dpkg(url, build_dir, repo_dir, rebuild=False):
                 run_command("yes | mk-build-deps -i -r debian/control", cwd=item_path)
                 run_command(build_cmd, cwd=item_path)
                 return copy_built_packages(temp_dir, repo_dir)
-                break
 
     return False
 
@@ -140,7 +139,7 @@ def copy_to_repo(file_url, repo_dir):
             return False
 
 def copy_built_packages(source_dir, repo_dir):
-    copy_ext = ['.buildinfo', '.changes', 'build']
+    copy_ext = ['.buildinfo', '.changes', '.build']
     deb_files = [f for f in os.listdir(source_dir) if f.endswith('.deb')]
     if deb_files:
         copy_ext.extend(['.deb', '.dsc', '.tar.gz', '.tar.xz', '.tar.bz2', \
