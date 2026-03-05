@@ -74,8 +74,8 @@ def clone_and_build_gbp(repo_url, build_dir, repo_dir):
     run_command("gbp buildpackage -uc -us --git-no-pristine-tar --git-ignore-new --git-export-dir=../build-area", cwd=clone_dir)
     # Copy built packages to repository
     rc = copy_built_packages(os.path.join(clone_dir, "../build-area"), repo_dir)
-    shutil.rmtree(clone_dir)
     shutil.rmtree(os.path.join(clone_dir, "../build-area"))
+    shutil.rmtree(clone_dir)
     return rc
 
 def download_and_build_dpkg(url, build_dir, repo_dir, rebuild=False):
