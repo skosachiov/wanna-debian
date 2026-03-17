@@ -96,7 +96,7 @@ dose-debcheck --latest 1 --deb-native-arch=amd64 -e -f /var/lib/apt/lists/*_Pack
 podman run -it --privileged  -v ~/git/podman:/root/git  debian:13  /bin/bash
 apt update && apt install -y debootstrap schroot sbuild libwww-perl
 apt install -y man vim
-sbuild-createchroot --include=eatmydata,ccache --extra-repository="deb http://security.debian.org/debian-security trixie-security main" trixie /srv/chroot/trixie-amd64-sbuild https://ftp.debian.org/debian
+sbuild-createchroot --keyring="" --include=eatmydata,ccache --extra-repository="deb http://security.debian.org/debian-security trixie-security main" trixie /srv/chroot/trixie-amd64-sbuild https://ftp.debian.org/debian
 sbuild-createchroot --include=eatmydata,ccache forky /srv/chroot/forky-amd64-sbuild https://ftp.debian.org/debian
 sbuild -d trixie hello
 sbuild -d forky  http://deb.debian.org/debian/pool/main/h/hello/hello_2.10-5.dsc
