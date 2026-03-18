@@ -93,7 +93,7 @@ dose-debcheck --latest 1 --deb-native-arch=amd64 -e -f /var/lib/apt/lists/*_Pack
 ## sbuild steps
 
 ```
-podman run -it --privileged  -v ~/git/podman:/root/git  debian:13  /bin/bash
+podman run -it --privileged -v ~/git/podman:/root/git debian:13 /bin/bash
 apt update && apt install -y debootstrap schroot sbuild libwww-perl
 apt install -y man vim
 ln -s /usr/share/debootstrap/scripts/trixie /usr/share/debootstrap/scripts/mytrixie
