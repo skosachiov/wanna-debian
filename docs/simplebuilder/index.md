@@ -90,7 +90,7 @@ dose-debcheck --latest 1 --deb-native-arch=amd64 -e -f /var/lib/apt/lists/*_Pack
         | grep -P "^\s{6}(unsat-|package:)" | paste - - | sort | uniq -c | sort -nr
 ```
 
-## sbuild steps
+## in a clean environment, podman and sbuild
 
 ```
 podman run -it --privileged -v ~/git/podman:/root/git debian:13 /bin/bash
