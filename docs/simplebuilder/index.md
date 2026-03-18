@@ -96,8 +96,16 @@ dose-debcheck --latest 1 --deb-native-arch=amd64 -e -f /var/lib/apt/lists/*_Pack
 podman run -it --privileged  -v ~/git/podman:/root/git  debian:13  /bin/bash
 apt update && apt install -y debootstrap schroot sbuild libwww-perl
 apt install -y man vim
-sbuild-createchroot --keyring="" --include=eatmydata,ccache --extra-repository="deb http://security.debian.org/debian-security trixie-security main" trixie /srv/chroot/trixie-amd64-sbuild https://ftp.debian.org/debian
-sbuild-createchroot --include=eatmydata,ccache forky /srv/chroot/forky-amd64-sbuild https://ftp.debian.org/debian
-sbuild -d trixie hello
-sbuild -d forky  http://deb.debian.org/debian/pool/main/h/hello/hello_2.10-5.dsc
+ln -s /usr/share/debootstrap/scripts/trixie /usr/share/debootstrap/scripts/mytrixie
+sbuild-createchroot --keyring=/usr/share/keyrings/mytrixie --include=eatmydata,ccache,gzip --extra-repository="deb http://security.debian.org/debian-security trixie-security main" mytrixie /srv/chroot/trixie-amd64-sbuild https://ftp.debian.org/debian
+sed -i '/\/sys/s/^/#/' /etc/schroot/sbuild/fstab
+sbuild-createchroot --include=eatmydata,ccache,gzip forky /srv/chroot/forky-amd64-sbuild https://ftp.debian.org/debian
+echo "Acquire::https { Verify-Peer "false"; Verify-Host "false"; }" > /srv/chroot/mytrixie-amd64-sbuild/etc/apt/apt.conf.d/99verify-https.conf
+chmod a+rwx /srv/chroot/mytrixie-amd64-sbuild/dev/null
+useradd -m user
+sbuild-adduser user
+su - user
+sbuild -d mytrixie hello
+sbuild -d mytrixie --lintian-opts="changelog-distribution-does-not-match-changes-file,bad-distribution-in-changes-file,distribution-and-changes-mismatch" http://deb.debian.org/debian/pool/main/h/hello/hello_2.10-5.dsc
+schroot -c chroot:trixie-amd64-sbuild
 ```
