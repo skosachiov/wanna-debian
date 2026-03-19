@@ -9,7 +9,7 @@ from functools import cmp_to_key
 config = {
     "config_file": "config.json",
     "base_url": "",
-    "local_dir": "metadata",
+    "local_dir": ["metadata"],
     "index_file": "index.json",
     "builds": ['binary-amd64', 'source'],
     "dist": [],
@@ -155,28 +155,29 @@ def check_version(version, required_op, required_version):
     else:
         return False
 
-def find_versions(fin, filename, dist = None, build = None, briefly = None, index_key = 'package', selection = None):
+def find_versions(fin, filenames, dist = None, build = None, briefly = None, index_key = 'package', selection = None):
 
     version_key = "source_version" if index_key == "source" else "version"
 
-    if not os.path.exists(filename):
-        logging.error(f"File does not exist: {filename}")
-        return {}
     data_dict = {}
-    try:
-        with open(filename, 'r', encoding='utf-8') as f:
-            data_list = json.load(f)
-        for e in data_list:
-            if build and e['build'] not in build: continue
-            if dist and e['dist'] not in dist: continue
-            if e[index_key] not in data_dict:
-                data_dict[e[index_key]] = [e]
-            else:
-                data_dict[e[index_key]].append(e)
-    except (IOError, json.JSONDecodeError) as e:
-        logging.error(f"Error reading file: {e}")
-        return {}
-    logging.info(f"Dictionary successfully read from: {filename}")
+    for filename in filenames:
+        if not os.path.exists(filename):
+            logging.error(f"File does not exist: {filename}")
+            return {}
+        try:
+            with open(filename, 'r', encoding='utf-8') as f:
+                data_list = json.load(f)
+            for e in data_list:
+                if build and e['build'] not in build: continue
+                if dist and e['dist'] not in dist: continue
+                if e[index_key] not in data_dict:
+                    data_dict[e[index_key]] = [e]
+                else:
+                    data_dict[e[index_key]].append(e)
+        except (IOError, json.JSONDecodeError) as e:
+            logging.error(f"Error reading file: {e}")
+            return {}
+    logging.info(f"Dictionary successfully read from: {filenames}")
     for key in data_dict:
         data_dict[key].sort(key=cmp_to_key(lambda a, b: apt_pkg.version_compare(a[version_key], b[version_key])))
 
@@ -504,7 +505,7 @@ def main():
 
     parser = argparse.ArgumentParser(description="Update Debian metadata files from the Debian repository")
     parser.add_argument("--base-url", help="Base URL for Debian metadata (example: https://ftp.debian.org/debian/)")
-    parser.add_argument("--local-dir", default="./" + config["local_dir"], help="Local directory to store metadata files (default: %(default)s)")
+    parser.add_argument("--local-dir", default=["./" + config["local_dir"]], nargs='+', help="Local directory to store metadata files (default: %(default)s)")
     parser.add_argument("--dist", default=[], nargs='+', help="Distributions (default: all)")
     parser.add_argument("--comp", default=config["comp"], nargs='+', \
         help=f"Components main, universe, contrib, non-free, non-free-firmware etc. (default: {" ".join(config["comp"])})")
@@ -527,7 +528,7 @@ def main():
 
     logging.basicConfig(level=getattr(logging, args.log_level), format='%(asctime)s %(levelname)s %(message)s')
 
-    config_file = args.local_dir + "/" + config["config_file"]
+    config_file = args.local_dir[0] + "/" + config["config_file"]
 
     if args.base_url:
         if not args.base_url.endswith("/"):
@@ -575,11 +576,12 @@ def main():
             logging.info("Starting metadata update...")
             update_metadata(config["base_url"], config["local_dir"], config["dist"], config["comp"], config["builds"], session, hashes)
             logging.info("Metadata update completed!")
-            with open(config["local_dir"] + "/" + config["config_file"], "w") as f:
+            with open(config["local_dir"][0] + "/" + config["config_file"], "w") as f:
                 json.dump(config, f, indent=4)
 
     if args.find:
-        find_versions(sys.stdin, args.local_dir + "/" + config["index_file"], args.dist, args.build, args.briefly, \
+        find_versions(sys.stdin, [d + "/" + config["index_file"] for d in config["local_dir"]], \
+            args.dist, args.build, args.briefly, \
             "package" if not args.source else "source", selection)
 
 
