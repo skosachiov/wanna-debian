@@ -571,7 +571,7 @@ def main():
     hashes = set()
 
     if not args.hold:
-        if args.force or original_metadata_is_newer(config["base_url"], config["local_dir"], session, hashes) or \
+        if args.force or original_metadata_is_newer(config["base_url"], config["local_dir"][0], session, hashes) or \
                 not os.path.exists(config_file):
             logging.info("Starting metadata update...")
             update_metadata(config["base_url"], config["local_dir"], config["dist"], config["comp"], config["builds"], session, hashes)
