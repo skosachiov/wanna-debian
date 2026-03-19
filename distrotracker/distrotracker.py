@@ -423,7 +423,7 @@ def update_metadata(base_url, local_base_dir, dists, components, builds, session
 
     config["consistency"] = False
 
-    with open(config["local_dir"] + "/" + config["config_file"], "w") as f:
+    with open(config["local_dir"][0] + "/" + config["config_file"], "w") as f:
         json.dump(config, f, indent=4)
 
     logging.info("Fetching distributions list...")
