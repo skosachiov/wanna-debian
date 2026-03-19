@@ -528,6 +528,10 @@ def main():
 
     logging.basicConfig(level=getattr(logging, args.log_level), format='%(asctime)s %(levelname)s %(message)s')
 
+    if len(args.local_dir) > 1 and (args.base_url or not args.find):
+        logging.error("Multiple local dirs can be specified for the search operation only")
+        return
+
     config_file = args.local_dir[0] + "/" + config["config_file"]
 
     if args.base_url:
@@ -580,7 +584,7 @@ def main():
                 json.dump(config, f, indent=4)
 
     if args.find:
-        find_versions(sys.stdin, [d + "/" + config["index_file"] for d in config["local_dir"]], \
+        find_versions(sys.stdin, [d + "/" + config["index_file"] for d in args.local_dir], \
             args.dist, args.build, args.briefly, \
             "package" if not args.source else "source", selection)
 
