@@ -505,7 +505,7 @@ def main():
 
     parser = argparse.ArgumentParser(description="Update Debian metadata files from the Debian repository")
     parser.add_argument("--base-url", help="Base URL for Debian metadata (example: https://ftp.debian.org/debian/)")
-    parser.add_argument("--local-dir", default=["./" + config["local_dir"]], nargs='+', help="Local directory to store metadata files (default: %(default)s)")
+    parser.add_argument("--local-dir", default=["./" + config["local_dir"][0]], nargs='+', help="Local directory to store metadata files (default: %(default)s)")
     parser.add_argument("--dist", default=[], nargs='+', help="Distributions (default: all)")
     parser.add_argument("--comp", default=config["comp"], nargs='+', \
         help=f"Components main, universe, contrib, non-free, non-free-firmware etc. (default: {" ".join(config["comp"])})")
