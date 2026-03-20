@@ -22,6 +22,18 @@ config = {
     'timestamp': str(time.time())
 }
 
+def validate_and_update(config, new_data):
+    for key, value in new_data.items():
+        if key in config:
+            # Check if types match
+            if type(config[key]) is not type(value):
+                raise TypeError(
+                    f"Type mismatch for key '{key}': "
+                    f"expected {type(config[key]).__name__}, "
+                    f"got {type(value).__name__}"
+                )
+        config[key] = value
+
 def write_metadata_index(filename, data_list):
     try:
         with open(filename, 'w', encoding='utf-8') as f:
@@ -505,7 +517,7 @@ def main():
 
     parser = argparse.ArgumentParser(description="Update Debian metadata files from the Debian repository")
     parser.add_argument("--base-url", help="Base URL for Debian metadata (example: https://ftp.debian.org/debian/)")
-    parser.add_argument("--local-dir", default=["./" + config["local_dir"][0]], nargs='+', help="Local directory to store metadata files (default: %(default)s)")
+    parser.add_argument("--local-dir", default=[config["local_dir"][0]], nargs='+', help="Local directory to store metadata files (default: %(default)s)")
     parser.add_argument("--dist", default=[], nargs='+', help="Distributions (default: all)")
     parser.add_argument("--comp", default=config["comp"], nargs='+', \
         help=f"Components main, universe, contrib, non-free, non-free-firmware etc. (default: {" ".join(config["comp"])})")
@@ -540,7 +552,8 @@ def main():
 
     try:
         with open(config_file, "r") as f:
-            config.update(json.load(f))
+            new_config = json.load(f)
+            validate_and_update(config, new_config)
             if args.base_url and args.base_url != config["base_url"]:
                 logging.error("Base url is specified, but at the same time configuration with a different url")
                 return
