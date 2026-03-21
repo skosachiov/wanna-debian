@@ -99,6 +99,8 @@ apt install -y man vim
 ln -s /usr/share/debootstrap/scripts/trixie /usr/share/debootstrap/scripts/mytrixie
 sbuild-createchroot --keyring=/usr/share/keyrings/mytrixie --include=eatmydata,ccache,gzip --extra-repository="deb http://security.debian.org/debian-security trixie-security main" mytrixie /srv/chroot/trixie-amd64-sbuild https://ftp.debian.org/debian
 sed -i '/\/sys/s/^/#/' /etc/schroot/sbuild/fstab
+sed -i '/\/sys/s/rw,bind/rw,rbind/' /etc/schroot/sbuild/fstab
+umount -l ...
 sbuild-createchroot --include=eatmydata,ccache,gzip forky /srv/chroot/forky-amd64-sbuild https://ftp.debian.org/debian
 echo "Acquire::https { Verify-Peer "false"; Verify-Host "false"; }" > /srv/chroot/mytrixie-amd64-sbuild/etc/apt/apt.conf.d/99verify-https.conf
 chmod a+rwx /srv/chroot/mytrixie-amd64-sbuild/dev/null
@@ -106,6 +108,6 @@ useradd -m user
 sbuild-adduser user
 su - user
 sbuild -d mytrixie hello
-sbuild -d mytrixie --lintian-opts="changelog-distribution-does-not-match-changes-file,bad-distribution-in-changes-file,distribution-and-changes-mismatch" http://deb.debian.org/debian/pool/main/h/hello/hello_2.10-5.dsc
+sbuild -d mytrixie --lintian-opts="--suppress-tags changelog-distribution-does-not-match-changes-file,bad-distribution-in-changes-file,distribution-and-changes-mismatch" http://deb.debian.org/debian/pool/main/h/hello/hello_2.10-5.dsc
 schroot -c chroot:trixie-amd64-sbuild
 ```
