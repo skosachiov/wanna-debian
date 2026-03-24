@@ -98,22 +98,20 @@ dose-debcheck --latest 1 --deb-native-arch=amd64 -e -f /var/lib/apt/lists/*_Pack
 
 ```
 podman run -it --privileged -v ~/git/podman:/root/git debian:13 /bin/bash
-apt update && apt install -y debootstrap schroot sbuild libwww-perl
+apt update && apt install -y sudo debootstrap schroot sbuild libwww-perl
 apt install -y man vim
-ln -s /usr/share/debootstrap/scripts/trixie /usr/share/debootstrap/scripts/mytrixie
-sbuild-createchroot --keyring=/usr/share/keyrings/mytrixie --include=eatmydata,ccache,gzip --extra-repository="deb http://security.debian.org/debian-security trixie-security main" mytrixie /srv/chroot/trixie-amd64-sbuild https://ftp.debian.org/debian
+# change trixie to mytrixie
+ln -s /usr/share/debootstrap/scripts/stable /usr/share/debootstrap/scripts/trixie
+sbuild-createchroot --keyring=/usr/share/keyrings/trixie.gpg --include=eatmydata,ccache,gzip --extra-repository="deb http://security.debian.org/debian-security trixie-security main" trixie /srv/chroot/trixie-amd64-sbuild https://ftp.debian.org/debian
+sbuild-createchroot --include=eatmydata,ccache,gzip forky /srv/chroot/forky-amd64-sbuild https://ftp.debian.org/debian
 sed -i '/\/sys/s/^/#/' /etc/schroot/sbuild/fstab
 sed -i '/\/sys/s/rw,bind/rw,rbind/' /etc/schroot/sbuild/fstab
-umount -l ...
-sbuild-createchroot --include=eatmydata,ccache,gzip forky /srv/chroot/forky-amd64-sbuild https://ftp.debian.org/debian
-echo "Acquire::https { Verify-Peer "false"; Verify-Host "false"; }" > /srv/chroot/mytrixie-amd64-sbuild/etc/apt/apt.conf.d/99verify-https.conf
-chmod a+rwx /srv/chroot/mytrixie-amd64-sbuild/dev/null
-useradd -m user
-sbuild-adduser user
-su - user
-sbuild --chroot-mode=schroot -d mytrixie hello
-sbuild --chroot-mode=schroot -d mytrixie --lintian-opts="--suppress-tags changelog-distribution-does-not-match-changes-file,bad-distribution-in-changes-file,distribution-and-changes-mismatch" http://deb.debian.org/debian/pool/main/h/hello/hello_2.10-5.dsc
+echo "Acquire::https { Verify-Peer "false"; Verify-Host "false"; }" > /srv/chroot/trixie-amd64-sbuild/etc/apt/apt.conf.d/99verify-https.conf
+chmod a+rwx /srv/chroot/trixie-amd64-sbuild/dev/null
+sudo -u sbuild sbuild --chroot-mode=schroot -d trixie --build-dir=/tmp hello
+sudo -u sbuild sbuild --chroot-mode=schroot -d trixie --build-dir=/tmp --lintian-opts="--suppress-tags changelog-distribution-does-not-match-changes-file,bad-distribution-in-changes-file,distribution-and-changes-mismatch" http://deb.debian.org/debian/pool/main/h/hello/hello_2.10-5.dsc
 schroot -c chroot:trixie-amd64-sbuild
+umount -l ...
 ```
 
 echo http://deb.debian.org/debian/pool/main/h/hello/hello_2.10-3.dsc | simplebuilder --sbuild --dist trixie --base-url https://ftp.debian.org/debian/
