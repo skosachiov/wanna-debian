@@ -157,7 +157,7 @@ def build_with_sbuild(dsc_url, dist, chroot_name, extra_repositories=None):
         sbuild_cmd += " --lintian-opts='--suppress-tags changelog-distribution-does-not-match-changes-file,bad-distribution-in-changes-file,distribution-and-changes-mismatch'"
 
         # Add build results directory (the folder containing the dsc file)
-        sbuild_cmd += f" --build-results-dir={dsc_file.parent}"
+        sbuild_cmd += f" --build-dir={dsc_file.parent}"
 
         # Add the dsc file
         sbuild_cmd += f" {dsc_file}"
