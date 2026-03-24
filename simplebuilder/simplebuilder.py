@@ -53,45 +53,44 @@ def scan_and_upgrade_packages(repo_path):
 def setup_sbuild_chroot(dist, base_url, extra_repositories, chroot_base="/srv/chroot"):
     """Setup sbuild chroot for building."""
     logging.info(f"Setting up sbuild chroot for {dist}")
-    
+
     chroot_name = f"{dist}-amd64-sbuild"
     chroot_path = Path(chroot_base) / chroot_name
-    
+
     # Install sbuild and dependencies
     run_command("apt-get update")
     run_command("apt-get install -y debootstrap schroot sbuild libwww-perl apt-utils")
-    
+
     # Create debootstrap symlink if needed
     debootstrap_script = Path(f"/usr/share/debootstrap/scripts/{dist}")
     if not debootstrap_script.exists():
         try:
-            debootstrap_script.symlink_to("/usr/share/debootstrap/scripts/trixie")
+            debootstrap_script.symlink_to("/usr/share/debootstrap/scripts/stable")
         except:
             pass
-    
+
     # Build extra repository arguments
     extra_repo_args = ""
     if extra_repositories:
         for repo in extra_repositories:
             extra_repo_args += f" --extra-repository='{repo}'"
-    
+
     # Create chroot
     cmd = f"sbuild-createchroot --keyring=/usr/share/keyrings/debian-archive-keyring.gpg \
         --include=eatmydata,ccache,gzip{extra_repo_args} \
         {dist} {chroot_path} {base_url}"
-    
+
     if not run_command(cmd):
         logging.error("Failed to create sbuild chroot")
         return None
-    
+
     # Fix fstab for /sys
     fstab_path = Path("/etc/schroot/sbuild/fstab")
     if fstab_path.exists():
         content = fstab_path.read_text()
-        content = re.sub(r'^/sys', '#/sys', content, flags=re.MULTILINE)
         content = re.sub(r'/sys\s+.*rw,bind', '/sys   /sys   none   rw,rbind   0   0', content)
         fstab_path.write_text(content)
-    
+
     # Disable HTTPS verification for local builds
     apt_conf_dir = chroot_path / "etc/apt/apt.conf.d"
     apt_conf_dir.mkdir(parents=True, exist_ok=True)
@@ -100,61 +99,61 @@ def setup_sbuild_chroot(dist, base_url, extra_repositories, chroot_base="/srv/ch
 Acquire::https::Verify-Peer "false";
 Acquire::https::Verify-Host "false";
 """)
-    
+
     # Fix permissions for /dev/null
     dev_null = chroot_path / "dev" / "null"
     if dev_null.exists():
         dev_null.chmod(0o777)
-    
+
     # Add local repository to chroot
     if os.environ.get('LOCAL_REPO_PATH'):
         sources_list = chroot_path / "etc/apt/sources.list"
         repo_line = f"deb [trusted=yes] file://{os.environ['LOCAL_REPO_PATH']} ./"
         with sources_list.open('a') as f:
             f.write(repo_line + '\n')
-    
+
     logging.info(f"Sbuild chroot created: {chroot_name}")
     return chroot_name
 
 def build_with_sbuild(dsc_url, dist, chroot_name, extra_repositories=None):
     """Build package using sbuild."""
     logging.info(f"Building with sbuild: {dsc_url}")
-    
+
     # Download .dsc and related files
     with tempfile.TemporaryDirectory() as temp_dir:
         if not run_command(f"dget --allow-unauthenticated {dsc_url}", cwd=temp_dir):
             return False
-        
+
         # Find .dsc file
         dsc_files = list(Path(temp_dir).glob("*.dsc"))
         if not dsc_files:
             logging.error("No .dsc file found")
             return False
-        
+
         dsc_file = dsc_files[0]
-        
+
         # Build sbuild command
         sbuild_cmd = f"sbuild -d {dist} --build-dep-resolver=aptitude"
-        
+
         # Add extra repositories
         if extra_repositories:
             for repo in extra_repositories:
                 sbuild_cmd += f" --extra-repository='{repo}'"
-        
+
         # Add local repository if exists
         if os.environ.get('LOCAL_REPO_PATH'):
             sbuild_cmd += f" --extra-repository='deb [trusted=yes] file://{os.environ['LOCAL_REPO_PATH']} ./'"
-        
+
         # Add lintian options to suppress common warnings
         sbuild_cmd += " --lintian-opts='--suppress-tags changelog-distribution-does-not-match-changes-file,bad-distribution-in-changes-file,distribution-and-changes-mismatch'"
-        
+
         sbuild_cmd += f" {dsc_file}"
-        
+
         # Run sbuild
         if not run_command(sbuild_cmd, cwd=temp_dir):
             logging.error("sbuild failed")
             return False
-        
+
         # Copy built packages to repository
         sbuild_output = Path(f"/var/lib/sbuild/{chroot_name}")
         if sbuild_output.exists():
@@ -162,7 +161,7 @@ def build_with_sbuild(dsc_url, dist, chroot_name, extra_repositories=None):
             for deb in sbuild_output.glob("*.deb"):
                 shutil.copy2(deb, repo_dir)
                 logging.info(f"Copied {deb.name} to repository")
-        
+
         return True
 
 def clone_and_build_gbp(repo_url, build_dir, repo_dir):
@@ -321,7 +320,7 @@ def process_line(line, args):
                     process_line.sbuild_chroot = setup_sbuild_chroot(
                         args.dist, args.base_url, args.extra_repository
                     )
-                
+
                 if process_line.sbuild_chroot:
                     success = build_with_sbuild(
                         url, args.dist, process_line.sbuild_chroot, args.extra_repository
@@ -423,13 +422,11 @@ def main():
     parser.add_argument("--log-file", default='simplebuilder.log', help="Log workspace file (default: %(default)s)")
     parser.add_argument("--log-level", default='INFO', choices=['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'], \
         help='Set the logging level (default: %(default)s)')
-    
-    # New sbuild options
     parser.add_argument("--sbuild", action="store_true", help="Use sbuild backend for building (default: dpkg-buildpackage)")
-    parser.add_argument("--dist", default="trixie", help="Distribution for sbuild chroot (default: trixie)")
-    parser.add_argument("--base-url", default="https://ftp.debian.org/debian", 
+    parser.add_argument("--dist", default="stable", help="Distribution for sbuild chroot (default: %(default)s)")
+    parser.add_argument("--base-url", default="https://ftp.debian.org/debian",
                        help="Base Debian repository URL for sbuild (default: https://ftp.debian.org/debian)")
-    parser.add_argument("--extra-repository", action="append", 
+    parser.add_argument("--extra-repository", action="append",
                        help="Extra repositories for sbuild (can be specified multiple times)")
 
     args = parser.parse_args()
