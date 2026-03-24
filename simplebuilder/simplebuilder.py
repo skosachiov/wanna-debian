@@ -77,8 +77,7 @@ def setup_sbuild_chroot(dist, base_url, extra_repositories, chroot_base="/srv/ch
 
     # Create chroot
     cmd = f"sbuild-createchroot --keyring={os.environ.get('DEB_KEYRING')} \
-        --include=eatmydata,ccache,gzip{extra_repo_args} \
-        {dist} {chroot_path} {base_url}"
+        --include=ccache {extra_repo_args} {dist} {chroot_path} {base_url}"
 
     if not run_command(cmd):
         logging.error("Failed to create sbuild chroot")
@@ -133,7 +132,7 @@ def build_with_sbuild(dsc_url, dist, chroot_name, extra_repositories=None):
         dsc_file = dsc_files[0]
 
         # Build sbuild command
-        sbuild_cmd = f"sbuild -d {dist} --build-dep-resolver=aptitude"
+        sbuild_cmd = f"sudo -u sbuild sbuild -d {dist} --build-dep-resolver=aptitude"
 
         # Add extra repositories
         if extra_repositories:
