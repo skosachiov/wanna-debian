@@ -75,6 +75,10 @@ def setup_sbuild_chroot(dist, base_url, extra_repositories, chroot_base="/srv/ch
         for repo in extra_repositories:
             extra_repo_args += f" --extra-repository='{repo}'"
 
+    if chroot_path.exists():
+        logging.info(f"Chroot already exists at {chroot_path}, removing it")
+        shutil.rmtree(chroot_path)
+
     # Create chroot
     cmd = f"sbuild-createchroot --keyring={os.environ.get('DEB_KEYRING')} \
         --include=ccache {extra_repo_args} {dist} {chroot_path} {base_url}"
