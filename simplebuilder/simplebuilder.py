@@ -129,54 +129,54 @@ def build_with_sbuild(dsc_url, dist, chroot_name, extra_repositories=None):
     logging.info(f"Building with sbuild: {dsc_url}")
 
     # Download .dsc and related files
-    with tempfile.TemporaryDirectory() as temp_dir:
-        os.chmod(temp_dir, 0o777)
-        if not run_command(f"dget --allow-unauthenticated {dsc_url}", cwd=temp_dir):
-            return False
+    temp_dir = tempfile.TemporaryDirectory()
+    os.chmod(temp_dir, 0o777)
+    if not run_command(f"dget --allow-unauthenticated {dsc_url}", cwd=temp_dir):
+        return False
 
-        # Find .dsc file
-        dsc_files = list(Path(temp_dir).glob("*.dsc"))
-        if not dsc_files:
-            logging.error("No .dsc file found")
-            return False
+    # Find .dsc file
+    dsc_files = list(Path(temp_dir).glob("*.dsc"))
+    if not dsc_files:
+        logging.error("No .dsc file found")
+        return False
 
-        dsc_file = dsc_files[0]
+    dsc_file = dsc_files[0]
 
-        # Build sbuild command
-        sbuild_cmd = f"sudo -u sbuild sbuild --chroot-mode=schroot -d {dist}"
+    # Build sbuild command
+    sbuild_cmd = f"sudo -u sbuild sbuild --chroot-mode=schroot -d {dist}"
 
-        # Add extra repositories
-        if extra_repositories:
-            for repo in extra_repositories:
-                sbuild_cmd += f" --extra-repository='{repo}'"
+    # Add extra repositories
+    if extra_repositories:
+        for repo in extra_repositories:
+            sbuild_cmd += f" --extra-repository='{repo}'"
 
-        # Add local repository if exists
-        if os.environ.get('LOCAL_REPO_PATH'):
-            sbuild_cmd += f" --extra-repository='deb [trusted=yes] file://{os.environ['LOCAL_REPO_PATH']} ./'"
+    # Add local repository if exists
+    if os.environ.get('LOCAL_REPO_PATH'):
+        sbuild_cmd += f" --extra-repository='deb [trusted=yes] file://{os.environ['LOCAL_REPO_PATH']} ./'"
 
-        # Add lintian options to suppress common warnings
-        sbuild_cmd += " --lintian-opts='--suppress-tags changelog-distribution-does-not-match-changes-file,bad-distribution-in-changes-file,distribution-and-changes-mismatch'"
+    # Add lintian options to suppress common warnings
+    sbuild_cmd += " --lintian-opts='--suppress-tags changelog-distribution-does-not-match-changes-file,bad-distribution-in-changes-file,distribution-and-changes-mismatch'"
 
-        # Add build results directory (the folder containing the dsc file)
-        sbuild_cmd += f" --build-dir={dsc_file.parent}"
+    # Add build results directory (the folder containing the dsc file)
+    sbuild_cmd += f" --build-dir={dsc_file.parent}"
 
-        # Add the dsc file
-        sbuild_cmd += f" {dsc_file.name}"
+    # Add the dsc file
+    sbuild_cmd += f" {dsc_file.name}"
 
-        # Run sbuild
-        if not run_command(sbuild_cmd, cwd=temp_dir):
-            logging.error("sbuild failed")
-            return False
+    # Run sbuild
+    if not run_command(sbuild_cmd, cwd=temp_dir):
+        logging.error("sbuild failed")
+        return False
 
-        # Copy built packages to repository
-        sbuild_output = Path(f"/var/lib/sbuild/{chroot_name}")
-        if sbuild_output.exists():
-            repo_dir = os.environ.get('LOCAL_REPO_PATH', '/tmp/workspace/repository')
-            for deb in sbuild_output.glob("*.deb"):
-                shutil.copy2(deb, repo_dir)
-                logging.info(f"Copied {deb.name} to repository")
+    # Copy built packages to repository
+    sbuild_output = Path(f"/var/lib/sbuild/{chroot_name}")
+    if sbuild_output.exists():
+        repo_dir = os.environ.get('LOCAL_REPO_PATH', '/tmp/workspace/repository')
+        for deb in sbuild_output.glob("*.deb"):
+            shutil.copy2(deb, repo_dir)
+            logging.info(f"Copied {deb.name} to repository")
 
-        return True
+    return True
 
 def clone_and_build_gbp(repo_url, build_dir, repo_dir):
     """Clone and build with gbp-buildpackage."""
