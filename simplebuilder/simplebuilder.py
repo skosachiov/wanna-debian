@@ -76,7 +76,7 @@ def setup_sbuild_chroot(dist, base_url, extra_repositories, chroot_base="/srv/ch
             extra_repo_args += f" --extra-repository='{repo}'"
 
     # Create chroot
-    cmd = f"sbuild-createchroot --keyring=/usr/share/keyrings/debian-archive-keyring.gpg \
+    cmd = f"sbuild-createchroot --keyring={os.environ.get('DEB_KEYRING')} \
         --include=eatmydata,ccache,gzip{extra_repo_args} \
         {dist} {chroot_path} {base_url}"
 
@@ -444,6 +444,7 @@ def main():
     os.environ['LOCALSUFFIX'] = args.suffix
     os.environ['DEB_BUILD_OPTIONS'] = " ".join(args.profiles)
     os.environ['LOCAL_REPO_PATH'] = args.repository
+    os.environ['DEB_KEYRING'] = os.environ.get('DEB_KEYRING', "/usr/share/keyrings/debian-archive-keyring.gpg")
 
     logging.basicConfig(level=getattr(logging, args.log_level), format='%(asctime)s %(levelname)s %(message)s', \
         handlers=[logging.StreamHandler(), logging.FileHandler(os.environ['LOG_FILE'])])
