@@ -115,3 +115,5 @@ sbuild --chroot-mode=schroot -d mytrixie hello
 sbuild --chroot-mode=schroot -d mytrixie --lintian-opts="--suppress-tags changelog-distribution-does-not-match-changes-file,bad-distribution-in-changes-file,distribution-and-changes-mismatch" http://deb.debian.org/debian/pool/main/h/hello/hello_2.10-5.dsc
 schroot -c chroot:trixie-amd64-sbuild
 ```
+
+echo http://deb.debian.org/debian/pool/main/h/hello/hello_2.10-3.dsc | simplebuilder --sbuild --dist trixie --base-url https://ftp.debian.org/debian/

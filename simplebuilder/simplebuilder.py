@@ -160,7 +160,7 @@ def build_with_sbuild(dsc_url, dist, chroot_name, extra_repositories=None):
         sbuild_cmd += f" --build-dir={dsc_file.parent}"
 
         # Add the dsc file
-        sbuild_cmd += f" {dsc_file}"
+        sbuild_cmd += f" {dsc_file.name}"
 
         # Run sbuild
         if not run_command(sbuild_cmd, cwd=temp_dir):
