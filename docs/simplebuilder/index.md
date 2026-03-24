@@ -98,7 +98,7 @@ dose-debcheck --latest 1 --deb-native-arch=amd64 -e -f /var/lib/apt/lists/*_Pack
 
 ```
 podman run -it --privileged -v ~/git/podman:/root/git debian:13 /bin/bash
-apt update && apt install -y sudo debootstrap schroot sbuild libwww-perl
+apt update && apt install -y sudo debootstrap schroot sbuild libwww-perl devscripts
 apt install -y man vim
 # change trixie to mytrixie
 ln -s /usr/share/debootstrap/scripts/stable /usr/share/debootstrap/scripts/trixie
