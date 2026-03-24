@@ -79,7 +79,7 @@ def setup_sbuild_chroot(dist, base_url, extra_repositories, chroot_base="/srv/ch
     if chroot_path.exists():
         logging.info(f"Chroot already exists at {chroot_path}, removing it")
         shutil.rmtree(chroot_path)
-    for file_path in glob.glob(chroot_name + "-*"):
+    for file_path in glob.glob(f"/etc/schroot/chroot.d/{chroot_name}-*"):
         if os.path.isfile(file_path):
             os.remove(file_path)
             logging.info(f"Removed: {file_path}")
