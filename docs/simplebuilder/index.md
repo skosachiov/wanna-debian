@@ -111,7 +111,7 @@ chmod a+rwx /srv/chroot/mytrixie-amd64-sbuild/dev/null
 useradd -m user
 sbuild-adduser user
 su - user
-sbuild -d mytrixie hello
-sbuild -d mytrixie --lintian-opts="--suppress-tags changelog-distribution-does-not-match-changes-file,bad-distribution-in-changes-file,distribution-and-changes-mismatch" http://deb.debian.org/debian/pool/main/h/hello/hello_2.10-5.dsc
+sbuild --chroot-mode=schroot -d mytrixie hello
+sbuild --chroot-mode=schroot -d mytrixie --lintian-opts="--suppress-tags changelog-distribution-does-not-match-changes-file,bad-distribution-in-changes-file,distribution-and-changes-mismatch" http://deb.debian.org/debian/pool/main/h/hello/hello_2.10-5.dsc
 schroot -c chroot:trixie-amd64-sbuild
 ```

@@ -75,9 +75,14 @@ def setup_sbuild_chroot(dist, base_url, extra_repositories, chroot_base="/srv/ch
         for repo in extra_repositories:
             extra_repo_args += f" --extra-repository='{repo}'"
 
+    # Remove chroot
     if chroot_path.exists():
         logging.info(f"Chroot already exists at {chroot_path}, removing it")
         shutil.rmtree(chroot_path)
+    for file_path in glob.glob(chroot_name + "-*"):
+        if os.path.isfile(file_path):
+            os.remove(file_path)
+            logging.info(f"Removed: {file_path}")
 
     # Create chroot
     logging.info(f"Create chroot")
@@ -137,7 +142,7 @@ def build_with_sbuild(dsc_url, dist, chroot_name, extra_repositories=None):
         dsc_file = dsc_files[0]
 
         # Build sbuild command
-        sbuild_cmd = f"sudo -u sbuild sbuild -d {dist}"
+        sbuild_cmd = f"sudo -u sbuild sbuild --chroot-mode=schroot -d {dist}"
 
         # Add extra repositories
         if extra_repositories:
