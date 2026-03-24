@@ -129,7 +129,8 @@ def build_with_sbuild(dsc_url, dist, chroot_name, extra_repositories=None):
     logging.info(f"Building with sbuild: {dsc_url}")
 
     # Download .dsc and related files
-    temp_dir = tempfile.TemporaryDirectory()
+    temp_dir_obj = tempfile.TemporaryDirectory()
+    temp_dir = Path(temp_dir_obj.name)
     os.chmod(temp_dir, 0o777)
     if not run_command(f"dget --allow-unauthenticated {dsc_url}", cwd=temp_dir):
         return False
