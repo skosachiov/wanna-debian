@@ -80,6 +80,7 @@ def setup_sbuild_chroot(dist, base_url, extra_repositories, chroot_base="/srv/ch
         shutil.rmtree(chroot_path)
 
     # Create chroot
+    logging.info(f"Create chroot")
     cmd = f"sbuild-createchroot --keyring={os.environ.get('DEB_KEYRING')} \
         --include=ccache {extra_repo_args} {dist} {chroot_path} {base_url}"
 
@@ -136,7 +137,7 @@ def build_with_sbuild(dsc_url, dist, chroot_name, extra_repositories=None):
         dsc_file = dsc_files[0]
 
         # Build sbuild command
-        sbuild_cmd = f"sudo -u sbuild sbuild -d {dist} --build-dep-resolver=aptitude"
+        sbuild_cmd = f"sudo -u sbuild sbuild -d {dist}"
 
         # Add extra repositories
         if extra_repositories:
@@ -150,6 +151,10 @@ def build_with_sbuild(dsc_url, dist, chroot_name, extra_repositories=None):
         # Add lintian options to suppress common warnings
         sbuild_cmd += " --lintian-opts='--suppress-tags changelog-distribution-does-not-match-changes-file,bad-distribution-in-changes-file,distribution-and-changes-mismatch'"
 
+        # Add build results directory (the folder containing the dsc file)
+        sbuild_cmd += f" --build-results-dir={dsc_file.parent}"
+
+        # Add the dsc file
         sbuild_cmd += f" {dsc_file}"
 
         # Run sbuild
