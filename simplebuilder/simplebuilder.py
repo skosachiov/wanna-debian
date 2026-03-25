@@ -98,6 +98,9 @@ def setup_sbuild_chroot(dist, base_url, extra_repositories, chroot_base="/srv/ch
     if fstab_path.exists():
         content = fstab_path.read_text()
         content = re.sub(r'/sys\s+.*rw,bind', '/sys   /sys   none   rw,rbind   0   0', content)
+        new_line = f"{os.environ['LOCAL_REPO_PATH']} {os.environ['LOCAL_REPO_PATH']} rw,bind   0   0\n"
+        if os.environ['LOCAL_REPO_PATH'] not in content:
+            content += new_line
         fstab_path.write_text(content)
 
     # Disable HTTPS verification for local builds
@@ -113,6 +116,9 @@ Acquire::https::Verify-Host "false";
     dev_null = chroot_path / "dev" / "null"
     if dev_null.exists():
         dev_null.chmod(0o777)
+
+    # Mkdir local
+    os.makedirs(chroot_path + '/' + os.environ['LOCAL_REPO_PATH'], exist_ok=True)
 
     # Add local repository to chroot
     if os.environ.get('LOCAL_REPO_PATH'):
