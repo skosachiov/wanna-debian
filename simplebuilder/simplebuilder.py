@@ -93,13 +93,16 @@ def setup_sbuild_chroot(dist, base_url, extra_repositories, chroot_base="/srv/ch
         logging.error("Failed to create sbuild chroot")
         return None
 
+    # Mkdir local
+    os.makedirs(chroot_path + '/' + os.environ['WORKSPACE_PATH'], exist_ok=True)
+
     # Fix fstab for /sys
     fstab_path = Path("/etc/schroot/sbuild/fstab")
     if fstab_path.exists():
         content = fstab_path.read_text()
         content = re.sub(r'/sys\s+.*rw,bind', '/sys   /sys   none   rw,rbind   0   0', content)
-        new_line = f"{os.environ['LOCAL_REPO_PATH']} {os.environ['LOCAL_REPO_PATH']} rw,bind   0   0\n"
-        if os.environ['LOCAL_REPO_PATH'] not in content:
+        new_line = f"{os.environ['WORKSPACE_PATH']} {os.environ['WORKSPACE_PATH']} rw,bind   0   0\n"
+        if os.environ['WORKSPACE_PATH'] not in content:
             content += new_line
         fstab_path.write_text(content)
 
@@ -116,9 +119,6 @@ Acquire::https::Verify-Host "false";
     dev_null = chroot_path / "dev" / "null"
     if dev_null.exists():
         dev_null.chmod(0o777)
-
-    # Mkdir local
-    os.makedirs(chroot_path + '/' + os.environ['LOCAL_REPO_PATH'], exist_ok=True)
 
     # Add local repository to chroot
     if os.environ.get('LOCAL_REPO_PATH'):
@@ -463,6 +463,7 @@ def main():
     os.environ['LOG_FILE'] = args.workspace + '/' + args.log_file
     os.environ['LOCALSUFFIX'] = args.suffix
     os.environ['DEB_BUILD_OPTIONS'] = " ".join(args.profiles)
+    os.environ['WORKSPACE_PATH'] = args.workspace
     os.environ['LOCAL_REPO_PATH'] = args.repository
     os.environ['DEB_KEYRING'] = os.environ.get('DEB_KEYRING', "/usr/share/keyrings/debian-archive-keyring.gpg")
 
