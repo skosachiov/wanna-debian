@@ -175,12 +175,7 @@ def build_with_sbuild(dsc_url, dist, chroot_name, extra_repositories=None):
             return False
 
         # Copy built packages to repository
-        sbuild_output = Path(f"/var/lib/sbuild/{chroot_name}")
-        if sbuild_output.exists():
-            repo_dir = os.environ.get('LOCAL_REPO_PATH', '/tmp/workspace/repository')
-            for deb in sbuild_output.glob("*.deb"):
-                shutil.copy2(deb, repo_dir)
-                logging.info(f"Copied {deb.name} to repository")
+        copy_built_packages(temp_dir, os.environ.get('LOCAL_REPO_PATH'))
 
         return True
 
