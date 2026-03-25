@@ -337,13 +337,13 @@ def process_line(line, args):
             if args.sbuild:
                 # Setup sbuild chroot if needed
                 if not hasattr(process_line, 'sbuild_chroot'):
-                    process_line.sbuild_chroot = setup_sbuild_chroot(
+                    chroot_name = setup_sbuild_chroot(
                         args.dist, args.base_url, args.extra_repository
                     )
 
                 if process_line.sbuild_chroot:
                     success = build_with_sbuild(
-                        url, args.dist, process_line.sbuild_chroot, args.extra_repository
+                        url, args.dist, chroot_name, args.extra_repository
                     )
                     if success:
                         scan_and_upgrade_packages(args.repository)
