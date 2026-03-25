@@ -94,7 +94,7 @@ def setup_sbuild_chroot(dist, base_url, extra_repositories, chroot_base="/srv/ch
         return None
 
     # Mkdir local
-    os.makedirs(chroot_path + '/' + os.environ['WORKSPACE_PATH'], exist_ok=True)
+    os.makedirs(chroot_path / os.environ['WORKSPACE_PATH'].lstrip('/'), exist_ok=True)
 
     # Fix fstab for /sys
     fstab_path = Path("/etc/schroot/sbuild/fstab")
