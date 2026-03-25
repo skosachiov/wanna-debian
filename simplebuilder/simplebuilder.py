@@ -100,8 +100,8 @@ def setup_sbuild_chroot(dist, base_url, extra_repositories, chroot_base="/srv/ch
     fstab_path = Path("/etc/schroot/sbuild/fstab")
     if fstab_path.exists():
         content = fstab_path.read_text()
-        content = re.sub(r'/sys\s+.*rw,bind', '/sys   /sys   none   rw,rbind   0   0', content)
-        new_line = f"{os.environ['WORKSPACE_PATH']} {os.environ['WORKSPACE_PATH']} rw,bind   0   0\n"
+        content = re.sub(r'/sys\s+.*rw,bind', '/sys /sys none rw,rbind 0 0', content)
+        new_line = f"{os.environ['WORKSPACE_PATH']} {os.environ['WORKSPACE_PATH']} none rw,bind 0 0\n"
         if os.environ['WORKSPACE_PATH'] not in content:
             content += new_line
         fstab_path.write_text(content)
