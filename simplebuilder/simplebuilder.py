@@ -432,6 +432,7 @@ def main():
     parser.add_argument("--log-level", default='INFO', choices=['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'], \
         help='Set the logging level (default: %(default)s)')
     parser.add_argument("--sbuild", action="store_true", help="Use sbuild backend for building (default: dpkg-buildpackage)")
+    parser.add_argument("--keyring", default="/etc/apt/trusted.gpg", help="Set to an empty string to disable signature checking (default: %(default)s)")
     parser.add_argument("--dist", default="stable", help="Distribution for sbuild chroot (default: %(default)s)")
     parser.add_argument("--base-url", default="https://ftp.debian.org/debian",
                        help="Base Debian repository URL for sbuild (default: https://ftp.debian.org/debian)")
@@ -454,7 +455,7 @@ def main():
     os.environ['DEB_BUILD_OPTIONS'] = " ".join(args.profiles)
     os.environ['WORKSPACE_PATH'] = args.workspace
     os.environ['LOCAL_REPO_PATH'] = args.repository
-    os.environ['DEB_KEYRING'] = os.environ.get('DEB_KEYRING', "/usr/share/keyrings/debian-archive-keyring.gpg")
+    os.environ['DEB_KEYRING'] = args.keyring
 
     logging.basicConfig(level=getattr(logging, args.log_level), format='%(asctime)s %(levelname)s %(message)s', \
         handlers=[logging.StreamHandler(), logging.FileHandler(os.environ['LOG_FILE'])])
