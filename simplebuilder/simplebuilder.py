@@ -161,7 +161,7 @@ def build_with_sbuild(dsc_url, dist, chroot_name, extra_repositories=None):
             sbuild_cmd += f" --extra-repository='deb [trusted=yes] file://{os.environ['LOCAL_REPO_PATH']} ./'"
 
         # Add lintian options to suppress common warnings
-        sbuild_cmd += " --lintian-opts='--suppress-tags changelog-distribution-does-not-match-changes-file,bad-distribution-in-changes-file,distribution-and-changes-mismatch'"
+        sbuild_cmd += f" --lintian-opts='{os.environ["LINTIAN_OPTIONS"]}'"
 
         # Add build results directory (the folder containing the dsc file)
         sbuild_cmd += f" --build-dir={dsc_file.parent}"
@@ -254,7 +254,7 @@ def gbp_build_with_sbuild(repo_url, dist, chroot_name, extra_repositories=None):
             f"--chroot={chroot_name} "
             f"--chroot-mode=schroot "
             f"--source "
-            f"--lintian-opts='--suppress-tags changelog-distribution-does-not-match-changes-file,bad-distribution-in-changes-file,distribution-and-changes-mismatch'"
+            f"--lintian-opts='{os.environ["LINTIAN_OPTIONS"]}'"
         )
         
         # Add extra repositories if specified
@@ -549,6 +549,10 @@ def main():
     os.environ['WORKSPACE_PATH'] = args.workspace
     os.environ['LOCAL_REPO_PATH'] = args.repository
     os.environ['DEB_KEYRING'] = args.keyring
+    os.environ['LINTIAN_OPTIONS'] = '--suppress-tags ' \
+        'changelog-distribution-does-not-match-changes-file,' \
+        'bad-distribution-in-changes-file,' \
+        'distribution-and-changes-mismatch'
 
     logging.basicConfig(level=getattr(logging, args.log_level), format='%(asctime)s %(levelname)s %(message)s', \
         handlers=[logging.StreamHandler(), logging.FileHandler(os.environ['LOG_FILE'])])
