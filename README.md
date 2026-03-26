@@ -21,7 +21,7 @@ readme: [docs/simplebuilder/index.md](docs/simplebuilder/index.md)
 
 ## python deps
 
-`sudo apt install -y python3-pip python3-apt python3-requests python3-debian`
+`sudo apt install -y python3-pip python3-apt python3-requests python3-debian sbuild devscripts git-buildpackage sudo`
 
 ## rootless userspace install from git
 

@@ -8,7 +8,7 @@ Please note that the local repository is enabled in the `/etc/apt/sources.list.d
 
 ## apt install
 
-`apt update && apt install -y sbuild devscripts sudo`
+`apt update && apt install -y sbuild devscripts git-buildpackage sudo`
 
 ## Build from a single .dsc file
 

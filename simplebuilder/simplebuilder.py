@@ -271,7 +271,6 @@ def gbp_build_with_sbuild(repo_url, dist, chroot_name, extra_repositories=None):
         sbuild_cmd += "--git-ignore-new "
         sbuild_cmd += "--git-verbose "
         sbuild_cmd += "--git-export-dir=../build-area "
-        sbuild_cmd += "--git-builder-arch=amd64 "
         sbuild_cmd += "-uc -us"
         
         # Run the build
