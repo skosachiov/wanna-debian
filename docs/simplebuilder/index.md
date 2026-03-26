@@ -35,19 +35,19 @@ To do this, you must connect the deb-src sources.
 ```
 #!/bin/bash
 
-simplebuilder --suffix="+ubuntu1" <<EOF
+simplebuilder --suffix="+0ubuntu1" <<EOF
 http://deb.debian.org/debian/pool/main/h/hello/hello_2.10-3.dsc
 https://salsa.debian.org/debian/runit.git
 EOF
 apt-get purge -y --force-yes -f maven-debian-helper
 apt-mark hold maven-debian-helper
-simplebuilder --suffix="+ubuntu1" <<EOF
+simplebuilder --suffix="+0ubuntu1" <<EOF
 https://deb.debian.org/debian/pool/main/b/bcel/bcel_6.10.0-1.dsc
 http://deb.debian.org/debian/pool/main/c/cowsay/cowsay_3.03+dfsg2-8.dsc
 http://deb.debian.org/debian/pool/main/h/hello/hello_2.10-5.dsc
 EOF
 apt-mark unhold maven-debian-helper
-simplebuilder --suffix="+ubuntu2" <<EOF
+simplebuilder --suffix="+0ubuntu2" <<EOF
 https://deb.debian.org/debian/pool/main/a/acct/acct_6.6.4-10.dsc
 https://deb.debian.org/debian/pool/main/j/jq/jq_1.8.1-4.dsc
 http://deb.debian.org/debian/pool/main/h/htop/htop_3.2.2-2.dsc
@@ -114,4 +114,7 @@ schroot -c chroot:trixie-amd64-sbuild
 umount -l ...
 ```
 
-echo http://deb.debian.org/debian/pool/main/h/hello/hello_2.10-3.dsc | simplebuilder --sbuild --dist trixie --base-url https://ftp.debian.org/debian/
+```
+echo http://deb.debian.org/debian/pool/main/h/hello/hello_2.10-3.dsc | simplebuilder --sbuild --dist trixie --base-url https://ftp.debian.org/debian/ --keyring=/usr/share/keyrings/debian-archive-trixie-stable.gpg
+```
+

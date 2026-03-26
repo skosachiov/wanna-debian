@@ -215,6 +215,82 @@ def clone_and_build_gbp(repo_url, build_dir, repo_dir):
     shutil.rmtree(clone_dir)
     return rc
 
+def gbp_build_with_sbuild(repo_url, dist, chroot_name, extra_repositories=None):
+    """Clone and build with gbp-buildpackage using sbuild backend."""
+    logging.info(f"Cloning and building with gbp-buildpackage using sbuild: {repo_url}")
+
+    # Create a temporary directory for building
+    with tempfile.TemporaryDirectory(dir=os.environ.get('WORKSPACE_PATH')) as temp_dir:
+        os.chmod(temp_dir, 0o777)
+        
+        # Extract repo name from URL
+        repo_name = repo_url.split('/')[-1].replace('.git', '')
+        clone_dir = os.path.join(temp_dir, repo_name)
+        
+        # Clone repository
+        if not run_command(f"git clone {repo_url} {repo_name}", cwd=temp_dir):
+            logging.error(f"Failed to clone repository: {repo_url}")
+            return False
+        
+        # Check if we're on a valid branch (assume debian/latest or debian/master)
+        # Try to checkout the debian branch if not already on one
+        run_command(f"cd {repo_name}; git checkout debian/latest || git checkout debian/master || git checkout master", cwd=temp_dir)
+        
+        # Apply local suffix if specified
+        if os.environ.get('LOCALSUFFIX'):
+            if not run_command(
+                f"cd {repo_name}; dch -v $(dpkg-parsechangelog -S Version){os.environ['LOCALSUFFIX']} 'Add suffix'; "
+                f"git -c user.name={os.environ['DEBFULLNAME']} -c user.email={os.environ['DEBEMAIL']} commit -am 'Add suffix'",
+                cwd=temp_dir
+            ):
+                logging.warning("Failed to add local suffix, continuing without it")
+        
+        # Build sbuild command for gbp
+        # Using gbp buildpackage with sbuild as the builder
+        sbuild_cmd = (
+            f"gbp buildpackage "
+            f"--git-builder=\"sbuild "
+            f"--dist={dist} "
+            f"--chroot={chroot_name} "
+            f"--chroot-mode=schroot "
+            f"--source "
+            f"--lintian-opts='--suppress-tags changelog-distribution-does-not-match-changes-file,bad-distribution-in-changes-file,distribution-and-changes-mismatch'"
+        )
+        
+        # Add extra repositories if specified
+        if extra_repositories:
+            for repo in extra_repositories:
+                sbuild_cmd += f" --extra-repository='{repo}'"
+        
+        # Add local repository if exists
+        if os.environ.get('LOCAL_REPO_PATH'):
+            sbuild_cmd += f" --extra-repository='deb [trusted=yes] file://{os.environ['LOCAL_REPO_PATH']} ./'"
+        
+        # Close the sbuild command and add gbp options
+        sbuild_cmd += "\" "
+        sbuild_cmd += "--git-no-pristine-tar "
+        sbuild_cmd += "--git-ignore-new "
+        sbuild_cmd += "--git-verbose "
+        sbuild_cmd += "--git-export-dir=../build-area "
+        sbuild_cmd += "--git-builder-arch=amd64 "
+        sbuild_cmd += "-uc -us"
+        
+        # Run the build
+        logging.info(f"Running gbp buildpackage with sbuild")
+        if not run_command(sbuild_cmd, cwd=clone_dir):
+            logging.error("gbp buildpackage with sbuild failed")
+            return False
+        
+        # Copy built packages to repository
+        build_area = os.path.join(clone_dir, "../build-area")
+        success = copy_built_packages(build_area, os.environ.get('LOCAL_REPO_PATH'))
+        
+        # Clean up build area
+        if os.path.exists(build_area):
+            shutil.rmtree(build_area)
+        
+        return success    
+
 def download_and_build_dpkg(url, build_dir, repo_dir, rebuild=False):
     """Download and build with dpkg-buildpackage."""
     logging.info(f"Downloading and building: {url}")
@@ -331,9 +407,17 @@ def process_line(line, args):
 
         if url.endswith('.git'):
             # Git repository - clone and build with gbp-buildpackage
-            success = clone_and_build_gbp(url, args.build, args.repository)
-            if success:
-                scan_and_upgrade_packages(args.repository)
+            if args.sbuild:
+                chroot_name = setup_sbuild_chroot(args.dist, args.base_url, args.extra_repository)
+                if chroot_name:
+                    success = gbp_build_with_sbuild(url, args.dist, chroot_name, args.extra_repository)
+                    if success:
+                        scan_and_upgrade_packages(args.repository)
+                    lazy_unmount_all_schroot_mounts()
+            else:
+                success = clone_and_build_gbp(url, args.build, args.repository)
+                if success:
+                    scan_and_upgrade_packages(args.repository)
 
         elif url.endswith('.dsc'):
             # Check if using sbuild backend
