@@ -251,7 +251,6 @@ def gbp_build_with_sbuild(repo_url, dist, chroot_name, extra_repositories=None):
             f"gbp buildpackage "
             f"--git-builder=\"sbuild "
             f"--dist={dist} "
-            f"--chroot={chroot_name} "
             f"--chroot-mode=schroot "
             f"--source "
             f"--lintian-opts='{os.environ["LINTIAN_OPTIONS"]}'"
