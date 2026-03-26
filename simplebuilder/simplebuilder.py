@@ -179,6 +179,14 @@ def build_with_sbuild(dsc_url, dist, chroot_name, extra_repositories=None):
 
         return True
 
+def lazy_unmount_all_schroot_mounts():
+    schroot_mounts = "/run/schroot/mount/"
+    if os.path.exists(schroot_mounts):
+        for f in os.listdir(schroot_mounts):
+            mount = os.path.join(schroot_mounts, f)
+            if os.path.isdir(mount):
+                subprocess.run(['umount','-l',mount])
+
 def clone_and_build_gbp(repo_url, build_dir, repo_dir):
     """Clone and build with gbp-buildpackage."""
     logging.info(f"Cloning and building with gbp-buildpackage: {repo_url}")
@@ -336,6 +344,7 @@ def process_line(line, args):
                     success = build_with_sbuild(url, args.dist, chroot_name, args.extra_repository)
                     if success:
                         scan_and_upgrade_packages(args.repository)
+                    lazy_unmount_all_schroot_mounts()
             else:
                 # Use traditional dpkg-buildpackage
                 match = re.match(r'.*/([^/]+)_(.+)\.dsc$', url)
