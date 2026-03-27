@@ -245,11 +245,13 @@ def gbp_build_with_sbuild(repo_url, dist, chroot_name, extra_repositories=None):
             ):
                 logging.warning("Failed to add local suffix, continuing without it")
         
+        run_command(f"chmod -R 777 {temp_dir}")
+        
         # Build sbuild command for gbp
         # Using gbp buildpackage with sbuild as the builder
         sbuild_cmd = (
-            f"gbp buildpackage --git-no-pristine-tar --git-ignore-new --git-export-dir=../build-area "
-            f"--git-builder=\"chmod -R 777 ../../* && sudo -u sbuild sbuild "
+            f"sudo -u sbuild gbp buildpackage --git-no-pristine-tar --git-ignore-new --git-export-dir=../build-area "
+            f"--git-builder=\"sbuild "
             f"--dist={dist} "
             f"--chroot-mode=schroot "
             f"--source "
