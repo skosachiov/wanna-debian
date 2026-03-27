@@ -221,7 +221,6 @@ def gbp_build_with_sbuild(repo_url, dist, chroot_name, extra_repositories=None):
 
     # Create a temporary directory for building
     with tempfile.TemporaryDirectory(dir=os.environ.get('WORKSPACE_PATH')) as temp_dir:
-        os.chmod(temp_dir, 0o777)
         
         # Extract repo name from URL
         repo_name = repo_url.split('/')[-1].replace('.git', '')
@@ -249,7 +248,7 @@ def gbp_build_with_sbuild(repo_url, dist, chroot_name, extra_repositories=None):
         # Using gbp buildpackage with sbuild as the builder
         sbuild_cmd = (
             f"gbp buildpackage --git-no-pristine-tar --git-ignore-new --git-export-dir=../build-area "
-            f"--git-builder=\"chmod -R 777 {temp_dir} && sudo -u sbuild sbuild "
+            f"--git-builder=\"sbuild "
             f"--dist={dist} "
             f"--chroot-mode=schroot "
             f"--source "
