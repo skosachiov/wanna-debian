@@ -250,8 +250,8 @@ def gbp_build_with_sbuild(repo_url, dist, chroot_name, extra_repositories=None):
         # Build sbuild command for gbp
         # Using gbp buildpackage with sbuild as the builder
         sbuild_cmd = (
-            f"sudo -u sbuild gbp buildpackage --git-no-pristine-tar --git-ignore-new --git-export-dir=../build-area "
-            f"--git-builder=\"sbuild "
+            f"gbp buildpackage --git-no-pristine-tar --git-ignore-new --git-export-dir=../build-area "
+            f"--git-builder=\"sudo -u sbuild sbuild "
             f"--dist={dist} "
             f"--chroot-mode=schroot "
             f"--source "
