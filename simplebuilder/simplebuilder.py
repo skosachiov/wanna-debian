@@ -231,10 +231,6 @@ def gbp_build_with_sbuild(repo_url, dist, chroot_name, extra_repositories=None):
             logging.error(f"Failed to clone repository: {repo_url}")
             return False
         
-        # Check if we're on a valid branch (assume debian/latest or debian/master)
-        # Try to checkout the debian branch if not already on one
-        run_command(f"cd {repo_name}; git checkout debian/latest || git checkout debian/master || git checkout master", cwd=temp_dir)
-        
         # Apply local suffix if specified
         if os.environ.get('LOCALSUFFIX'):
             if not run_command(
@@ -243,12 +239,14 @@ def gbp_build_with_sbuild(repo_url, dist, chroot_name, extra_repositories=None):
                 cwd=temp_dir
             ):
                 logging.warning("Failed to add local suffix, continuing without it")
+
+        run_command(f"chown -R sbild:sbild *", cwd=temp_dir)
         
         # Build sbuild command for gbp
         # Using gbp buildpackage with sbuild as the builder
         sbuild_cmd = (
             f"gbp buildpackage --git-no-pristine-tar --git-ignore-new --git-export-dir=../build-area "
-            f"--git-builder=\"sbuild "
+            f"--git-builder=\"sudo -u sbuild sbuild "
             f"--dist={dist} "
             f"--chroot-mode=schroot "
             f"--source "
