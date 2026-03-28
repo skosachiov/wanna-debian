@@ -502,7 +502,7 @@ deb-src [trusted=yes] file://{os.path.abspath(repo_path)} ./
 
 def main():
     """Main function."""
-    parser = argparse.ArgumentParser(description="Simple debbuild system with stdin job flow")
+    parser = argparse.ArgumentParser(description="Simple Debian package build system that accepts job input via stdin")
     parser.add_argument("--workspace", default="/tmp/workspace", help="Local workspace (default: %(default)s)")
     parser.add_argument("--repository", default="/tmp/workspace/repository", help="Local repository (default: %(default)s)")
     parser.add_argument("--build", default="/tmp/workspace/build", help="Local build folder (default: %(default)s)")

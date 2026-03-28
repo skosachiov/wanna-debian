@@ -195,6 +195,7 @@ def find_versions(fin, filenames, dist = None, build = None, briefly = None, ind
 
     briefly_keys = config["briefly_keys"]
     items = []
+    if fin is None: fin = data_dict.keys()
     for line in fin:
         req = parse_requirement_line(line)
         if not req:
@@ -515,7 +516,7 @@ def update_metadata(base_url, local_base_dir, dists, components, builds, session
 def main():
     """Main entry point"""
 
-    parser = argparse.ArgumentParser(description="Update Debian metadata files from the Debian repository")
+    parser = argparse.ArgumentParser(description="Update and query Debian repository metadata files")
     parser.add_argument("--base-url", help="Base URL for Debian metadata (example: https://ftp.debian.org/debian/)")
     parser.add_argument("--local-dir", default=[config["local_dir"][0]], nargs='+', help="Local directory to store metadata files (default: %(default)s)")
     parser.add_argument("--dist", default=[], nargs='+', help="Distributions (default: all)")
@@ -532,6 +533,7 @@ def main():
     parser.add_argument("--latest", action="store_true", help="Display the newest version that matches the criteria")
     parser.add_argument("--source", action="store_true", help="Use the Source field for searching, not the Package field")
     parser.add_argument("--briefly", action="store_true", help="Display only basic fields")
+    parser.add_argument("--all", action="store_true", help="Process all records instead of reading conditions from stdin")
     parser.add_argument("--arch", default=config["arch"], help='System architecture amd64, arm64, etc. (default: %(default)s)')
     parser.add_argument("--log-level", default=config["loglevel"], choices=['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'], \
         help='Set the logging level (default: %(default)s)')
@@ -597,7 +599,8 @@ def main():
                 json.dump(config, f, indent=4)
 
     if args.find:
-        find_versions(sys.stdin, [d + "/" + config["index_file"] for d in args.local_dir], \
+        find_versions(None if args.all else sys.stdin, \
+            [d + "/" + config["index_file"] for d in args.local_dir], \
             args.dist, args.build, args.briefly, \
             "package" if not args.source else "source", selection)
 
