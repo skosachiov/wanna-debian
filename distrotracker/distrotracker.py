@@ -11,10 +11,10 @@ config = {
     "base_url": "",
     "local_dir": ["metadata"],
     "index_file": "index.json",
+    "sysarch": "amd64",
     "builds": ['binary-amd64', 'source'],
     "dist": [],
     "comp": ['main', 'contrib', 'non-free', 'non-free-firmware'],
-    "arch": 'amd64',
     "loglevel": 'INFO',
     "min_version": "0~~",
     "briefly_keys": ['package', 'version', 'dist', 'build', 'source'],
@@ -258,7 +258,7 @@ def original_metadata_is_newer(base_url, local_base_dir, session, hashes):
         # 'db/references.db',
         'ls-lR.gz',
         'db/release.caches.db',
-        'indices/files/arch-' + config["arch"] + '.files',
+        'indices/files/arch-' + config["sysarch"] + '.files',
         'indices/files/components/source.list.gz'
     ]
 
@@ -521,11 +521,13 @@ def main():
     parser = argparse.ArgumentParser(description="Update and query Debian repository metadata files")
     parser.add_argument("--base-url", help="Base URL for Debian metadata (example: https://ftp.debian.org/debian/)")
     parser.add_argument("--local-dir", default=[config["local_dir"][0]], nargs='+', help="Local directory to store metadata files (default: %(default)s)")
+    parser.add_argument("--sysarch", default=config["sysarch"], help='Distribution architecture amd64, arm64, etc. (default: %(default)s)')
     parser.add_argument("--dist", default=[], nargs='+', help="Distributions (default: all)")
     parser.add_argument("--comp", default=config["comp"], nargs='+', \
         help=f"Components main, universe, contrib, non-free, non-free-firmware etc. (default: {" ".join(config["comp"])})")
     parser.add_argument("--build", default=config["builds"], nargs='+', \
         help=f"Build binary-amd64, binary-arm64, source etc. (default: {" ".join(config["builds"])})")
+    parser.add_argument("--arch", default=[], nargs='+', help='Binary packet architecture all, amd64, etc. (default: %(default)s)')
     parser.add_argument("--force", action="store_true", help="Force update even if remote files are older")
     parser.add_argument("--hold", action="store_true", help="Do not attempt to update metadata")
     parser.add_argument("--find", action="store_true", \
@@ -536,7 +538,6 @@ def main():
     parser.add_argument("--source", action="store_true", help="Use the Source field for searching, not the Package field")
     parser.add_argument("--briefly", action="store_true", help="Display only basic fields")
     parser.add_argument("--all", action="store_true", help="Process all records instead of reading conditions from stdin")
-    parser.add_argument("--arch", default=config["arch"], help='System architecture amd64, arm64, etc. (default: %(default)s)')
     parser.add_argument("--log-level", default=config["loglevel"], choices=['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'], \
         help='Set the logging level (default: %(default)s)')
 
