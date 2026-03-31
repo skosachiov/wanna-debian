@@ -31,18 +31,18 @@ or
 
 `pip install --user --break-system-packages git+ssh://git@.../wanna-debian.git`
 
+github repo example
+
+`pip install --user --break-system-packages git+https://github.com/skosachiov/wanna-debian.git`
+
 ```
 echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc
 source ~/.bashrc
 ```
 
-## upgrade
+## upgrade all git pip packages
 
-`pip install --upgrade --user --break-system-packages git+https://.../wanna-debian.git`
-
-or
-
-`pip install --upgrade --user --break-system-packages git+ssh://git@.../wanna-debian.git`
+`pip freeze | grep -Po "@ \K.*" | sed 's/@[^@]*$//' | xargs -I {} pip install --upgrade --user --break-system-packages {}`
 
 ## uninstall
 
