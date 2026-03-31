@@ -21,7 +21,7 @@ readme: [docs/simplebuilder/index.md](docs/simplebuilder/index.md)
 
 ## python deps
 
-`sudo apt install -y python3-pip python3-apt python3-requests python3-debian sbuild devscripts git-buildpackage sudo`
+`sudo apt install -y python3-pip python3-apt python3-requests python3-debian sbuild devscripts git-buildpackage jq sudo`
 
 ## rootless userspace install from git
 
@@ -42,7 +42,7 @@ source ~/.bashrc
 
 ## upgrade all git pip packages
 
-`pip freeze | grep -Po "@ \K.*" | sed 's/@[^@]*$//' | xargs -I {} pip install --upgrade --user --break-system-packages {}`
+`pip inspect | jq '.installed[].direct_url.url? // empty' | xargs -I {} pip install --upgrade --user --break-system-packages git+{}`
 
 ## uninstall
 
