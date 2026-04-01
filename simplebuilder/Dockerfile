@@ -101,9 +101,21 @@ RUN apt-get update && \
         libatspi2.0-dev \
         libdbus-1-dev \
         libglib2.0-dev && \
+    # This project deps
+    apt-get install -y \
+        python3-pip \
+        python3-apt \
+        python3-requests \
+        python3-debian \
+        sbuild devscripts \
+        git-buildpackage \
+        jq \
+        sudo && \
     # Clean up
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
+
+# RUN pip install --user --break-system-packages git+https://github.com/skosachiov/wanna-debian.git
 
 # Create a non-root user for building packages
 RUN useradd -m -s /bin/bash builder && \
