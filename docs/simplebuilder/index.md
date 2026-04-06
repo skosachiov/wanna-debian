@@ -117,4 +117,32 @@ umount -l ...
 ```
 echo http://deb.debian.org/debian/pool/main/h/hello/hello_2.10-3.dsc | simplebuilder --sbuild --dist trixie --base-url https://ftp.debian.org/debian/ --keyring=/usr/share/keyrings/debian-archive-trixie-stable.gpg
 ```
+## create docker image from schroot env
 
+### inside the container
+
+```
+tar -C /srv/chroot/trixie-amd64-sbuild -czf /tmp/trixie-image.tar.gz .
+```
+
+### outside the container
+
+```
+podman cp container:/tmp/trixie-image.tar.gz .
+```
+
+```
+cat > ~/.config/containers/policy.json <<'EOF'
+{
+  "default": [
+    {
+      "type": "insecureAcceptAnything"
+    }
+  ]
+}
+EOF
+```
+
+```
+podman import trixie-image.tar.gz trixie:latest
+```
