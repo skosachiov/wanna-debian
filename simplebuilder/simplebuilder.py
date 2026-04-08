@@ -110,8 +110,8 @@ def setup_sbuild_chroot(dist, base_url, extra_repositories, chroot_base="/srv/ch
     cmd = f"schroot -c chroot:{chroot_name} -u root --directory=/ -- dpkg --configure -a"
 
     if not run_command(cmd):
-        logging.error("Failed to fix sbuild chroot")
-        return None
+        logging.warning("Force lazy umount")
+        lazy_unmount_all_schroot_mounts()
 
     # Disable HTTPS verification for local builds
     apt_conf_dir = chroot_path / "etc/apt/apt.conf.d"
