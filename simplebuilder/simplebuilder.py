@@ -93,6 +93,12 @@ def setup_sbuild_chroot(dist, base_url, extra_repositories, chroot_base="/srv/ch
         logging.error("Failed to create sbuild chroot")
         return None
 
+    cmd = f"schroot -c chroot:{chroot_name} -u root -- dpkg --configure -a"
+
+    if not run_command(cmd):
+        logging.error("Failed to fix sbuild chroot")
+        return None
+
     # Mkdir local
     os.makedirs(chroot_path / os.environ['WORKSPACE_PATH'].lstrip('/'), exist_ok=True)
 
@@ -221,16 +227,16 @@ def gbp_build_with_sbuild(repo_url, dist, chroot_name, extra_repositories=None):
 
     # Create a temporary directory for building
     with tempfile.TemporaryDirectory(dir=os.environ.get('WORKSPACE_PATH')) as temp_dir:
-        
+
         # Extract repo name from URL
         repo_name = repo_url.split('/')[-1].replace('.git', '')
         clone_dir = os.path.join(temp_dir, repo_name)
-        
+
         # Clone repository
         if not run_command(f"git clone {repo_url} {repo_name}", cwd=temp_dir):
             logging.error(f"Failed to clone repository: {repo_url}")
             return False
-        
+
         # Apply local suffix if specified
         if os.environ.get('LOCALSUFFIX'):
             if not run_command(
@@ -250,34 +256,34 @@ def gbp_build_with_sbuild(repo_url, dist, chroot_name, extra_repositories=None):
             f"--source "
             f"--lintian-opts='{os.environ["LINTIAN_OPTIONS"]}'"
         )
-        
+
         # Add extra repositories if specified
         if extra_repositories:
             for repo in extra_repositories:
                 sbuild_cmd += f" --extra-repository='{repo}'"
-        
+
         # Add local repository if exists
         if os.environ.get('LOCAL_REPO_PATH'):
             sbuild_cmd += f" --extra-repository='deb [trusted=yes] file://{os.environ['LOCAL_REPO_PATH']} ./'"
-        
+
         # Close the sbuild command and add gbp options
         sbuild_cmd += "\" "
-        
+
         # Run the build
         logging.info(f"Running gbp buildpackage with sbuild")
         if not run_command(sbuild_cmd, cwd=clone_dir):
             logging.error("gbp buildpackage with sbuild failed")
             return False
-        
+
         # Copy built packages to repository
         build_area = os.path.join(clone_dir, "../build-area")
         success = copy_built_packages(build_area, os.environ.get('LOCAL_REPO_PATH'))
-        
+
         # Clean up build area
         if os.path.exists(build_area):
             shutil.rmtree(build_area)
-        
-        return success    
+
+        return success
 
 def download_and_build_dpkg(url, build_dir, repo_dir, rebuild=False):
     """Download and build with dpkg-buildpackage."""
