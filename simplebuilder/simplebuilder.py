@@ -93,12 +93,6 @@ def setup_sbuild_chroot(dist, base_url, extra_repositories, chroot_base="/srv/ch
         logging.error("Failed to create sbuild chroot")
         return None
 
-    cmd = f"schroot -c chroot:{chroot_name} -u root -- dpkg --configure -a"
-
-    if not run_command(cmd):
-        logging.error("Failed to fix sbuild chroot")
-        return None
-
     # Mkdir local
     os.makedirs(chroot_path / os.environ['WORKSPACE_PATH'].lstrip('/'), exist_ok=True)
 
@@ -111,6 +105,13 @@ def setup_sbuild_chroot(dist, base_url, extra_repositories, chroot_base="/srv/ch
         if os.environ['WORKSPACE_PATH'] not in content:
             content += new_line
         fstab_path.write_text(content)
+
+    # Fix dpkg
+    cmd = f"schroot -c chroot:{chroot_name} -u root -- dpkg --configure -a"
+
+    if not run_command(cmd):
+        logging.error("Failed to fix sbuild chroot")
+        return None
 
     # Disable HTTPS verification for local builds
     apt_conf_dir = chroot_path / "etc/apt/apt.conf.d"
