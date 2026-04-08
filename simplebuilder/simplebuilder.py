@@ -107,7 +107,7 @@ def setup_sbuild_chroot(dist, base_url, extra_repositories, chroot_base="/srv/ch
         fstab_path.write_text(content)
 
     # Fix dpkg
-    cmd = f"schroot -c chroot:{chroot_name} -u root -- dpkg --configure -a"
+    cmd = f"schroot -c chroot:{chroot_name} -u root --directory=/ -- dpkg --configure -a"
 
     if not run_command(cmd):
         logging.error("Failed to fix sbuild chroot")
