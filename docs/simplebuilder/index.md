@@ -96,11 +96,28 @@ dose-debcheck --latest 1 --deb-native-arch=amd64 -e -f /var/lib/apt/lists/*_Pack
 
 ## in a clean environment, podman and sbuild
 
+### podman run
+
 ```
-podman run -it --privileged -v ~/git/podman:/root/git debian:13 /bin/bash
+podman run -it --privileged \
+  -v ~/git/podman:/root/git \
+  -v ~/.ssh:/root/.ssh:ro \
+  -v ~/git/podman/.gitconfig:/root/.gitconfig:ro \
+  -v ~/.config/pip:/root/.config/pip:ro \
+  -v /etc/ssl/certs:/etc/ssl/certs:ro
+  debian:13 /bin/bash
+```
+
+```
 apt update && apt install -y sudo debootstrap schroot sbuild libwww-perl devscripts
 apt install -y man vim
-# change trixie to mytrixie
+```
+
+### inside
+
+change trixie to mytrixie
+
+```
 ln -s /usr/share/debootstrap/scripts/stable /usr/share/debootstrap/scripts/trixie
 sbuild-createchroot --keyring=/usr/share/keyrings/trixie.gpg --include=eatmydata,ccache,gzip --extra-repository="deb http://security.debian.org/debian-security trixie-security main" trixie /srv/chroot/trixie-amd64-sbuild https://ftp.debian.org/debian
 sbuild-createchroot --include=eatmydata,ccache,gzip forky /srv/chroot/forky-amd64-sbuild https://ftp.debian.org/debian
