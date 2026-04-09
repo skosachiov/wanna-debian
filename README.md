@@ -19,9 +19,13 @@ The Simple Debian package builder handles different source types based on URL pa
 
 readme: [docs/simplebuilder/index.md](docs/simplebuilder/index.md)
 
-## python deps
+## apt deps
 
-`sudo apt install -y python3-pip python3-apt python3-requests python3-debian sbuild devscripts git-buildpackage jq sudo mount`
+```
+sudo apt install -y python3-pip python3-apt python3-requests python3-debian \
+    sbuild devscripts git-buildpackage jq sudo mount \
+    dose-distcheck dose-builddebcheck
+```
 
 ## rootless userspace install from git
 

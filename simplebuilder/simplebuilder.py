@@ -159,7 +159,7 @@ def build_with_sbuild(dsc_url, dist, chroot_name, extra_repositories=None):
         dsc_file = dsc_files[0]
 
         # Build sbuild command
-        sbuild_cmd = f"sudo -u sbuild sbuild --chroot-mode=schroot -d {dist}"
+        sbuild_cmd = f"sudo -u sbuild sbuild --chroot-mode=schroot -d {dist} {os.environ['SBUILD_EXTRA']}"
 
         # Add extra repositories
         if extra_repositories:
@@ -530,6 +530,7 @@ def main():
     parser.add_argument("--keep-chroot", action="store_true", help="Do not recreate chroot environment")
     parser.add_argument("--keyring", default="/etc/apt/trusted.gpg", help="Set to an empty string to disable signature checking (default: %(default)s)")
     parser.add_argument("--dist", default="stable", help="Distribution for sbuild chroot (default: %(default)s)")
+    parser.add_argument("--sbuild-extra", default="--bd-uninstallable-explainer=dose3 --debug", help="Sbuild extra options (default: %(default)s)")
     parser.add_argument("--base-url", default="https://ftp.debian.org/debian",
                        help="Base Debian repository URL for sbuild (default: https://ftp.debian.org/debian)")
     parser.add_argument("--extra-repository", action="append",
@@ -552,6 +553,7 @@ def main():
     os.environ['WORKSPACE_PATH'] = args.workspace
     os.environ['LOCAL_REPO_PATH'] = args.repository
     os.environ['DEB_KEYRING'] = args.keyring
+    os.environ['SBUILD_EXTRA'] = args.sbuild_extra
     os.environ['LINTIAN_OPTIONS'] = '--suppress-tags ' \
         'changelog-distribution-does-not-match-changes-file,' \
         'bad-distribution-in-changes-file,' \
