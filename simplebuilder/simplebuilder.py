@@ -50,7 +50,7 @@ def scan_and_upgrade_packages(repo_path):
     env['DEBCONF_NOWARNINGS'] = 'yes'
     run_command("apt-get update && apt-get -o Dpkg::Options::=--force-confold -o Dpkg::Options::=--force-confdef -y upgrade", env=env)
 
-def setup_sbuild_chroot(dist, base_url, extra_repositories, force_chroot=False, chroot_base="/srv/chroot"):
+def setup_sbuild_chroot(dist, base_url, extra_repositories, keep_chroot=False, chroot_base="/srv/chroot"):
     """Setup sbuild chroot for building."""
     logging.info(f"Setting up sbuild chroot for {dist}")
 
@@ -76,7 +76,7 @@ def setup_sbuild_chroot(dist, base_url, extra_repositories, force_chroot=False, 
             extra_repo_args += f" --extra-repository='{repo}'"
 
     # Remove chroot
-    if force_chroot:
+    if not keep_chroot:
         if chroot_path.exists():
             logging.info(f"Chroot already exists at {chroot_path}, removing it")
             shutil.rmtree(chroot_path)
@@ -410,7 +410,7 @@ def process_line(line, args):
         if url.endswith('.git'):
             # Git repository - clone and build with gbp-buildpackage
             if args.sbuild:
-                chroot_name = setup_sbuild_chroot(args.dist, args.base_url, args.extra_repository, args.force_chroot)
+                chroot_name = setup_sbuild_chroot(args.dist, args.base_url, args.extra_repository, args.keep_chroot)
                 if chroot_name:
                     success = gbp_build_with_sbuild(url, args.dist, chroot_name, args.extra_repository)
                     if success:
@@ -425,7 +425,7 @@ def process_line(line, args):
             # Check if using sbuild backend
             if args.sbuild:
                 # Setup sbuild chroot
-                chroot_name = setup_sbuild_chroot(args.dist, args.base_url, args.extra_repository, args.force_chroot)
+                chroot_name = setup_sbuild_chroot(args.dist, args.base_url, args.extra_repository, args.keep_chroot)
                 if chroot_name:
                     success = build_with_sbuild(url, args.dist, chroot_name, args.extra_repository)
                     if success:
@@ -527,7 +527,7 @@ def main():
     parser.add_argument("--log-level", default='INFO', choices=['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'], \
         help='Set the logging level (default: %(default)s)')
     parser.add_argument("--sbuild", action="store_true", help="Use sbuild backend for building")
-    parser.add_argument("--force-chroot", action="store_true", help="Force recreate sbuild chroot")
+    parser.add_argument("--keep-chroot", action="store_true", help="Do not recreate chroot environment")
     parser.add_argument("--keyring", default="/etc/apt/trusted.gpg", help="Set to an empty string to disable signature checking (default: %(default)s)")
     parser.add_argument("--dist", default="stable", help="Distribution for sbuild chroot (default: %(default)s)")
     parser.add_argument("--base-url", default="https://ftp.debian.org/debian",
