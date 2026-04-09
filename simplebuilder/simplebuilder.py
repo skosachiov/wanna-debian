@@ -194,6 +194,10 @@ def lazy_unmount_all_schroot_mounts():
             mount = os.path.join(schroot_mounts, f)
             if os.path.isdir(mount):
                 subprocess.run(['umount','-l',mount])
+            try:
+                os.rmdir(mount)
+            except OSError:
+                logging.info(f"Unable to delete mount point: {mount}")
 
 def clone_and_build_gbp(repo_url, build_dir, repo_dir):
     """Clone and build with gbp-buildpackage."""
