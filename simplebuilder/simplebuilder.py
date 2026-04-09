@@ -50,7 +50,7 @@ def scan_and_upgrade_packages(repo_path):
     env['DEBCONF_NOWARNINGS'] = 'yes'
     run_command("apt-get update && apt-get -o Dpkg::Options::=--force-confold -o Dpkg::Options::=--force-confdef -y upgrade", env=env)
 
-def setup_sbuild_chroot(dist, base_url, extra_repositories, chroot_base="/srv/chroot", force_chroot=False):
+def setup_sbuild_chroot(dist, base_url, extra_repositories, force_chroot=False, chroot_base="/srv/chroot"):
     """Setup sbuild chroot for building."""
     logging.info(f"Setting up sbuild chroot for {dist}")
 
