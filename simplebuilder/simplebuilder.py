@@ -91,9 +91,9 @@ def setup_sbuild_chroot(dist, base_url, extra_repositories, force_chroot=False, 
         cmd = f"sbuild-createchroot --keyring={os.environ.get('DEB_KEYRING')} \
             --include=ccache {extra_repo_args} {dist} {chroot_path} {base_url}"
 
-    if not run_command(cmd):
-        logging.error("Failed to create sbuild chroot")
-        return None
+        if not run_command(cmd):
+            logging.error("Failed to create sbuild chroot")
+            return None
 
     # Mkdir local
     os.makedirs(chroot_path / os.environ['WORKSPACE_PATH'].lstrip('/'), exist_ok=True)
