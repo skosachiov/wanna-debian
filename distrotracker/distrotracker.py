@@ -78,6 +78,7 @@ def update_metadata_index(packagefile, data_list, dist, comp, build, dry_run = F
                 if not line or line[0].isspace(): continue
                 if ':' in line:
                     key, value = line.split(':', 1)
+                    key = key.title()
                     # Extract package name
                     if key == 'Package':
                         if pkg_name is not None:
