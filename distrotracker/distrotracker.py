@@ -522,7 +522,8 @@ def main():
 
     parser = argparse.ArgumentParser(description="Update and query Debian repository metadata files")
     parser.add_argument("--base-url", help="Base URL for Debian metadata (example: https://ftp.debian.org/debian/)")
-    parser.add_argument("--no-check-certificate", help="Do not check the server certificate against the available CA")
+    parser.add_argument("--no-check-certificate", action="store_true", \
+        help="Do not check the server certificate against the available CA")
     parser.add_argument("--local-dir", default=[config["local_dir"][0]], nargs='+', help="Local directory to store metadata files (default: %(default)s)")
     parser.add_argument("--sysarch", default=config["sysarch"], help='Distribution architecture amd64, arm64, etc. (default: %(default)s)')
     parser.add_argument("--dist", default=[], nargs='+', help="Distributions (default: all)")
