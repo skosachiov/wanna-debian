@@ -592,10 +592,13 @@ def main():
     elif args.earliest: selection = "earliest"
     else: selection = None
 
+    if args.no_check_certificate:
+        config["ssl_verify"] = False
+
     apt_pkg.init()
 
     session = requests.Session()
-    if not config["ssl_verify"] or args.no_check_certificate: session.verify = False
+    if not config["ssl_verify"]: session.verify = False
 
     hashes = set()
 
