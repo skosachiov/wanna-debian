@@ -22,7 +22,7 @@ readme: [docs/simplebuilder/index.md](docs/simplebuilder/index.md)
 ## apt deps
 
 ```
-sudo apt install -y python3-pip python3-apt python3-requests python3-debian \
+sudo apt install -y python3-pip python3-apt python3-requests python3-certifi python3-debian \
     sbuild devscripts git-buildpackage jq sudo mount \
     dose-distcheck dose-builddebcheck
 ```

@@ -9,6 +9,7 @@ from functools import cmp_to_key
 config = {
     "config_file": "config.json",
     "base_url": "",
+    "ssl_verify": True,
     "local_dir": ["metadata"],
     "index_file": "index.json",
     "sysarch": "amd64",
@@ -521,6 +522,7 @@ def main():
 
     parser = argparse.ArgumentParser(description="Update and query Debian repository metadata files")
     parser.add_argument("--base-url", help="Base URL for Debian metadata (example: https://ftp.debian.org/debian/)")
+    parser.add_argument("--no-check-certificate", help="Do not check the server certificate against the available CA")
     parser.add_argument("--local-dir", default=[config["local_dir"][0]], nargs='+', help="Local directory to store metadata files (default: %(default)s)")
     parser.add_argument("--sysarch", default=config["sysarch"], help='Distribution architecture amd64, arm64, etc. (default: %(default)s)')
     parser.add_argument("--dist", default=[], nargs='+', help="Distributions (default: all)")
@@ -573,6 +575,7 @@ def main():
                 return
             else:
                 if args.base_url: config["base_url"] = args.base_url
+                if args.no_check_certificate: config["ssl_verify"] = False
                 if args.local_dir: config["local_dir"] = args.local_dir
                 if args.dist: config["dist"] = args.dist
                 if args.comp: config["comp"] = args.comp
@@ -591,6 +594,8 @@ def main():
     apt_pkg.init()
 
     session = requests.Session()
+    if not config["ssl_verify"] or args.no_check_certificate: session.verify = False
+
     hashes = set()
 
     if not args.hold:
