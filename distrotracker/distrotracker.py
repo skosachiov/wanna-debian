@@ -247,11 +247,11 @@ def extract_hashes(filename, hashes):
     with open(filename, 'rb') as f:
         data = f.read()
         text = data.decode('utf-8', errors='ignore')
-        hash_block = set(re.findall(pattern, text))
-        hashes_dict[hash_block] = hashes_dict.get(hash_block, 0) + 1
-        logging.info(f"Hashes read from the index: {len(hashes)}")
+        for h in re.findall(pattern, text):
+            hashes_dict[h] = hashes_dict.get(h, 0) + 1
+        logging.info(f"Hashes read from the index: {len(hashes_dict)}")
 
-    hashes_dict = {k: v for k, v in hashes.items() if v <= 1}
+    hashes_dict = {k: v for k, v in hashes_dict.items() if v == 1}
     hashes = set(hashes_dict.keys())
 
 def original_metadata_is_newer(base_url, local_base_dir, session, hashes):
