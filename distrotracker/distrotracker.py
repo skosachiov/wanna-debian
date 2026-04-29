@@ -242,12 +242,17 @@ def extract_hashes(filename, hashes):
         pattern = r':2:([a-fA-F0-9]{64})'
     else:
         return
+
+    hashes_dict = {}
     with open(filename, 'rb') as f:
         data = f.read()
         text = data.decode('utf-8', errors='ignore')
         hash_block = set(re.findall(pattern, text))
-        hashes.update(hash_block)
+        hashes_dict[hash_block] = hashes_dict.get(hash_block, 0) + 1
         logging.info(f"Hashes read from the index: {len(hashes)}")
+
+    hashes_dict = {k: v for k, v in hashes.items() if v <= 1}
+    hashes = set(hashes_dict.keys())
 
 def original_metadata_is_newer(base_url, local_base_dir, session, hashes):
     """
