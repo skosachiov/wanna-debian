@@ -116,7 +116,7 @@ def update_metadata_index(packagefile, data_list, dist, comp, build, dry_run = F
                     'source': source, 'source_version': source_version, \
                     'filename': filename if filename else directory + "/" + pkg_name + "_" + version.split(":")[-1] + ".dsc" })
             else:
-                if not block.isspace():
+                if block.strip():
                     logging.error(f'Invalid metadata detected: {block}')
     logging.debug(f'In the file {packagefile} processed packets: {len(packages)}')
 
