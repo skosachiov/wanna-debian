@@ -108,6 +108,8 @@ def update_metadata_index(packagefile, data_list, dist, comp, build, dry_run = F
                         depends.append(value)
             # Store package metadata if valid
             if pkg_name is not None and (filename is not None or (directory is not None and version is not None)):
+                if source is None: source = pkg_name
+                if source_version is None: source_version = version
                 packages.append({ \
                     'package': pkg_name, 'version': version, 'dist': dist, 'comp': comp, 'build': build, 'arch': arch, \
                     'depends': hashlib.md5(",".join(depends).encode()).hexdigest()[:8], \
