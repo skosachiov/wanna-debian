@@ -15,6 +15,7 @@ def parse_metadata(filepath, src_dict = None, prov_dict = None, bin_dict = None)
         package_blocks = re.split(r'\n\n+', content.strip())
         for block in package_blocks:
             pkg_name = version = source = source_version = None
+            type_bin_package = True
             depends = []
             block_list = []
             for line in block.splitlines():
@@ -33,11 +34,13 @@ def parse_metadata(filepath, src_dict = None, prov_dict = None, bin_dict = None)
                             logging.error(f'Duplicate stanza key: {key}: {value.strip()}')
                         pkg_name = value.strip()
                     # Build binary-to-source mapping for source metadata if requested
-                    if key == 'Binary' and src_dict is not None:
-                        bin_pkgs = [p.strip() for p in value.split(',')]
-                        if bin_dict is not None: bin_dict[pkg_name] = bin_pkgs
-                        for p in bin_pkgs:
-                            src_dict[p] = pkg_name
+                    if key == 'Binary':
+                        type_bin_package = False
+                        if src_dict is not None:
+                            bin_pkgs = [p.strip() for p in value.split(',')]
+                            if bin_dict is not None: bin_dict[pkg_name] = bin_pkgs
+                            for p in bin_pkgs:
+                                src_dict[p] = pkg_name
                     # Build binary-to-source mapping for binary metadata if requested
                     if key == 'Source' and bin_dict is not None:
                         source_line = value.strip().split()
@@ -74,7 +77,10 @@ def parse_metadata(filepath, src_dict = None, prov_dict = None, bin_dict = None)
             # Store package metadata if valid
             if pkg_name is not None:
                 if pkg_name not in packages or apt_pkg.version_compare(version, packages[pkg_name]['version']) > 0:
-                    if source is None: source = pkg_name
+                    if source is None:
+                        source = pkg_name
+                        if type_bin_package and bin_dict is not None:
+                            bin_dict[source].append(pkg_name)
                     if source_version is None: source_version = version
                     packages[pkg_name] = {'version': version, 'block': block, 'depends': depends, \
                         'source': source, 'source_version': source_version}
