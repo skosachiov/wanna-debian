@@ -87,7 +87,7 @@ while [[ -s "$filename.bin" || -s "$filename.src"  ]]; do
         | python3 $SD/predose.py --log-file $base_name.log --remove ${base_name}_Packages > ${base_name}_Packages.tmp && \
         mv -f ${base_name}_Packages.tmp ${base_name}_Packages
     cat $filename.bin \
-        | python3 $SD/predose.py --log-file $base_name.log --resolve-group $3_Packages $3_Packages \
+        | python3 $SD/predose.py --log-file $base_name.log --resolve-group $3_Packages ${base_name}_Packages \
         | python3 $SD/predose.py --log-file $base_name.log --remove ${base_name}_Packages > ${base_name}_Packages.tmp && \
         mv -f ${base_name}_Packages.tmp ${base_name}_Packages
     cat $filename.bin \
