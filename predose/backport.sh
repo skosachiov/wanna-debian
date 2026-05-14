@@ -148,16 +148,13 @@ while [[ -s "$filename.bin" || -s "$filename.src"  ]]; do
 
     fi # removeonly
 
-    tmp_bin_a=$(mktemp)
-    tmp_bin_b=$(mktemp)
-    tmp_src_a=$(mktemp)
-    tmp_src_b=$(mktemp)
+    echo -n > $next_filename.bin
 
     # check binary packages in dependencies, broken due to low dependent versions
     dose-debcheck --latest 1 --deb-native-arch=amd64 -e -f ${base_name}_Packages | tee \
         >(grep "unsat-dependency:" | sed 's/unsat-dependency: //' |  tr '|' '\n' | awk '{print $1}' \
-            | cut -d: -f1 | grep -v '^[|(>=]*$' | sort -u >> $tmp_bin_a) \
-        >(grep -B 4 -P "^\s{6}unsat-.*\((<|=)" | grep -oP '(package:|version:) \K\S+' | paste -d "=" - - | sort -u >> $tmp_bin_b) \
+            | cut -d: -f1 | grep -v '^[|(>=]*$' | sort -u >> $next_filename.bin) \
+        >(grep -B 4 -P "^\s{6}unsat-.*\((<|=)" | grep -oP '(package:|version:) \K\S+' | paste -d "=" - - | sort -u >> $next_filename.bin) \
         >> ${base_name}.debcheck.log &
 
     pid=$!
@@ -169,16 +166,12 @@ while [[ -s "$filename.bin" || -s "$filename.src"  ]]; do
     if [ "$OPT_BINONLY" = false ]; then
     dose-builddebcheck "${EXTRA_PARAMS[@]}" --latest 1 --deb-native-arch=amd64 -e -f ${base_name}_Packages ${base_name}_Sources | tee \
         >(grep "unsat-dependency:" | sed 's/unsat-dependency: //' |  tr '|' '\n' | awk '{print $1}' \
-            | cut -d: -f1 | grep -v '^[|(>=]*$' | sort -u >> $tmp_src_a) \
-        >(grep -B 4 -P "^\s{6}unsat-.*\((<|=)" | grep -oP '(package:|version:) \K\S+' | paste -d "=" - - | sort -u >> $tmp_src_b) \
+            | cut -d: -f1 | grep -v '^[|(>=]*$' | sort -u >> $next_filename.bin) \
+        >(grep -B 4 -P "^\s{6}unsat-.*\((<|=)" | grep -oP '(package:|version:) \K\S+' | paste -d "=" - - | sort -u >> $next_filename.bin) \
         >> ${base_name}.builddebcheck.log
     fi
 
     wait $pid
-
-    cat "$tmp_bin_a" "$tmp_bin_b" "$tmp_src_a" "$tmp_src_b" > "$next_filename.bin"
-
-    rm -f "$tmp_bin_a" "$tmp_bin_b" "$tmp_src_a" "$tmp_src_b"
 
     sort -u -o "$next_filename.bin" "$next_filename.bin"
     sort -u -o "$next_filename.src" "$next_filename.src"
