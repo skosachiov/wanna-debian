@@ -80,7 +80,10 @@ def parse_metadata(filepath, src_dict = None, prov_dict = None, bin_dict = None)
                     if source is None:
                         source = pkg_name
                         if type_bin_package and bin_dict is not None:
-                            bin_dict[source].append(pkg_name)
+                            if source not in bin_dict:
+                                bin_dict[source] = [pkg_name]
+                            else:
+                                bin_dict[source].append(pkg_name)
                     if source_version is None: source_version = version
                     packages[pkg_name] = {'version': version, 'block': block, 'depends': depends, \
                         'source': source, 'source_version': source_version}
