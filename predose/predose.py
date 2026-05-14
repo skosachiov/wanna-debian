@@ -186,7 +186,7 @@ def main():
     else: handlers.append(logging.StreamHandler())
     logging.basicConfig(handlers=handlers, level=getattr(logging, args.log_level), format='%(asctime)s %(levelname)s %(message)s')
 
-    logging.debug(f'Pre-dose started with command line options: {args}')
+    logging.info(f'Pre-dose started with command line options: {args}')
 
     # Initialize data structures
     src_dict = {}
