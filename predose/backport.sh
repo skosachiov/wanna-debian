@@ -128,7 +128,7 @@ while [[ -s "$filename.bin" || -s "$filename.src"  ]]; do
         mv -f ${base_name}_Packages.tmp ${base_name}_Packages
 
     # src-src implantation
-    cat $next_filename.src \
+    cat $filename.src \
         | python3 $SD/predose.py --log-file $base_name.log --provide $2_Packages $2_Sources ${base_name}_Sources > ${base_name}_Sources.tmp && \
         mv -f ${base_name}_Sources.tmp ${base_name}_Sources
 
@@ -140,7 +140,7 @@ while [[ -s "$filename.bin" || -s "$filename.src"  ]]; do
 
     # src-bin implantation
     if [ "$OPT_ALLBIN" = true ]; then
-    cat $next_filename.src \
+    cat $filename.src \
         | python3 $SD/predose.py --log-file $base_name.log --resolve-bin $2_Sources ${base_name}_Sources \
         | python3 $SD/predose.py --log-file $base_name.log $2_Packages ${base_name}_Packages > ${base_name}_Packages.tmp && \
         mv -f ${base_name}_Packages.tmp ${base_name}_Packages
