@@ -157,7 +157,8 @@ def dict_to_dot(d, graph_name='G'):
 def main():
     # Setup command line argument parser
     parser = argparse.ArgumentParser(description='Pre-dose script performs a targeted substitution of package \
-        information from a origin repository to a target repository, only for packages specified in the stdin input list.')
+        information from a origin repository to a target repository, only for packages specified in the stdin input list. \
+        Note: many options may operate based on binary or sources metadata.')
     parser.add_argument('origin_repo', metavar='ORIGIN_REPO', nargs='?', help='newer repository Packages/Sources')
     parser.add_argument('target_repo', metavar='TARGET_REPO', help='older repository Packages/Sources')
     parser.add_argument('-m', '--add-missing', action='store_true', help='add missing packages do not change versions')
@@ -168,7 +169,7 @@ def main():
     parser.add_argument('-b', '--resolve-bin', action='store_true', help='resolve binary package names by original source metadata and exit')
     parser.add_argument('-u', '--resolve-up', action='store_true', help='resolve the target dependent package if the package name is not found in origin and exit')
     parser.add_argument('-o', '--resolve-group', action='store_true', help='resolve target binary group and exit')
-    parser.add_argument('-t', '--topo-sort', action='store_true', help='perform topological sort on origin and exit')
+    parser.add_argument('-t', '--topo-sort', action='store_true', help='perform topological sort and exit')
     parser.add_argument('-g', '--dot', type=str, help="save toposort graph to dot file")
     parser.add_argument('-a', '--add-version', action='store_true', help='add version to package name and exit')
     parser.add_argument('-l', '--log-level', default='INFO', choices=['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'], \
@@ -176,8 +177,11 @@ def main():
     parser.add_argument('--log-file', help="save logs to file (default: stderr)")
     args = parser.parse_args()
 
+    # only target args
+    only_target_args = (args.remove, args.resolve_bin, args.resolve_src, args.resolve_group, args.depends, args.topo_sort)
+
     # Check args
-    if any((args.remove, args.resolve_bin, args.resolve_src)) and args.origin_repo is not None:
+    if any(only_target_args) and args.origin_repo is not None:
         parser.error("option does not require ORIGIN_REPO")
 
     # Configure logging system
@@ -201,7 +205,7 @@ def main():
     dependent_set = {}
 
     # Parse repository metadata
-    origin = parse_metadata(args.origin_repo if not any((args.remove, args.resolve_bin, args.resolve_src)) else args.target_repo, \
+    origin = parse_metadata(args.origin_repo if not any(only_target_args) else args.target_repo, \
         src_dict = src_dict, prov_dict = prov_dict, bin_dict = bin_dict if args.resolve_bin is not None else None)
     target = parse_metadata(args.target_repo, bin_dict = group_dict)
     if args.provide: parse_metadata(args.provide, prov_dict = prov_dict)
@@ -224,9 +228,9 @@ def main():
         elif args.resolve_src:
             if pkg_name is not None:
                 if args.add_version:
-                    print(f'{origin[pkg_name]['source']}={origin[pkg_name]["source_version"]}')
+                    print(f'{target[pkg_name]['source']}={target[pkg_name]["source_version"]}')
                 else:
-                    print(f'{origin[pkg_name]['source']}')
+                    print(f'{target[pkg_name]['source']}')
         elif args.resolve_bin:
             if pkg_name is not None:
                 if pkg_name in bin_dict:
@@ -240,6 +244,11 @@ def main():
                     if target[pkg_name]["source"] in group_dict:
                         for p in group_dict[target[pkg_name]["source"]]:
                             print(p)
+                    elif bin_dict:
+                        for bin_pkgs in bin_dict.values():
+                            if pkg_name in bin_pkgs:
+                                for p in bin_pkgs:
+                                    print(p)
                     else:
                         logging.error(f'Can not resolve package binary group for: {pkg_name} via source {target[pkg_name]["source"]}')
         elif args.resolve_up:
@@ -257,10 +266,10 @@ def main():
                 for i in range(args.depends):
                     set_len = len(depends_set)
                     for p in dict(depends_set).keys():
-                        p_src = resolve_pkg_name(p, origin, src_dict, prov_dict)
+                        p_src = resolve_pkg_name(p, target, src_dict, prov_dict)
                         if p_src:
-                            for pd in origin[p_src]["depends"]:
-                                pd_src = resolve_pkg_name(pd, origin, src_dict, prov_dict)
+                            for pd in target[p_src]["depends"]:
+                                pd_src = resolve_pkg_name(pd, target, src_dict, prov_dict)
                                 if pd_src:
                                     depends_set[pd_src] = None
                     if set_len == len(depends_set):
@@ -296,8 +305,8 @@ def main():
         # Build dependency graph
         for p in packages:
             if p not in graph: graph[p] = set()
-            for d in origin[p]['depends']:
-                pkg_name = resolve_pkg_name(d.split()[0], origin, src_dict, prov_dict)
+            for d in target[p]['depends']:
+                pkg_name = resolve_pkg_name(d.split()[0], target, src_dict, prov_dict)
                 if pkg_name in packages:
                     graph[p].add(pkg_name)
                     if pkg_name not in graph: graph[pkg_name] = set()

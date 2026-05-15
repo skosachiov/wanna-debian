@@ -63,18 +63,16 @@ filename=$(printf "%s.%03d" "$base_name" $counter)
 
 cat > $filename.bin
 
-cat $filename.bin | python3 $SD/predose.py --log-file $base_name.log $2_Packages $3_Packages > ${base_name}_Packages
-cat $filename.bin | python3 $SD/predose.py --log-file $base_name.log -s $2_Sources $3_Sources | sort -u > $filename.src
-cat $filename.src | python3 $SD/predose.py --log-file $base_name.log $2_Sources $3_Sources > ${base_name}_Sources
-echo "" > $filename.src
+echo "" | python3 $SD/predose.py --log-file $base_name.log $2_Packages $3_Packages > ${base_name}_Packages
+echo "" | python3 $SD/predose.py --log-file $base_name.log $2_Sources $3_Sources > ${base_name}_Sources
 
-while [[ -s "$filename.bin" || -s "$filename.src"  ]]; do
+while [[ -s "$filename.bin" ]]; do
 
     echo "Processing $filename"
     ((counter++))
     next_filename=$(printf "%s.%03d" "$base_name" $counter)
 
-    # keep resolve up
+    # keep resolve up for speedup only
     cat $filename.bin \
         | python3 $SD/predose.py --log-file $base_name.log --resolve-up $2_Packages ${base_name}_Packages > $filename.bin.tmp && \
         cat $filename.bin.tmp >> $filename.bin && rm -f $filename.bin.tmp
@@ -82,68 +80,42 @@ while [[ -s "$filename.bin" || -s "$filename.src"  ]]; do
         | python3 $SD/predose.py --log-file $base_name.log --resolve-up $2_Sources ${base_name}_Sources > $filename.bin.tmp && \
         cat $filename.bin.tmp >> $filename.bin && rm -f $filename.bin.tmp
 
-    # remove bin target packages and groups
+    # resolve to src on orig, resolve src to bins on target, remove from target bin
     cat $filename.bin \
-        | python3 $SD/predose.py --log-file $base_name.log --resolve-group $3_Packages ${base_name}_Packages \
-        | python3 $SD/predose.py --log-file $base_name.log --remove ${base_name}_Packages > ${base_name}_Packages.tmp && \
-        mv -f ${base_name}_Packages.tmp ${base_name}_Packages
-    cat $filename.bin \
-        | python3 $SD/predose.py --log-file $base_name.log --resolve-up $2_Packages ${base_name}_Packages \
-        | python3 $SD/predose.py --log-file $base_name.log --remove ${base_name}_Packages > ${base_name}_Packages.tmp && \
-        mv -f ${base_name}_Packages.tmp ${base_name}_Packages
-    cat $filename.bin \
+        | python3 $SD/predose.py --log-file $base_name.log --resolve-src $2_Packages \
+        | python3 $SD/predose.py --log-file $base_name.log --resolve-bin ${base_name}_Packages \
         | python3 $SD/predose.py --log-file $base_name.log --remove ${base_name}_Packages > ${base_name}_Packages.tmp && \
         mv -f ${base_name}_Packages.tmp ${base_name}_Packages
 
     if [ "$OPT_BINONLY" = false ]; then
-    # remove src target sources
+    # resolve to src on orig, remove from target src
     cat $filename.bin \
-        | python3 $SD/predose.py --log-file $base_name.log --resolve-src --provide $3_Packages $3_Sources ${base_name}_Sources \
-        | python3 $SD/predose.py --log-file $base_name.log --remove ${base_name}_Sources > ${base_name}_Sources.tmp && \
-        mv -f ${base_name}_Sources.tmp ${base_name}_Sources
-    cat $filename.bin \
-        | python3 $SD/predose.py --log-file $base_name.log --resolve-up $2_Sources ${base_name}_Sources \
+        | python3 $SD/predose.py --log-file $base_name.log --resolve-src $2_Packages \
         | python3 $SD/predose.py --log-file $base_name.log --remove ${base_name}_Sources > ${base_name}_Sources.tmp && \
         mv -f ${base_name}_Sources.tmp ${base_name}_Sources
     fi
 
-    # convert bin to src
-    cat $filename.bin \
-        | python3 $SD/predose.py --log-file $base_name.log --resolve-src --provide $2_Packages $2_Sources ${base_name}_Sources \
-        | sort -u > $next_filename.src
-
     if [ "$OPT_REMOVEONLY" = false ]; then # skip all implantations if true
 
-    # bin-bin implantation
+    # bin implantation
     cat $filename.bin \
         | python3 $SD/predose.py --log-file $base_name.log $2_Packages ${base_name}_Packages > ${base_name}_Packages.tmp && \
         mv -f ${base_name}_Packages.tmp ${base_name}_Packages
-    cat $filename.bin \
-        | python3 $SD/predose.py --log-file $base_name.log --resolve-group $2_Packages ${base_name}_Packages \
-        | python3 $SD/predose.py --log-file $base_name.log $2_Packages ${base_name}_Packages > ${base_name}_Packages.tmp && \
-        mv -f ${base_name}_Packages.tmp ${base_name}_Packages
-    cat $filename.bin \
-        | python3 $SD/predose.py --log-file $base_name.log --resolve-up $2_Packages ${base_name}_Packages \
-        | python3 $SD/predose.py --log-file $base_name.log $2_Packages ${base_name}_Packages > ${base_name}_Packages.tmp && \
-        mv -f ${base_name}_Packages.tmp ${base_name}_Packages
-
-    # src-src implantation
-    cat $filename.src \
-        | python3 $SD/predose.py --log-file $base_name.log --provide $2_Packages $2_Sources ${base_name}_Sources > ${base_name}_Sources.tmp && \
-        mv -f ${base_name}_Sources.tmp ${base_name}_Sources
-
-    # src-src dependent implantation if dep not found
-    cat $filename.bin \
-        | python3 $SD/predose.py --log-file $base_name.log --resolve-up $2_Sources ${base_name}_Sources \
-        | python3 $SD/predose.py --log-file $base_name.log --provide $2_Packages $2_Sources ${base_name}_Sources > ${base_name}_Sources.tmp && \
-        mv -f ${base_name}_Sources.tmp ${base_name}_Sources
-
-    # src-bin implantation
+    # all-bin implantation
     if [ "$OPT_ALLBIN" = true ]; then
-    cat $filename.src \
-        | python3 $SD/predose.py --log-file $base_name.log --resolve-bin $2_Sources ${base_name}_Sources \
+    cat $filename.bin \
+        | python3 $SD/predose.py --log-file $base_name.log --resolve-src $2_Packages \
+        | python3 $SD/predose.py --log-file $base_name.log --resolve-bin $2_Packages \
         | python3 $SD/predose.py --log-file $base_name.log $2_Packages ${base_name}_Packages > ${base_name}_Packages.tmp && \
         mv -f ${base_name}_Packages.tmp ${base_name}_Packages
+    fi        
+
+    if [ "$OPT_BINONLY" = false ]; then
+    # src implantation
+    cat $filename.bin \
+        | python3 $SD/predose.py --log-file $base_name.log --resolve-src $2_Packages \
+        | python3 $SD/predose.py --log-file $base_name.log $2_Sources ${base_name}_Sources > ${base_name}_Sources.tmp && \
+        mv -f ${base_name}_Sources.tmp ${base_name}_Sources
     fi
 
     fi # removeonly
@@ -151,6 +123,9 @@ while [[ -s "$filename.bin" || -s "$filename.src"  ]]; do
     echo -n > $next_filename.bin
 
     # check binary packages in dependencies, broken due to low dependent versions
+    if [ "$OPT_CHECKONLY" = true ]; then
+        EXTRA_PARAMS=(--checkonly "$(paste -sd, <(cat $base_name.*.bin | grep -v "^\s*$"))")
+    fi
     dose-debcheck --latest 1 --deb-native-arch=amd64 -e -f ${base_name}_Packages | tee \
         >(grep "unsat-dependency:" | sed 's/unsat-dependency: //' |  tr '|' '\n' | awk '{print $1}' \
             | cut -d: -f1 | grep -v '^[|(>=]*$' | sort -u >> $next_filename.bin) \
@@ -161,7 +136,7 @@ while [[ -s "$filename.bin" || -s "$filename.src"  ]]; do
 
     # check src and append to bin, broken due to low dependent versions
     if [ "$OPT_CHECKONLY" = true ]; then
-        EXTRA_PARAMS=(--checkonly "$(paste -sd, <(cat $base_name.*.src | grep -v "^\s*$"))")
+        EXTRA_PARAMS=(--checkonly "$(paste -sd, <(cat $base_name.*.bin | python3 $SD/predose.py --resolve-src $2_Packages | grep -v "^\s*$"))")
     fi
     if [ "$OPT_BINONLY" = false ]; then
     dose-builddebcheck "${EXTRA_PARAMS[@]}" --latest 1 --deb-native-arch=amd64 -e -f ${base_name}_Packages ${base_name}_Sources | tee \
@@ -174,12 +149,11 @@ while [[ -s "$filename.bin" || -s "$filename.src"  ]]; do
     wait $pid
 
     sort -u -o "$next_filename.bin" "$next_filename.bin"
-    sort -u -o "$next_filename.src" "$next_filename.src"
 
     cp -f ${base_name}_Sources ${base_name}_Sources.prev
     cp -f ${base_name}_Packages ${base_name}_Packages.prev
 
-    if cmp -s "$filename.bin" "$next_filename.bin" && cmp -s "$filename.src" "$next_filename.src"; then
+    if cmp -s "$filename.bin" "$next_filename.bin"; then
         echo "Stopping: '$next_filename' has identical content to '$filename'"
         exit 0
     fi
@@ -192,4 +166,4 @@ while [[ -s "$filename.bin" || -s "$filename.src"  ]]; do
     filename="$next_filename"
 done
 
-echo "Stopping: '$filename.bin' and '$filename.src' is empty"
+echo "Stopping: '$filename.bin' is empty"
