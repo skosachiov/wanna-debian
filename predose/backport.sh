@@ -101,6 +101,7 @@ while [[ -s "$filename.bin" ]]; do
     cat $filename.bin \
         | python3 $SD/predose.py --log-file $base_name.log $2_Packages ${base_name}_Packages > ${base_name}_Packages.tmp && \
         mv -f ${base_name}_Packages.tmp ${base_name}_Packages
+        
     # all-bin implantation
     if [ "$OPT_ALLBIN" = true ]; then
     cat $filename.bin \
@@ -136,7 +137,8 @@ while [[ -s "$filename.bin" ]]; do
 
     # check src and append to bin, broken due to low dependent versions
     if [ "$OPT_CHECKONLY" = true ]; then
-        EXTRA_PARAMS=(--checkonly "$(paste -sd, <(cat $base_name.*.bin | python3 $SD/predose.py --resolve-src $2_Packages | grep -v "^\s*$"))")
+        EXTRA_PARAMS=(--checkonly "$(paste -sd, <(cat $base_name.*.bin \
+            | python3 $SD/predose.py --log-file $base_name.log --resolve-src $2_Packages | grep -v "^\s*$"))")
     fi
     if [ "$OPT_BINONLY" = false ]; then
     dose-builddebcheck "${EXTRA_PARAMS[@]}" --latest 1 --deb-native-arch=amd64 -e -f ${base_name}_Packages ${base_name}_Sources | tee \
