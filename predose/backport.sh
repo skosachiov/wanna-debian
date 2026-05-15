@@ -101,7 +101,7 @@ while [[ -s "$filename.bin" ]]; do
     cat $filename.bin \
         | python3 $SD/predose.py --log-file $base_name.log $2_Packages ${base_name}_Packages > ${base_name}_Packages.tmp && \
         mv -f ${base_name}_Packages.tmp ${base_name}_Packages
-        
+
     # all-bin implantation
     if [ "$OPT_ALLBIN" = true ]; then
     cat $filename.bin \
@@ -150,6 +150,7 @@ while [[ -s "$filename.bin" ]]; do
 
     wait $pid
 
+    sort -u -o "$filename.bin" "$filename.bin"
     sort -u -o "$next_filename.bin" "$next_filename.bin"
 
     cp -f ${base_name}_Sources ${base_name}_Sources.prev
