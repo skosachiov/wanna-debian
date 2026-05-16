@@ -1,7 +1,7 @@
 # pre-dose
 
 Pre-dose is a small set of Python and Bash scripts designed for analyzing and backporting Debian packages from
-newer releases (e.g., Sid) to older stable versions (e.g., Trixie or Bookworm).
+newer releases (e.g., Sid or Testing) to older Stable versions.
 
 Pre-dose iteratively attempts to solve some limitations of Debian's standard metadata analyzers - dose-distcheck and dose-builddebcheck, specifically:
 * Termination of dose scanning after the first unresolved dependency
@@ -27,7 +27,7 @@ The build metadata of the target repository may have unresolved dependencies bef
 * Packages to backport
 * Packages needed to repair the target repository
 
-If the user provides a list of source packages (e.g., from a Debian software section like packages.debian.org/trixie/), they must first be converted to binary packages before processing.
+If the user provides a list of source packages (e.g., from a Debian software section like packages.debian.org/stable/), they must first be converted to binary packages before processing.
 
 ## workflow of backport
 
@@ -55,113 +55,107 @@ By combining dose-debcheck and dose-builddebcheck, Pre-dose provides an efficien
 ### get metadata
 
 ```
-wget -O trixie_Sources.gz http://ftp.debian.org/debian/dists/trixie/main/source/Sources.gz && gunzip trixie_Sources.gz
-wget -O trixie_Packages.gz http://ftp.debian.org/debian/dists/trixie/main/binary-amd64/Packages.gz && gunzip trixie_Packages.gz
+wget -O stable_Sources.gz http://ftp.debian.org/debian/dists/stable/main/source/Sources.gz && gunzip stable_Sources.gz
+wget -O stable_Packages.gz http://ftp.debian.org/debian/dists/stable/main/binary-amd64/Packages.gz && gunzip stable_Packages.gz
 
-wget -O forky_Packages.gz http://ftp.debian.org/debian/dists/forky/main/binary-amd64/Packages.gz && gunzip forky_Packages.gz
-wget -O forky_Sources.gz http://ftp.debian.org/debian/dists/forky/main/source/Sources.gz && gunzip forky_Sources.gz
-
-wget -O sid_Sources.gz http://ftp.debian.org/debian/dists/sid/main/source/Sources.gz && gunzip sid_Sources.gz
-wget -O sid_Packages.gz http://ftp.debian.org/debian/dists/sid/main/binary-amd64/Packages.gz && gunzip sid_Packages.gz
+wget -O testing_Sources.gz http://ftp.debian.org/debian/dists/testing/main/source/Sources.gz && gunzip testing_Sources.gz
+wget -O testing_Packages.gz http://ftp.debian.org/debian/dists/testing/main/binary-amd64/Packages.gz && gunzip testing_Packages.gz
 ```
 
 ### find unmet dependencies before metadata implantation
 
-Fix myrepo with trixie:
+Fix myrepo with stable:
 
-`echo "" | backport --checkall broken-before trixie myrepo`
+`echo "" | backport --checkall broken-before stable myrepo`
 
 By default the backport script runs dose3 build dependencies check with the `--checkonly` option, to change the behavior here we use --checkall.
 
-### select packages to backport
+### select binary packages to backport
 
-Get list of sections in "sid":
+Get list of sections in "testing":
 
-https://packages.debian.org/source/sid/
+`https://packages.debian.org/source/testing/`
 
 or
 
-https://people.debian.org/~fpeters/gnome/debian-gnome-48-status.html
+`https://people.debian.org/~fpeters/gnome/`
+
+or
+
+`https://wiki.debian.org/PkgQtKde/`
 
 or
 
 ```
-echo gnome-core | pre-dose -e 2 trixie_Packages 2> /dev/null \
-| xargs -I {} grep-dctrl -P -F -n -e "^{}$" -s Package,Version,Maintainer,Section trixie_Packages \
-| tr -s "\n" | paste -d = - - - - | grep 'GNOME Maintainers' > gnome.list
+echo gnome-core | pre-dose -e 2 testing_Packages 2> /dev/null \
+| xargs -I {} grep-dctrl -P -n -e "^{}$" -s Package,Version,Maintainer,Section testing_Packages \
+| tr -s "\n" | paste -d ' ' - - - - | grep 'GNOME Maintainers' | cut -f 1 -d ' ' > gnome.list 
 ```
 
 or
 
-`awk -v RS='\n\n' '/Version: [4-5][3-8]\..*GNOME Main/' sid_Packages | grep ^Package: | cut -f 2 -d ' ' | sort -u > gnome.list`
-
-or
-
-https://wiki.debian.org/PkgQtKde/TrixieReleasePlans
-
 ```
-awk -v RS='\n\n' '/Version:.*6\.3\.[4-5].*KDE Main/' trixie_Packages | grep ^Package: | cut -f 2 -d ' ' > kde.list
-awk -v RS='\n\n' '/Version:.*24\.12.*KDE Main/' trixie_Packages | grep ^Package: | cut -f 2 -d ' ' >> kde.list
-awk -v RS='\n\n' '/Version:.*25\.0.*KDE Main/' trixie_Packages | grep ^Package: | cut -f 2 -d ' ' >> kde.list
-sort -u -o kde.list kde.list
+echo kde-plasma-desktop | pre-dose -e 2 testing_Packages 2> /dev/null \
+| xargs -I {} grep-dctrl -P -n -e "^{}$" -s Package,Version,Maintainer,Section testing_Packages \
+| tr -s "\n" | paste -d ' ' - - - - | grep 'KDE Main' | cut -f 1 -d ' ' > kde.list 
 ```
 
 ### convert to binary
 
-`cat gnome.list | pre-dose --resolve-bin sid_Sources > tmp && mv -f tmp gnome.list`
+`cat gnome.list.bin | pre-dose --resolve-bin testing_Sources > gnome.list`
 
 ### run resolver
 
-`cat gnome.list | backport gnome sid trixie`
+`cat gnome.list | backport gnome testing stable`
 
 or
 
-`cat kde.list | backport kde sid trixie`
+`cat kde.list | backport kde testing stable`
 
 ### view result
 
 #### to remove from older repo
 ```
 comm -13 <(grep-dctrl -n -s Package,Version -P '' gnome_Sources | tr -s "\n" \
-| paste -d = - - | sort -u) <(grep-dctrl -n -s Package,Version -P '' trixie_Sources | tr -s "\n" | paste -d = - - | sort -u) > gnome.remove.list
+| paste -d = - - | sort -u) <(grep-dctrl -n -s Package,Version -P '' stable_Sources | tr -s "\n" | paste -d = - - | sort -u) > gnome.remove.list
 ```
 #### to add to older repo
 ```
 comm -23 <(grep-dctrl -n -s Package,Version -P '' gnome_Sources | tr -s "\n" \
-| paste -d = - - | sort -u) <(grep-dctrl -n -s Package,Version -P '' trixie_Sources | tr -s "\n" | paste -d = - - | sort -u) > gnome.backport.list
+| paste -d = - - | sort -u) <(grep-dctrl -n -s Package,Version -P '' stable_Sources | tr -s "\n" | paste -d = - - | sort -u) > gnome.backport.list
 ```
 
 ### topological sort result
 
-`cat gnome.backport.list | sort -u | pre-dose --log-file gnome.log -t -p sid_Packages sid_Sources trixie_Sources > gnome.toposort.src`
+`cat gnome.backport.list | sort -u | pre-dose --log-file gnome.log -t -p testing_Packages testing_Sources stable_Sources > gnome.toposort.src`
 
 ## man dose-ceve
 
 Find all the source packages that (directly or indirectly) build depend on patchutils (depth 2):
 ```
-dose-ceve --deb-native-arch=amd64 -r patchutils -T debsrc --depth 2 debsrc://sid_Sources deb://sid_Packages \
+dose-ceve --deb-native-arch=amd64 -r patchutils -T debsrc --depth 2 debsrc://testing_Sources deb://testing_Packages \
         | grep-dctrl -n -s Package '' | sort -u
 ```
 
 Find all the reverse binary dependencies of the package patchutils:
 ```
-dose-ceve --deb-native-arch amd64 -r patchutils -T deb --depth 2 deb://sid_Packages \
+dose-ceve --deb-native-arch amd64 -r patchutils -T deb --depth 2 deb://testing_Packages \
         | grep-dctrl -n -s Package '' | sort -u
 ```
 
 Find all build deps for build-essential:
 ```
 dose-ceve --deb-native-arch=amd64 -r build-essential -T deb --depth 1 \
-    debsrc://sid_Sources deb://sid_Packages | grep-dctrl -n -s Package '' | sort -u
+    debsrc://testing_Sources deb://testing_Packages | grep-dctrl -n -s Package '' | sort -u
 ```
 
 ## sources toposort with dot graph
 
-`echo build-essential | pre-dose --log-file build-essential.log -e 2 sid_Sources trixie_Sources > build-essential.list`
+`echo build-essential | pre-dose --log-file build-essential.log -e 2 testing_Sources stable_Sources > build-essential.list`
 
 ```
 tac build-essential.list \
-        | pre-dose --log-file build-essential.log -t --dot build-essential.dot -p trixie_Packages sid_Sources trixie_Sources \
+        | pre-dose --log-file build-essential.log -t --dot build-essential.dot -p stable_Packages testing_Sources stable_Sources \
         > build-essential.toposort
 ```
 
@@ -182,7 +176,7 @@ sbuild -d bookworm package.dsc
 ```
 Types: deb-src
 URIs: http://deb.debian.org/debian
-Suites: sid sid-updates
+Suites: testing testing-updates
 Components: main
 Signed-By: /usr/share/keyrings/debian-archive-keyring.gpg
 ```
@@ -202,12 +196,12 @@ aliases=unstable,default
 ### debootstrap repo example
 
 ```
-debootstrap --print-debs trixie /tmp/trixie-chroot | tr " " "\n" > /tmp/bootstrap.list
+debootstrap --print-debs stable /tmp/stable-chroot | tr " " "\n" > /tmp/bootstrap.list
 
 echo "" > empty_Packages
 echo "" > empty_Sources
 
-cat /tmp/bootstrap.list | backport bootstrap trixie empty
+cat /tmp/bootstrap.list | backport bootstrap stable empty
 ```
 
 #### debootstrap final check
@@ -228,22 +222,22 @@ dose-debcheck --latest 1 --deb-native-arch=amd64 -e -f bootstrap_Packages | grep
 
 ### backport gnome-core full example
 
-from trixie (newer) to trixie snapshot 2025.01 (older)
+from stable (newer) to stable snapshot 2025.01 (older)
 
 #### wget metadata
 ```
-wget -O trixie_Sources.gz http://ftp.debian.org/debian/dists/trixie/main/source/Sources.gz && gunzip trixie_Sources.gz
-wget -O trixie_Packages.gz http://ftp.debian.org/debian/dists/trixie/main/binary-amd64/Packages.gz && gunzip trixie_Packages.gz
+wget -O stable_Sources.gz http://ftp.debian.org/debian/dists/stable/main/source/Sources.gz && gunzip stable_Sources.gz
+wget -O stable_Packages.gz http://ftp.debian.org/debian/dists/stable/main/binary-amd64/Packages.gz && gunzip stable_Packages.gz
 
-wget -O t202501_Sources.gz https://snapshot.debian.org/archive/debian/20250131T203740Z/dists/trixie/main/source/Sources.gz && gunzip t202501_Sources.gz
-wget -O t202501_Packages.gz https://snapshot.debian.org/archive/debian/20250131T203740Z/dists/trixie/main/binary-amd64/Packages.gz && gunzip t202501_Packages.gz
+wget -O t202501_Sources.gz https://snapshot.debian.org/archive/debian/20250131T203740Z/dists/stable/main/source/Sources.gz && gunzip t202501_Sources.gz
+wget -O t202501_Packages.gz https://snapshot.debian.org/archive/debian/20250131T203740Z/dists/stable/main/binary-amd64/Packages.gz && gunzip t202501_Packages.gz
 ```
 
 #### iterate pre-dose and dose with backport script
 
 it takes about 30 min ...
 
-`echo gnome-core | backport gnome-core trixie t202501 &`
+`echo gnome-core | backport gnome-core stable t202501 &`
 
 #### remove from snapshot source repo
 ```
@@ -270,5 +264,5 @@ comm -23 <(grep-dctrl -n -s Package,Version -P '' gnome-core_Packages | tr -s "\
 ```
 comm -23 <(grep-dctrl -n -s Package,Version -P '' gnome-core_Packages | tr -s "\n" \
 | paste -d = - - | sort -u) <(grep-dctrl -n -s Package,Version -P '' t202501_Packages | tr -s "\n" | paste -d = - - | sort -u) \
-| pre-dose -s -p trixie_Packages trixie_Sources trixie_Sources
+| pre-dose -s -p stable_Packages stable_Sources stable_Sources
 ```

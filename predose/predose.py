@@ -178,10 +178,10 @@ def main():
     args = parser.parse_args()
 
     # only target args
-    only_target_args = (args.remove, args.resolve_bin, args.resolve_src, args.resolve_group, args.depends, args.topo_sort)
+    only_one_repo = (args.remove, args.resolve_bin, args.resolve_src, args.resolve_group, args.depends, args.topo_sort)
 
     # Check args
-    if any(only_target_args) and args.origin_repo is not None:
+    if any(only_one_repo) and args.origin_repo is not None:
         parser.error("option does not require ORIGIN_REPO")
 
     # Configure logging system
@@ -205,9 +205,9 @@ def main():
     dependent_set = {}
 
     # Parse repository metadata
-    origin = parse_metadata(args.origin_repo if not any(only_target_args) else args.target_repo, \
+    origin = parse_metadata(args.origin_repo if not any(only_one_repo) else args.target_repo, \
         src_dict = src_dict, prov_dict = prov_dict, bin_dict = bin_dict if args.resolve_bin is not None else None)
-    target = parse_metadata(args.target_repo, bin_dict = group_dict)
+    if not any(only_one_repo): target = parse_metadata(args.target_repo, bin_dict = group_dict)
     if args.provide: parse_metadata(args.provide, prov_dict = prov_dict)
 
     # Process input packages from stdin
@@ -215,7 +215,11 @@ def main():
         if line[0] == "#" or line.strip() == "": continue
         line_left_side = line.strip().split("=")[0] # Package name
         lines.append(line_left_side)
-        pkg_name = resolve_pkg_name(line_left_side, origin, src_dict, prov_dict)
+        if any((args.resolve_bin, args.resolve_src)):
+            pkg_name = line_left_side
+        else:
+            pkg_name = resolve_pkg_name(line_left_side, origin, src_dict, prov_dict)
+            
         if pkg_name is not None: packages.add(pkg_name)
 
         # Handle different operation modes
@@ -227,22 +231,30 @@ def main():
                     logging.error(f'Package without resolve operation not found: {line_left_side}')
         elif args.resolve_src:
             if pkg_name is not None:
-                if args.add_version:
-                    print(f'{target[pkg_name]['source']}={target[pkg_name]["source_version"]}')
+                if bin_dict:
+                    for p in bin_dict.keys():
+                        if pkg_name in bin_dict[p]:
+                            print(p)
                 else:
-                    print(f'{target[pkg_name]['source']}')
+                    if args.add_version:
+                        print(f'{origin[pkg_name]['source']}={origin[pkg_name]["source_version"]}')
+                    else:
+                        print(f'{origin[pkg_name]['source']}')
         elif args.resolve_bin:
             if pkg_name is not None:
-                if pkg_name in bin_dict:
-                    for p in bin_dict[pkg_name]:
-                        print(p)
+                if bin_dict:
+                    if pkg_name in bin_dict:
+                        for p in bin_dict[pkg_name]:
+                            print(p)
                 else:
-                    logging.error(f'Can not resolve the source package to binary because the name was not found: {pkg_name}')
+                    for p in origin.keys():
+                        if origin[p]['source'] == pkg_name:
+                            print(p)
         elif args.resolve_group:
             if pkg_name is not None:
-                if pkg_name in target and target[pkg_name]["source"] is not None:
-                    if target[pkg_name]["source"] in group_dict:
-                        for p in group_dict[target[pkg_name]["source"]]:
+                if pkg_name in origin and origin[pkg_name]["source"] is not None:
+                    if origin[pkg_name]["source"] in bin_dict:
+                        for p in bin_dict[origin[pkg_name]["source"]]:
                             print(p)
                     elif bin_dict:
                         for bin_pkgs in bin_dict.values():
@@ -266,10 +278,10 @@ def main():
                 for i in range(args.depends):
                     set_len = len(depends_set)
                     for p in dict(depends_set).keys():
-                        p_src = resolve_pkg_name(p, target, src_dict, prov_dict)
+                        p_src = resolve_pkg_name(p, origin, src_dict, prov_dict)
                         if p_src:
-                            for pd in target[p_src]["depends"]:
-                                pd_src = resolve_pkg_name(pd, target, src_dict, prov_dict)
+                            for pd in origin[p_src]["depends"]:
+                                pd_src = resolve_pkg_name(pd, origin, src_dict, prov_dict)
                                 if pd_src:
                                     depends_set[pd_src] = None
                     if set_len == len(depends_set):
@@ -281,8 +293,8 @@ def main():
             pass
         elif args.remove:
             if pkg_name is not None:
-                if pkg_name in target:
-                    del target[pkg_name]
+                if pkg_name in origin:
+                    del origin[pkg_name]
                     logging.info(f'Package removed: {pkg_name}')
                 else:
                     logging.error(f'Package to be removed is not present in the target: {pkg_name}')
