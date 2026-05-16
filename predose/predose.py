@@ -178,10 +178,10 @@ def main():
     args = parser.parse_args()
 
     # only target args
-    only_one_repo = (args.remove, args.resolve_bin, args.resolve_src, args.resolve_group, args.depends, args.topo_sort)
+    only_one_repo = any((args.remove, args.resolve_bin, args.resolve_src, args.resolve_group, args.depends, args.topo_sort))
 
     # Check args
-    if any(only_one_repo) and args.origin_repo is not None:
+    if only_one_repo and args.origin_repo is not None:
         parser.error("option does not require ORIGIN_REPO")
 
     # Configure logging system
@@ -205,9 +205,9 @@ def main():
     dependent_set = {}
 
     # Parse repository metadata
-    origin = parse_metadata(args.origin_repo if not any(only_one_repo) else args.target_repo, \
+    origin = parse_metadata(args.origin_repo if not only_one_repo else args.target_repo, \
         src_dict = src_dict, prov_dict = prov_dict, bin_dict = bin_dict if args.resolve_bin is not None else None)
-    if not any(only_one_repo): target = parse_metadata(args.target_repo, bin_dict = group_dict)
+    if not only_one_repo: target = parse_metadata(args.target_repo, bin_dict = group_dict)
     if args.provide: parse_metadata(args.provide, prov_dict = prov_dict)
 
     # Process input packages from stdin
