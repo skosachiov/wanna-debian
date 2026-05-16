@@ -123,28 +123,34 @@ while [[ -s "$filename.bin" ]]; do
 
     echo -n > $next_filename.bin
 
+    if [ "$OPT_REMOVEONLY" = false ]; then
+        GREP_UNSAT="^\s{6}unsat-.*\((<|=)"
+    else
+        GREP_UNSAT="^\s{6}unsat-.*\("
+    fi
+
     # check binary packages in dependencies, broken due to low dependent versions
     if [ "$OPT_CHECKONLY" = true ]; then
-        EXTRA_PARAMS=(--checkonly "$(paste -sd, <(cat $base_name.*.bin | grep -v "^\s*$"))")
+        EXTRA_PARAMS=(--checkonly "$(paste -sd, <(cat $base_name.*.bin | sort -u | grep -v "^\s*$"))")
     fi
-    dose-debcheck --latest 1 --deb-native-arch=amd64 -e -f ${base_name}_Packages | tee \
+    dose-debcheck "${EXTRA_PARAMS[@]}" --latest 1 --deb-native-arch=amd64 -e -f ${base_name}_Packages | tee \
         >(grep "unsat-dependency:" | sed 's/unsat-dependency: //' |  tr '|' '\n' | awk '{print $1}' \
             | cut -d: -f1 | grep -v '^[|(>=]*$' | sort -u >> $next_filename.bin) \
-        >(grep -B 4 -P "^\s{6}unsat-.*\((<|=)" | grep -oP '(package:|version:) \K\S+' | paste -d "=" - - | sort -u >> $next_filename.bin) \
+        >(grep -B 4 -P "$GREP_UNSAT" | grep -oP '(package:|version:) \K\S+' | paste -d "=" - - | sort -u >> $next_filename.bin) \
         >> ${base_name}.debcheck.log &
 
     pid=$!
 
     # check src and append to bin, broken due to low dependent versions
     if [ "$OPT_CHECKONLY" = true ]; then
-        EXTRA_PARAMS=(--checkonly "$(paste -sd, <(cat $base_name.*.bin \
+        EXTRA_PARAMS=(--checkonly "$(paste -sd, <(cat $base_name.*.bin | sort -u \
             | python3 $SD/predose.py --log-file $base_name.log --resolve-src $2_Packages | grep -v "^\s*$"))")
     fi
     if [ "$OPT_BINONLY" = false ]; then
     dose-builddebcheck "${EXTRA_PARAMS[@]}" --latest 1 --deb-native-arch=amd64 -e -f ${base_name}_Packages ${base_name}_Sources | tee \
         >(grep "unsat-dependency:" | sed 's/unsat-dependency: //' |  tr '|' '\n' | awk '{print $1}' \
             | cut -d: -f1 | grep -v '^[|(>=]*$' | sort -u >> $next_filename.bin) \
-        >(grep -B 4 -P "^\s{6}unsat-.*\((<|=)" | grep -oP '(package:|version:) \K\S+' | paste -d "=" - - | sort -u >> $next_filename.bin) \
+        >(grep -B 4 -P "$GREP_UNSAT" | grep -oP '(package:|version:) \K\S+' | paste -d "=" - - | sort -u >> $next_filename.bin) \
         >> ${base_name}.builddebcheck.log
     fi
 
