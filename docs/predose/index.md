@@ -86,14 +86,14 @@ https://people.debian.org/~fpeters/gnome/debian-gnome-48-status.html
 or
 
 ```
-echo gnome-core | pre-dose -e 2 trixie_Packages trixie_Sources 2> /dev/null \
+echo gnome-core | pre-dose -e 2 trixie_Packages 2> /dev/null \
 | xargs -I {} grep-dctrl -P -F -n -e "^{}$" -s Package,Version,Maintainer,Section trixie_Packages \
 | tr -s "\n" | paste -d = - - - - | grep 'GNOME Maintainers' > gnome.list
 ```
 
 or
 
-`awk -v RS='\n\n' '/Version: 4[3-8]\..*GNOME Main/' sid_Packages | grep ^Package: | cut -f 2 -d ' ' | sort -u > gnome.list`
+`awk -v RS='\n\n' '/Version: [4-5][3-8]\..*GNOME Main/' sid_Packages | grep ^Package: | cut -f 2 -d ' ' | sort -u > gnome.list`
 
 or
 
@@ -108,7 +108,7 @@ sort -u -o kde.list kde.list
 
 ### convert to binary
 
-`cat gnome.list | pre-dose --resolve-bin sid_Sources sid_Sources > tmp && mv -f tmp gnome.list`
+`cat gnome.list | pre-dose --resolve-bin sid_Sources > tmp && mv -f tmp gnome.list`
 
 ### run resolver
 
