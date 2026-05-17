@@ -154,9 +154,6 @@ def dict_to_dot(d, graph_name='G'):
     lines.append("}")
     return '\n'.join(lines)
 
-
-# ============ Operation mode handlers (return strings) ============
-
 def handle_resolve_src(pkg_name, line_left_side, origin, is_bin_metadata, bin_dict, add_version):
     """Handle --resolve-src operation mode. Returns output string."""
     output = []
@@ -378,9 +375,6 @@ def main():
     if not only_one_repo: target, _ = parse_metadata(args.target_repo, bin_dict = group_dict)
     if args.provide: parse_metadata(args.provide, prov_dict = prov_dict)
 
-    # Collect all output lines
-    all_output = []
-
     # Process input packages from stdin
     for line in sys.stdin:
         if line[0] == "#" or line.strip() == "": continue
@@ -396,23 +390,17 @@ def main():
         # Handle different operation modes via dedicated functions (all return strings)
         if args.resolve_src:
             result = handle_resolve_src(pkg_name, line_left_side, origin, is_bin_metadata, bin_dict, args.add_version)
-            if result: all_output.append(result)
         elif args.resolve_bin:
             result = handle_resolve_bin(pkg_name, origin, is_bin_metadata, bin_dict, args.add_version)
-            if result: all_output.append(result)
         elif args.add_version:
             result = handle_add_version(line_left_side, origin)
-            if result: all_output.append(result)
         elif args.resolve_group:
             result = handle_resolve_group(pkg_name, origin, is_bin_metadata, bin_dict, group_dict)
-            if result: all_output.append(result)
         elif args.resolve_up:
             dep_set, result = handle_resolve_up(line_left_side, group_dict)
             dependent_set.update(dep_set)
-            if result: all_output.append(result)
         elif args.depends:
             depends_set, result = handle_depends(pkg_name, origin, src_dict, prov_dict, args.depends, depends_set)
-            if result: all_output.append(result)
         elif args.topo_sort:
             pass  # Handled after loop
         elif args.remove:
@@ -423,8 +411,8 @@ def main():
             logging.error(f'No deletion request and package name is not resolved: {line_left_side}')
 
     # Print collected output for resolve/depends modes
-    if all_output:
-        print('\n'.join(all_output))
+    if result:
+        print(result)
 
     # Perform topological sort if requested (prints directly)
     if args.topo_sort:
