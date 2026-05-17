@@ -9,13 +9,13 @@ apt_pkg.init_system()
 # Parse package metadata from repository file
 def parse_metadata(filepath, src_dict = None, prov_dict = None, bin_dict = None):
     packages = {}
+    type_bin_package = True
     with open(filepath, 'rt', encoding='utf-8') as f:
         content = f.read()
         # Split into individual package blocks
         package_blocks = re.split(r'\n\n+', content.strip())
         for block in package_blocks:
             pkg_name = version = source = source_version = None
-            type_bin_package = True
             depends = []
             block_list = []
             for line in block.splitlines():
@@ -42,7 +42,7 @@ def parse_metadata(filepath, src_dict = None, prov_dict = None, bin_dict = None)
                             for p in bin_pkgs:
                                 src_dict[p] = pkg_name
                     # Build binary-to-source mapping for binary metadata if requested
-                    if key == 'Source' and bin_dict is not None:
+                    if key == 'Source':
                         source_line = value.strip().split()
                         if len(source_line) > 0:
                             source = source_line[0]
@@ -52,7 +52,7 @@ def parse_metadata(filepath, src_dict = None, prov_dict = None, bin_dict = None)
                         else:
                             bin_dict[source].append(pkg_name)
                     # Build provides mapping if requested
-                    if key == 'Provides' and prov_dict is not None:
+                    if key == 'Provides':
                         prov_pkgs = [p.strip().split()[0] for p in value.split(',')]
                         for p in prov_pkgs:
                             prov_dict[p] = pkg_name
@@ -90,7 +90,7 @@ def parse_metadata(filepath, src_dict = None, prov_dict = None, bin_dict = None)
                 else:
                     logging.warning(f'A new version package already in the list: {pkg_name}')
     logging.debug(f'In the file {filepath} processed packets: {len(packages)}')
-    return packages
+    return packages, type_bin_package
 
 # Copy package version from origin to target repository
 def backport_version(origin, target, name, add_missing = False):
@@ -171,7 +171,7 @@ def main():
     parser.add_argument('-o', '--resolve-group', action='store_true', help='resolve target binary group and exit')
     parser.add_argument('-t', '--topo-sort', action='store_true', help='perform topological sort and exit')
     parser.add_argument('-g', '--dot', type=str, help="save toposort graph to dot file")
-    parser.add_argument('-a', '--add-version', action='store_true', help='add version to package name and exit')
+    parser.add_argument('-a', '--add-version', action='store_true', help='add version to output for resolve operations and exit')
     parser.add_argument('-l', '--log-level', default='INFO', choices=['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'], \
                        help='set the logging level (default: INFO)')
     parser.add_argument('--log-file', help="save logs to file (default: stderr)")
@@ -203,10 +203,11 @@ def main():
     # Ordered sets
     depends_set = {}
     dependent_set = {}
+    type_bin_package = None
 
     # Parse repository metadata
-    origin = parse_metadata(args.origin_repo if not only_one_repo else args.target_repo, \
-        src_dict = src_dict, prov_dict = prov_dict, bin_dict = bin_dict if args.resolve_bin else None)
+    origin, type_bin_package = parse_metadata(args.origin_repo if not only_one_repo else args.target_repo, \
+        src_dict = src_dict, prov_dict = prov_dict, bin_dict = bin_dict)
     if not only_one_repo: target = parse_metadata(args.target_repo, bin_dict = group_dict)
     if args.provide: parse_metadata(args.provide, prov_dict = prov_dict)
 
@@ -223,18 +224,15 @@ def main():
         if pkg_name is not None: packages.add(pkg_name)
 
         # Handle different operation modes
-        if args.add_version:
+        if args.resolve_src:
             if pkg_name is not None:
-                if line_left_side in origin:
-                    print(f'{line_left_side}={origin[line_left_side]["version"]}')
-                else:
-                    logging.error(f'Package without resolve operation not found: {line_left_side}')
-        elif args.resolve_src:
-            if pkg_name is not None:
-                if bin_dict:
+                if not type_bin_package:
                     for p in bin_dict.keys():
                         if pkg_name in bin_dict[p]:
-                            print(p)
+                            if args.add_version:
+                                print(f'{p}={origin[p]["source_version"]}')
+                            else:
+                                print(p)
                 elif pkg_name in origin:
                     if args.add_version:
                         print(f'{origin[pkg_name]["source"]}={origin[pkg_name]["source_version"]}')
@@ -242,21 +240,30 @@ def main():
                         print(f'{origin[pkg_name]["source"]}')
         elif args.resolve_bin:
             if pkg_name is not None:
-                if bin_dict:
+                if not type_bin_package:
                     if pkg_name in bin_dict:
                         for p in bin_dict[pkg_name]:
                             print(p)
                 else:
                     for p in origin.keys():
                         if origin[p]['source'] == pkg_name:
-                            print(p)
+                            if args.add_version:
+                                print(f'{p}={origin[p]["version"]}')
+                            else:
+                                print(p)
+        elif args.add_version:
+            if pkg_name is not None:
+                if line_left_side in origin:
+                    print(f'{line_left_side}={origin[line_left_side]["version"]}')
+                else:
+                    logging.error(f'Package without resolve operation not found: {line_left_side}')                            
         elif args.resolve_group:
             if pkg_name is not None:
                 if pkg_name in origin and origin[pkg_name]["source"] is not None:
                     if origin[pkg_name]["source"] in bin_dict:
                         for p in bin_dict[origin[pkg_name]["source"]]:
                             print(p)
-                    elif bin_dict:
+                    elif not type_bin_package:
                         for bin_pkgs in bin_dict.values():
                             if pkg_name in bin_pkgs:
                                 for p in bin_pkgs:
