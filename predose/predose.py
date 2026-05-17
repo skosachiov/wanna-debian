@@ -206,7 +206,7 @@ def main():
 
     # Parse repository metadata
     origin = parse_metadata(args.origin_repo if not only_one_repo else args.target_repo, \
-        src_dict = src_dict, prov_dict = prov_dict, bin_dict = bin_dict if args.resolve_bin is not None else None)
+        src_dict = src_dict, prov_dict = prov_dict, bin_dict = bin_dict if args.resolve_bin else None)
     if not only_one_repo: target = parse_metadata(args.target_repo, bin_dict = group_dict)
     if args.provide: parse_metadata(args.provide, prov_dict = prov_dict)
 
@@ -237,9 +237,9 @@ def main():
                             print(p)
                 else:
                     if args.add_version:
-                        print(f'{origin[pkg_name]['source']}={origin[pkg_name]["source_version"]}')
+                        print(f'{origin[pkg_name]["source"]}={origin[pkg_name]["source_version"]}')
                     else:
-                        print(f'{origin[pkg_name]['source']}')
+                        print(f'{origin[pkg_name]["source"]}')
         elif args.resolve_bin:
             if pkg_name is not None:
                 if bin_dict:
@@ -280,7 +280,7 @@ def main():
                     for p in dict(depends_set).keys():
                         p_src = resolve_pkg_name(p, origin, src_dict, prov_dict)
                         if p_src:
-                            for pd in origin[p_src]["depends"]:
+                            for pd in origin[p_src].get("depends", []):
                                 pd_src = resolve_pkg_name(pd, origin, src_dict, prov_dict)
                                 if pd_src:
                                     depends_set[pd_src] = None
