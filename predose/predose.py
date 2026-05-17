@@ -9,7 +9,7 @@ apt_pkg.init_system()
 # Parse package metadata from repository file
 def parse_metadata(filepath, src_dict = None, prov_dict = None, bin_dict = None):
     packages = {}
-    type_bin_package = True
+    is_bin_metadata = True
     with open(filepath, 'rt', encoding='utf-8') as f:
         content = f.read()
         # Split into individual package blocks
@@ -35,7 +35,7 @@ def parse_metadata(filepath, src_dict = None, prov_dict = None, bin_dict = None)
                         pkg_name = value.strip()
                     # Build binary-to-source mapping for source metadata if requested
                     if key == 'Binary' and bin_dict is not None and src_dict is not None:
-                        type_bin_package = False
+                        is_bin_metadata = False
                         if src_dict is not None:
                             bin_pkgs = [p.strip() for p in value.split(',')]
                             if bin_dict is not None: bin_dict[pkg_name] = bin_pkgs
@@ -79,7 +79,7 @@ def parse_metadata(filepath, src_dict = None, prov_dict = None, bin_dict = None)
                 if pkg_name not in packages or apt_pkg.version_compare(version, packages[pkg_name]['version']) > 0:
                     if source is None:
                         source = pkg_name
-                        if type_bin_package and bin_dict is not None:
+                        if is_bin_metadata and bin_dict is not None:
                             if source not in bin_dict:
                                 bin_dict[source] = [pkg_name]
                             else:
@@ -90,7 +90,7 @@ def parse_metadata(filepath, src_dict = None, prov_dict = None, bin_dict = None)
                 else:
                     logging.warning(f'A new version package already in the list: {pkg_name}')
     logging.debug(f'In the file {filepath} processed packets: {len(packages)}')
-    return packages, type_bin_package
+    return packages, is_bin_metadata
 
 # Copy package version from origin to target repository
 def backport_version(origin, target, name, add_missing = False):
@@ -203,10 +203,10 @@ def main():
     # Ordered sets
     depends_set = {}
     dependent_set = {}
-    type_bin_package = None
+    is_bin_metadata = None
 
     # Parse repository metadata
-    origin, type_bin_package = parse_metadata(args.origin_repo if not only_one_repo else args.target_repo, \
+    origin, is_bin_metadata = parse_metadata(args.origin_repo if not only_one_repo else args.target_repo, \
         src_dict = src_dict, prov_dict = prov_dict, bin_dict = bin_dict)
     if not only_one_repo: target, _ = parse_metadata(args.target_repo, bin_dict = group_dict)
     if args.provide: parse_metadata(args.provide, prov_dict = prov_dict)
@@ -226,7 +226,7 @@ def main():
         # Handle different operation modes
         if args.resolve_src:
             if pkg_name is not None:
-                if not type_bin_package:
+                if not is_bin_metadata:
                     for p in bin_dict.keys():
                         if pkg_name in bin_dict[p]:
                             if args.add_version:
@@ -240,7 +240,7 @@ def main():
                         print(f'{origin[pkg_name]["source"]}')
         elif args.resolve_bin:
             if pkg_name is not None:
-                if not type_bin_package:
+                if not is_bin_metadata:
                     if pkg_name in bin_dict:
                         for p in bin_dict[pkg_name]:
                             print(p)
@@ -263,7 +263,7 @@ def main():
                     if origin[pkg_name]["source"] in bin_dict:
                         for p in bin_dict[origin[pkg_name]["source"]]:
                             print(p)
-                    elif not type_bin_package:
+                    elif not is_bin_metadata:
                         for bin_pkgs in bin_dict.values():
                             if pkg_name in bin_pkgs:
                                 for p in bin_pkgs:

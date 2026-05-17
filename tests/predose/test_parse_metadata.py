@@ -14,7 +14,9 @@ def test_parse_metadata_packages():
     packages_file = data_dir / "sample_Packages"
 
     # Parse the metadata - for Packages file, we need to pass empty dicts for src_dict and prov_dict
-    pkg_dict = parse_metadata(packages_file, {}, {}, {})
+    pkg_dict, is_bin_metadata = parse_metadata(packages_file, {}, {}, {})
+
+    assert is_bin_metadata == True
 
     # Test basic structure
     assert isinstance(pkg_dict, dict)
@@ -67,7 +69,7 @@ def test_parse_metadata_empty_file(tmp_path):
     empty_file.write_text("")
 
     # Should return empty dictionary for Packages file
-    pkg_dict = parse_metadata(empty_file, {}, {}, {})
+    pkg_dict, _ = parse_metadata(empty_file, {}, {}, {})
     assert pkg_dict == {}
 
     # Should populate empty dictionaries for Sources file
@@ -87,7 +89,7 @@ Version: 1.0
     malformed_file.write_text(malformed_content)
 
     # Should handle malformed lines gracefully
-    pkg_dict = parse_metadata(malformed_file, {}, {}, {})
+    pkg_dict, _ = parse_metadata(malformed_file, {}, {}, {})
 
     # Should still parse the valid package
     assert "test-package" in pkg_dict
@@ -98,7 +100,7 @@ def test_package_specific_fields():
     data_dir = Path(__file__).parent / "data"
     packages_file = data_dir / "sample_Packages"
 
-    pkg_dict = parse_metadata(packages_file, {}, {}, {})
+    pkg_dict, _ = parse_metadata(packages_file, {}, {}, {})
 
     # Test a specific package if known to exist
     for pkg_name, pkg_data in list(pkg_dict.items())[:1]:  # Test first package
