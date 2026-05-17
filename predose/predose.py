@@ -235,7 +235,7 @@ def main():
                     for p in bin_dict.keys():
                         if pkg_name in bin_dict[p]:
                             print(p)
-                else:
+                elif pkg_name in origin:
                     if args.add_version:
                         print(f'{origin[pkg_name]["source"]}={origin[pkg_name]["source_version"]}')
                     else:
