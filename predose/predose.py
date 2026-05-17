@@ -375,6 +375,8 @@ def main():
     if not only_one_repo: target, _ = parse_metadata(args.target_repo, bin_dict = group_dict)
     if args.provide: parse_metadata(args.provide, prov_dict = prov_dict)
 
+    result = None
+
     # Process input packages from stdin
     for line in sys.stdin:
         if line[0] == "#" or line.strip() == "": continue
