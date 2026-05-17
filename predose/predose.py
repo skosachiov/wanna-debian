@@ -34,7 +34,7 @@ def parse_metadata(filepath, src_dict = None, prov_dict = None, bin_dict = None)
                             logging.error(f'Duplicate stanza key: {key}: {value.strip()}')
                         pkg_name = value.strip()
                     # Build binary-to-source mapping for source metadata if requested
-                    if key == 'Binary':
+                    if key == 'Binary' and bin_dict is not None and src_dict is not None:
                         type_bin_package = False
                         if src_dict is not None:
                             bin_pkgs = [p.strip() for p in value.split(',')]
@@ -42,7 +42,7 @@ def parse_metadata(filepath, src_dict = None, prov_dict = None, bin_dict = None)
                             for p in bin_pkgs:
                                 src_dict[p] = pkg_name
                     # Build binary-to-source mapping for binary metadata if requested
-                    if key == 'Source':
+                    if key == 'Source' and bin_dict is not None:
                         source_line = value.strip().split()
                         if len(source_line) > 0:
                             source = source_line[0]
@@ -52,7 +52,7 @@ def parse_metadata(filepath, src_dict = None, prov_dict = None, bin_dict = None)
                         else:
                             bin_dict[source].append(pkg_name)
                     # Build provides mapping if requested
-                    if key == 'Provides':
+                    if key == 'Provides' and prov_dict is not None:
                         prov_pkgs = [p.strip().split()[0] for p in value.split(',')]
                         for p in prov_pkgs:
                             prov_dict[p] = pkg_name
