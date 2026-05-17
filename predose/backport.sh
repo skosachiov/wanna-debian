@@ -72,14 +72,6 @@ while [[ -s "$filename.bin" ]]; do
     ((counter++))
     next_filename=$(printf "%s.%03d" "$base_name" $counter)
 
-    # keep resolve up for speedup only
-    cat $filename.bin \
-        | python3 $SD/predose.py --log-file $base_name.log --resolve-up $2_Packages ${base_name}_Packages > $filename.bin.tmp && \
-        cat $filename.bin.tmp >> $filename.bin && rm -f $filename.bin.tmp
-    cat $filename.bin \
-        | python3 $SD/predose.py --log-file $base_name.log --resolve-up $2_Sources ${base_name}_Sources > $filename.bin.tmp && \
-        cat $filename.bin.tmp >> $filename.bin && rm -f $filename.bin.tmp
-
     # resolve to src on orig, resolve src to bins on target, remove from target bin
     cat $filename.bin \
         | python3 $SD/predose.py --log-file $base_name.log --resolve-src $2_Packages \

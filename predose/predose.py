@@ -218,22 +218,6 @@ def handle_resolve_group(pkg_name, origin, is_bin_metadata, bin_dict, target):
     return '\n'.join(output)
 
 
-def handle_resolve_up(line_left_side, target):
-    """Handle --resolve-up operation mode. Returns (dependent_set, output_string)."""
-    dependent_set = {}
-    output = []
-    if line_left_side not in target:
-        dependent_found = False
-        for key, value in target.items():
-            if line_left_side in value['depends']:
-                dependent_set[key] = None
-                dependent_found = True
-                logging.info(f'Resolve the target dependent {key} package for: {line_left_side}')
-        if not dependent_found:
-            logging.error(f'Can not resolve the target dependent package for: {line_left_side}')
-    return dependent_set, '\n'.join(output)
-
-
 def handle_depends(pkg_name, origin, src_dict, prov_dict, depends_depth, depends_set):
     """Handle --depends operation mode. Returns (depends_set, output_string)."""
     if pkg_name is not None:
@@ -331,7 +315,6 @@ def main():
     parser.add_argument('-e', '--depends', type=int, metavar='DEPTH', help='print repository package dependencies and exit')
     parser.add_argument('-s', '--resolve-src', action='store_true', help='resolve source code package names and exit')
     parser.add_argument('-b', '--resolve-bin', action='store_true', help='resolve binary package names by original source metadata and exit')
-    parser.add_argument('-u', '--resolve-up', action='store_true', help='resolve the target dependent package if the package name is not found in origin and exit')
     parser.add_argument('-o', '--resolve-group', action='store_true', help='resolve target binary group and exit')
     parser.add_argument('-t', '--topo-sort', action='store_true', help='perform topological sort and exit')
     parser.add_argument('-g', '--dot', type=str, help="save toposort graph to dot file")
@@ -398,9 +381,6 @@ def main():
             result = handle_add_version(line_left_side, origin)
         elif args.resolve_group:
             result = handle_resolve_group(pkg_name, origin, is_bin_metadata, bin_dict, group_dict)
-        elif args.resolve_up:
-            dep_set, result = handle_resolve_up(line_left_side, group_dict)
-            dependent_set.update(dep_set)
         elif args.depends:
             depends_set, result = handle_depends(pkg_name, origin, src_dict, prov_dict, args.depends, depends_set)
         elif args.topo_sort:
