@@ -208,7 +208,7 @@ def main():
     # Parse repository metadata
     origin, type_bin_package = parse_metadata(args.origin_repo if not only_one_repo else args.target_repo, \
         src_dict = src_dict, prov_dict = prov_dict, bin_dict = bin_dict)
-    if not only_one_repo: target = parse_metadata(args.target_repo, bin_dict = group_dict)
+    if not only_one_repo: target, _ = parse_metadata(args.target_repo, bin_dict = group_dict)
     if args.provide: parse_metadata(args.provide, prov_dict = prov_dict)
 
     # Process input packages from stdin
