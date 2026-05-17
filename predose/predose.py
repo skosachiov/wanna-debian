@@ -404,7 +404,7 @@ def main():
 
     # Output modified package metadata if not in special mode
     if not any((args.add_version, args.depends, args.resolve_src, args.resolve_bin,
-        args.resolve_group, args.topo_sort, args.resolve_up)):
+        args.resolve_group, args.topo_sort)):
         output_metadata(origin, target if not only_one_repo else origin, only_one_repo)
 
     logging.debug(f'Pre-dose finished and the input stream was: {lines}')
