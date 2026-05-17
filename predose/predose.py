@@ -154,6 +154,173 @@ def dict_to_dot(d, graph_name='G'):
     lines.append("}")
     return '\n'.join(lines)
 
+
+# ============ Operation mode handlers (return strings) ============
+
+def handle_resolve_src(pkg_name, line_left_side, origin, is_bin_metadata, bin_dict, add_version):
+    """Handle --resolve-src operation mode. Returns output string."""
+    output = []
+    if pkg_name is not None:
+        if not is_bin_metadata:
+            for p in bin_dict.keys():
+                if pkg_name in bin_dict[p]:
+                    if add_version:
+                        output.append(f'{p}={origin[p]["source_version"]}')
+                    else:
+                        output.append(p)
+        elif pkg_name in origin:
+            if add_version:
+                output.append(f'{origin[pkg_name]["source"]}={origin[pkg_name]["source_version"]}')
+            else:
+                output.append(f'{origin[pkg_name]["source"]}')
+    return '\n'.join(output)
+
+
+def handle_resolve_bin(pkg_name, origin, is_bin_metadata, bin_dict, add_version):
+    """Handle --resolve-bin operation mode. Returns output string."""
+    output = []
+    if pkg_name is not None:
+        if not is_bin_metadata:
+            if pkg_name in bin_dict:
+                for p in bin_dict[pkg_name]:
+                    output.append(p)
+        else:
+            for p in origin.keys():
+                if origin[p]['source'] == pkg_name:
+                    if add_version:
+                        output.append(f'{p}={origin[p]["version"]}')
+                    else:
+                        output.append(p)
+    return '\n'.join(output)
+
+
+def handle_add_version(line_left_side, origin):
+    """Handle --add-version operation mode. Returns output string."""
+    if line_left_side in origin:
+        return f'{line_left_side}={origin[line_left_side]["version"]}'
+    else:
+        logging.error(f'Package without resolve operation not found: {line_left_side}')
+        return ''
+
+
+def handle_resolve_group(pkg_name, origin, is_bin_metadata, bin_dict, target):
+    """Handle --resolve-group operation mode. Returns output string."""
+    output = []
+    if pkg_name is not None:
+        if pkg_name in origin and origin[pkg_name]["source"] is not None:
+            if origin[pkg_name]["source"] in bin_dict:
+                for p in bin_dict[origin[pkg_name]["source"]]:
+                    output.append(p)
+            elif not is_bin_metadata:
+                for bin_pkgs in bin_dict.values():
+                    if pkg_name in bin_pkgs:
+                        for p in bin_pkgs:
+                            output.append(p)
+            else:
+                logging.error(f'Can not resolve package binary group for: {pkg_name} via source {target[pkg_name]["source"]}')
+    return '\n'.join(output)
+
+
+def handle_resolve_up(line_left_side, target):
+    """Handle --resolve-up operation mode. Returns (dependent_set, output_string)."""
+    dependent_set = {}
+    output = []
+    if line_left_side not in target:
+        dependent_found = False
+        for key, value in target.items():
+            if line_left_side in value['depends']:
+                dependent_set[key] = None
+                dependent_found = True
+                logging.info(f'Resolve the target dependent {key} package for: {line_left_side}')
+        if not dependent_found:
+            logging.error(f'Can not resolve the target dependent package for: {line_left_side}')
+    return dependent_set, '\n'.join(output)
+
+
+def handle_depends(pkg_name, origin, src_dict, prov_dict, depends_depth, depends_set):
+    """Handle --depends operation mode. Returns (depends_set, output_string)."""
+    if pkg_name is not None:
+        depends_set[pkg_name] = None
+        for i in range(depends_depth):
+            set_len = len(depends_set)
+            for p in dict(depends_set).keys():
+                p_src = resolve_pkg_name(p, origin, src_dict, prov_dict)
+                if p_src:
+                    for pd in origin[p_src].get("depends", []):
+                        pd_src = resolve_pkg_name(pd, origin, src_dict, prov_dict)
+                        if pd_src:
+                            depends_set[pd_src] = None
+            if set_len == len(depends_set):
+                logging.info(f'Dependency search completed at iteration: {i + 1}')
+                break
+        else:
+            logging.warning(f'Dependency search did not reach all leaf nodes, number of iteration: {depends_depth}')
+    output = '\n'.join(depends_set.keys())
+    return depends_set, output
+
+
+def handle_remove(pkg_name, origin):
+    """Handle --remove operation mode. Returns empty string (side effects only)."""
+    if pkg_name is not None:
+        if pkg_name in origin:
+            del origin[pkg_name]
+            logging.info(f'Package removed: {pkg_name}')
+        else:
+            logging.error(f'Package to be removed is not present in the target: {pkg_name}')
+    return ''
+
+
+def handle_backport(pkg_name, origin, target, add_missing):
+    """Handle default backport operation mode. Returns empty string (side effects only)."""
+    if pkg_name is not None:
+        backport_version(origin, target, pkg_name, add_missing)
+    else:
+        logging.error(f'No deletion request and package name is not resolved: {pkg_name}')
+    return ''
+
+
+def handle_topo_sort(packages, target, src_dict, prov_dict, dot_file=None):
+    """Handle --topo-sort operation mode. Returns output string."""
+    graph = {}
+    # Build dependency graph
+    for p in packages:
+        if p not in graph: graph[p] = set()
+        for d in target[p]['depends']:
+            pkg_name = resolve_pkg_name(d.split()[0], target, src_dict, prov_dict)
+            if pkg_name in packages:
+                graph[p].add(pkg_name)
+                if pkg_name not in graph: graph[pkg_name] = set()
+    # Save graph to dot file
+    if dot_file:
+        with open(dot_file, 'w') as f:
+            f.write(dict_to_dot(graph))
+    # Prepare graph for topological sort
+    graph_dict = reverse_graph(graph)
+    nodes = {name: Node(name) for name in graph_dict}
+    edges_counter = 0
+    for name, edges in graph_dict.items():
+        node = nodes[name]
+        edges_counter += len(edges)
+        for edge_name in edges:
+            node.edges.append(nodes[edge_name])
+    nodes = list(nodes.values())
+    logging.debug(f'Stable topological sort started, number of edges: {edges_counter}')
+    # Perform and output topological sort
+    sorted_nodes_with_levels = StableTopoSort.stable_topo_sort(nodes)
+    tl = []
+    for level, node in sorted_nodes_with_levels:
+        tl.append((level, node.name))
+    output_lines = [str(t) for t in sorted(tl)]
+    return '\n'.join(output_lines)
+
+
+def output_metadata(origin, target, only_one_repo):
+    """Output modified package metadata."""
+    for pkg in origin.values() if only_one_repo else target.values():
+        print(pkg['block'])
+        print()
+
+
 def main():
     # Setup command line argument parser
     parser = argparse.ArgumentParser(description='Pre-dose script performs a targeted substitution of package \
@@ -211,6 +378,9 @@ def main():
     if not only_one_repo: target, _ = parse_metadata(args.target_repo, bin_dict = group_dict)
     if args.provide: parse_metadata(args.provide, prov_dict = prov_dict)
 
+    # Collect all output lines
+    all_output = []
+
     # Process input packages from stdin
     for line in sys.stdin:
         if line[0] == "#" or line.strip() == "": continue
@@ -223,141 +393,49 @@ def main():
             
         if pkg_name is not None: packages.add(pkg_name)
 
-        # Handle different operation modes
+        # Handle different operation modes via dedicated functions (all return strings)
         if args.resolve_src:
-            if pkg_name is not None:
-                if not is_bin_metadata:
-                    for p in bin_dict.keys():
-                        if pkg_name in bin_dict[p]:
-                            if args.add_version:
-                                print(f'{p}={origin[p]["source_version"]}')
-                            else:
-                                print(p)
-                elif pkg_name in origin:
-                    if args.add_version:
-                        print(f'{origin[pkg_name]["source"]}={origin[pkg_name]["source_version"]}')
-                    else:
-                        print(f'{origin[pkg_name]["source"]}')
+            result = handle_resolve_src(pkg_name, line_left_side, origin, is_bin_metadata, bin_dict, args.add_version)
+            if result: all_output.append(result)
         elif args.resolve_bin:
-            if pkg_name is not None:
-                if not is_bin_metadata:
-                    if pkg_name in bin_dict:
-                        for p in bin_dict[pkg_name]:
-                            print(p)
-                else:
-                    for p in origin.keys():
-                        if origin[p]['source'] == pkg_name:
-                            if args.add_version:
-                                print(f'{p}={origin[p]["version"]}')
-                            else:
-                                print(p)
+            result = handle_resolve_bin(pkg_name, origin, is_bin_metadata, bin_dict, args.add_version)
+            if result: all_output.append(result)
         elif args.add_version:
-            if pkg_name is not None:
-                if line_left_side in origin:
-                    print(f'{line_left_side}={origin[line_left_side]["version"]}')
-                else:
-                    logging.error(f'Package without resolve operation not found: {line_left_side}')                            
+            result = handle_add_version(line_left_side, origin)
+            if result: all_output.append(result)
         elif args.resolve_group:
-            if pkg_name is not None:
-                if pkg_name in origin and origin[pkg_name]["source"] is not None:
-                    if origin[pkg_name]["source"] in bin_dict:
-                        for p in bin_dict[origin[pkg_name]["source"]]:
-                            print(p)
-                    elif not is_bin_metadata:
-                        for bin_pkgs in bin_dict.values():
-                            if pkg_name in bin_pkgs:
-                                for p in bin_pkgs:
-                                    print(p)
-                    else:
-                        logging.error(f'Can not resolve package binary group for: {pkg_name} via source {target[pkg_name]["source"]}')
+            result = handle_resolve_group(pkg_name, origin, is_bin_metadata, bin_dict, group_dict)
+            if result: all_output.append(result)
         elif args.resolve_up:
-            if pkg_name is None:
-                dependent_found = False
-                for key, value in target.items():
-                    if line_left_side in value['depends']:
-                        dependent_set[key] = None
-                        dependent_found = True
-                        logging.info(f'Resolve the target dependent {key} package for: {line_left_side}')
-                if not dependent_found: logging.error(f'Can not resolve the target dependent package for: {line_left_side}')
+            dep_set, result = handle_resolve_up(line_left_side, group_dict)
+            dependent_set.update(dep_set)
+            if result: all_output.append(result)
         elif args.depends:
-            if pkg_name is not None:
-                depends_set[pkg_name] = None # Set
-                for i in range(args.depends):
-                    set_len = len(depends_set)
-                    for p in dict(depends_set).keys():
-                        p_src = resolve_pkg_name(p, origin, src_dict, prov_dict)
-                        if p_src:
-                            for pd in origin[p_src].get("depends", []):
-                                pd_src = resolve_pkg_name(pd, origin, src_dict, prov_dict)
-                                if pd_src:
-                                    depends_set[pd_src] = None
-                    if set_len == len(depends_set):
-                        logging.info(f'Dependency search completed at iteration: {i + 1}')
-                        break
-                else:
-                    logging.warning(f'Dependency search did not reach all leaf nodes, number of iteration: {args.depends}')
+            depends_set, result = handle_depends(pkg_name, origin, src_dict, prov_dict, args.depends, depends_set)
+            if result: all_output.append(result)
         elif args.topo_sort:
-            pass
+            pass  # Handled after loop
         elif args.remove:
-            if pkg_name is not None:
-                if pkg_name in origin:
-                    del origin[pkg_name]
-                    logging.info(f'Package removed: {pkg_name}')
-                else:
-                    logging.error(f'Package to be removed is not present in the target: {pkg_name}')
+            handle_remove(pkg_name, origin)  # Returns '', no output
         elif pkg_name is not None:
-            backport_version(origin, target, pkg_name, args.add_missing)
+            handle_backport(pkg_name, origin, group_dict if only_one_repo else target, args.add_missing)  # Returns '', no output
         else:
             logging.error(f'No deletion request and package name is not resolved: {line_left_side}')
 
-    # Process dependency resolve requested
-    for p in depends_set.keys():
-        print(p)
+    # Print collected output for resolve/depends modes
+    if all_output:
+        print('\n'.join(all_output))
 
-    # Process target dependent requested
-    for p in dependent_set.keys():
-        print(p)
-
-    # Perform topological sort if requested
+    # Perform topological sort if requested (prints directly)
     if args.topo_sort:
-        graph = {}
-        # Build dependency graph
-        for p in packages:
-            if p not in graph: graph[p] = set()
-            for d in target[p]['depends']:
-                pkg_name = resolve_pkg_name(d.split()[0], target, src_dict, prov_dict)
-                if pkg_name in packages:
-                    graph[p].add(pkg_name)
-                    if pkg_name not in graph: graph[pkg_name] = set()
-        # Save graph to dot file
-        if args.dot:
-            with open(args.dot, 'w') as f:
-                f.write(dict_to_dot(graph))
-        # Prepare graph for topological sort
-        graph_dict = reverse_graph(graph)
-        nodes = {name: Node(name) for name in graph_dict}
-        edges_counter = 0
-        for name, edges in graph_dict.items():
-            node = nodes[name]
-            edges_counter += len(edges)
-            for edge_name in edges:
-                node.edges.append(nodes[edge_name])
-        nodes = list(nodes.values())
-        logging.debug(f'Stable topological sort started, number of edges: {edges_counter}')
-        # Perform and output topological sort
-        sorted_nodes_with_levels = StableTopoSort.stable_topo_sort(nodes)
-        tl = []
-        for level, node in sorted_nodes_with_levels:
-            tl.append((level, node.name))
-        for t in sorted(tl):
-            print(t)
+        result = handle_topo_sort(packages, target if not only_one_repo else origin, src_dict, prov_dict, args.dot)
+        if result:
+            print(result)
 
     # Output modified package metadata if not in special mode
     if not any((args.add_version, args.depends, args.resolve_src, args.resolve_bin,
         args.resolve_group, args.topo_sort, args.resolve_up)):
-        for pkg in origin.values() if only_one_repo else target.values():
-            print(pkg['block'])
-            print()
+        output_metadata(origin, target if not only_one_repo else origin, only_one_repo)
 
     logging.debug(f'Pre-dose finished and the input stream was: {lines}')
 
