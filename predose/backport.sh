@@ -140,6 +140,9 @@ while [[ -s "$filename.bin" ]]; do
             }' | sort -u >> $next_filename.bin || true
     }
 
+    echo -n > ${base_name}.debcheck.log.tmp
+    echo -n > ${base_name}.builddebcheck.log.tmp
+
     # check binary packages in dependencies, broken due to low dependent versions
     if [ "$OPT_CHECKONLY" = true ]; then
         EXTRA_PARAMS=(--checkonly "$(paste -sd, <(cat $filename.bin | sort -u | grep -v "^\s*$"))")
