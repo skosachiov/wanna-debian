@@ -121,19 +121,18 @@ while [[ -s "$filename.bin" ]]; do
 
     grepunsat() {
         grep -P -A 5 "^\s{5}pkg1?:" | grep -P "^\s{6}(unsat-|package:)" | paste - - | sort -u \
-        | awk -v OPT="$OPT_REMOVEONLY" '
-            {
-            pkg = $2
-            dep = $4
-            sub(/:.*/, "", dep)
-            if (OPT == "true")
-                print pkg
-            else {
-                if ($0 ~ /unsat-dependency:.*\([<=]/) {
+            | awk -v OPT="$OPT_REMOVEONLY" '{
+                pkg = $2
+                dep = $4
+                sub(/:.*/, "", dep)
+                if (OPT == "true")
                     print pkg
+                else {
+                    if ($0 ~ /unsat-dependency:.*\([<=]/) {
+                        print pkg
+                    }
+                    print dep
                 }
-                print dep
-            }
             }' | sort -u >> $next_filename.bin
     }
 
@@ -151,6 +150,7 @@ while [[ -s "$filename.bin" ]]; do
         EXTRA_PARAMS=(--checkonly "$(paste -sd, <(cat $filename.bin | sort -u \
             | python3 $SD/predose.py --log-file $base_name.log --resolve-src $2_Packages | grep -v "^\s*$"))")
     fi
+    
     if [ "$OPT_BINONLY" = false ]; then
     dose-builddebcheck "${EXTRA_PARAMS[@]}" --latest 1 --deb-native-arch=amd64 -e -f ${base_name}_Packages ${base_name}_Sources \
         | tee >(grepunsat) >> ${base_name}.builddebcheck.log
