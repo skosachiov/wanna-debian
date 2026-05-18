@@ -117,6 +117,7 @@ while [[ -s "$filename.bin" ]]; do
 
     fi # removeonly
 
+    echo -n > $next_filename.bin.tmp
     echo -n > $next_filename.bin
     cat $filename.bin >> $next_filename.bin
 
@@ -135,7 +136,7 @@ while [[ -s "$filename.bin" ]]; do
                 }
                 print dep
             }
-            }' | sort -u >> $next_filename.bin
+            }' | sort -u >> $next_filename.bin.tmp
     }
 
     # check binary packages in dependencies, broken due to low dependent versions
@@ -158,6 +159,10 @@ while [[ -s "$filename.bin" ]]; do
     fi
 
     wait $pid
+
+    # update packages that re-require removed dependencies
+    comm -12 <(cat $filename.bin | sort -u) <(cat $next_filename.bin.tmp | sort -u) \
+        | python3 $SD/predose.py --log-file $base_name.log --depends-on ${base_name}_Packages >> $next_filename.bin
 
     sort -u -o "$filename.bin" "$filename.bin"
     sort -u -o "$next_filename.bin" "$next_filename.bin"

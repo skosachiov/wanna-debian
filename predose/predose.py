@@ -154,8 +154,7 @@ def dict_to_dot(d, graph_name='G'):
     lines.append("}")
     return '\n'.join(lines)
 
-def handle_resolve_src(pkg_name, line_left_side, origin, is_bin_metadata, bin_dict, add_version):
-    """Handle --resolve-src operation mode. Returns output string."""
+def handle_resolve_src(pkg_name, origin, is_bin_metadata, bin_dict, add_version):
     output = []
     if pkg_name is not None:
         if not is_bin_metadata:
@@ -174,7 +173,6 @@ def handle_resolve_src(pkg_name, line_left_side, origin, is_bin_metadata, bin_di
 
 
 def handle_resolve_bin(pkg_name, origin, is_bin_metadata, bin_dict, add_version):
-    """Handle --resolve-bin operation mode. Returns output string."""
     output = []
     if pkg_name is not None:
         if not is_bin_metadata:
@@ -192,7 +190,6 @@ def handle_resolve_bin(pkg_name, origin, is_bin_metadata, bin_dict, add_version)
 
 
 def handle_add_version(line_left_side, origin):
-    """Handle --add-version operation mode. Returns output string."""
     if line_left_side in origin:
         return f'{line_left_side}={origin[line_left_side]["version"]}'
     else:
@@ -201,7 +198,6 @@ def handle_add_version(line_left_side, origin):
 
 
 def handle_resolve_group(pkg_name, origin, is_bin_metadata, bin_dict, target):
-    """Handle --resolve-group operation mode. Returns output string."""
     output = []
     if pkg_name is not None:
         if pkg_name in origin and origin[pkg_name]["source"] is not None:
@@ -219,7 +215,6 @@ def handle_resolve_group(pkg_name, origin, is_bin_metadata, bin_dict, target):
 
 
 def handle_depends(pkg_name, origin, src_dict, prov_dict, depends_depth, depends_set):
-    """Handle --depends operation mode. Returns (depends_set, output_string)."""
     if pkg_name is not None:
         depends_set[pkg_name] = None
         for i in range(depends_depth):
@@ -239,9 +234,15 @@ def handle_depends(pkg_name, origin, src_dict, prov_dict, depends_depth, depends
     output = '\n'.join(depends_set.keys())
     return depends_set, output
 
+def handle_depends_on(pkg_name, origin):
+    output = []
+    if pkg_name is not None:
+        for p in origin.keys():
+            if pkg_name in origin[p].get('depends', []):
+                output.append(p)
+    return '\n'.join(output)
 
 def handle_remove(pkg_name, origin):
-    """Handle --remove operation mode. Returns empty string (side effects only)."""
     if pkg_name is not None:
         if pkg_name in origin:
             del origin[pkg_name]
@@ -252,7 +253,6 @@ def handle_remove(pkg_name, origin):
 
 
 def handle_backport(pkg_name, origin, target, add_missing):
-    """Handle default backport operation mode. Returns empty string (side effects only)."""
     if pkg_name is not None:
         backport_version(origin, target, pkg_name, add_missing)
     else:
@@ -261,7 +261,6 @@ def handle_backport(pkg_name, origin, target, add_missing):
 
 
 def handle_topo_sort(packages, target, src_dict, prov_dict, dot_file=None):
-    """Handle --topo-sort operation mode. Returns output string."""
     graph = {}
     # Build dependency graph
     for p in packages:
@@ -313,6 +312,7 @@ def main():
     parser.add_argument('-r', '--remove', action='store_true', help='remove packages instead of replacing or adding')
     parser.add_argument('-p', '--provide', type=str, metavar='PATH', help="path to binary Packages metadata to provide replacements for sources implantation")
     parser.add_argument('-e', '--depends', type=int, metavar='DEPTH', help='print repository package dependencies and exit')
+    parser.add_argument('-n', '--depends-on', action='store_true', help='determine which package depends on a given dependency and exit')
     parser.add_argument('-s', '--resolve-src', action='store_true', help='resolve source code package names and exit')
     parser.add_argument('-b', '--resolve-bin', action='store_true', help='resolve binary package names by original source metadata and exit')
     parser.add_argument('-o', '--resolve-group', action='store_true', help='resolve target binary group and exit')
@@ -325,7 +325,7 @@ def main():
     args = parser.parse_args()
 
     # only target args
-    only_one_repo = any((args.remove, args.resolve_bin, args.resolve_src, args.resolve_group, args.depends, args.topo_sort))
+    only_one_repo = any((args.remove, args.resolve_bin, args.resolve_src, args.resolve_group, args.depends, args.depends_on, args.topo_sort))
 
     # Check args
     if only_one_repo and args.origin_repo is not None:
@@ -374,7 +374,7 @@ def main():
 
         # Handle different operation modes via dedicated functions (all return strings)
         if args.resolve_src:
-            result = handle_resolve_src(pkg_name, line_left_side, origin, is_bin_metadata, bin_dict, args.add_version)
+            result = handle_resolve_src(pkg_name, origin, is_bin_metadata, bin_dict, args.add_version)
         elif args.resolve_bin:
             result = handle_resolve_bin(pkg_name, origin, is_bin_metadata, bin_dict, args.add_version)
         elif args.add_version:
@@ -383,6 +383,8 @@ def main():
             result = handle_resolve_group(pkg_name, origin, is_bin_metadata, bin_dict, group_dict)
         elif args.depends:
             depends_set, result = handle_depends(pkg_name, origin, src_dict, prov_dict, args.depends, depends_set)
+        elif args.depends_on:
+            result = handle_depends_on(pkg_name, origin)
         elif args.topo_sort:
             pass  # Handled after loop
         elif args.remove:
@@ -403,7 +405,7 @@ def main():
             print(result)
 
     # Output modified package metadata if not in special mode
-    if not any((args.add_version, args.depends, args.resolve_src, args.resolve_bin,
+    if not any((args.add_version, args.depends, args.resolve_src, args.resolve_bin, args.depends_on,
         args.resolve_group, args.topo_sort)):
         output_metadata(origin, target if not only_one_repo else origin, only_one_repo)
 
