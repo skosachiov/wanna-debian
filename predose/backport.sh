@@ -145,7 +145,7 @@ while [[ -s "$filename.bin" ]]; do
         EXTRA_PARAMS=(--checkonly "$(paste -sd, <(cat $filename.bin | sort -u | grep -v "^\s*$"))")
     fi
     dose-debcheck "${EXTRA_PARAMS[@]}" --latest 1 --deb-native-arch=amd64 -e -f ${base_name}_Packages \
-        > ${base_name}.debcheck.log.tmp &
+        > ${base_name}.debcheck.log.tmp || true &
 
     pid=$!
 
@@ -156,7 +156,7 @@ while [[ -s "$filename.bin" ]]; do
     fi
     if [ "$OPT_BINONLY" = false ]; then
     dose-builddebcheck "${EXTRA_PARAMS[@]}" --latest 1 --deb-native-arch=amd64 -e -f ${base_name}_Packages ${base_name}_Sources \
-        > ${base_name}.builddebcheck.log.tmp
+        > ${base_name}.builddebcheck.log.tmp || true
     fi
 
     wait $pid || true
