@@ -140,15 +140,12 @@ while [[ -s "$filename.bin" ]]; do
             }' | sort -u >> $next_filename.bin || true
     }
 
-    echo -n > ${base_name}.debcheck.log.tmp
-    echo -n > ${base_name}.builddebcheck.log.tmp
-
     # check binary packages in dependencies, broken due to low dependent versions
     if [ "$OPT_CHECKONLY" = true ]; then
         EXTRA_PARAMS=(--checkonly "$(paste -sd, <(cat $filename.bin | sort -u | grep -v "^\s*$"))")
     fi
     dose-debcheck "${EXTRA_PARAMS[@]}" --latest 1 --deb-native-arch=amd64 -e -f ${base_name}_Packages \
-        | tee >(grepunsat) >> ${base_name}.debcheck.log.tmp &
+        > ${base_name}.debcheck.log.tmp &
 
     pid=$!
 
@@ -157,13 +154,15 @@ while [[ -s "$filename.bin" ]]; do
         EXTRA_PARAMS=(--checkonly "$(paste -sd, <(cat $filename.bin | sort -u \
             | python3 $SD/predose.py --log-file $base_name.log --resolve-src $2_Packages | grep -v "^\s*$"))")
     fi
-    
     if [ "$OPT_BINONLY" = false ]; then
     dose-builddebcheck "${EXTRA_PARAMS[@]}" --latest 1 --deb-native-arch=amd64 -e -f ${base_name}_Packages ${base_name}_Sources \
-        | tee >(grepunsat) >> ${base_name}.builddebcheck.log.tmp
+        > ${base_name}.builddebcheck.log.tmp
     fi
 
     wait $pid || true
+
+    cat ${base_name}.debcheck.log.tmp | grepunsat >> $next_filename.bin || true
+    cat ${base_name}.builddebcheck.log.tmp | grepunsat >> $next_filename.bin || true
 
     # print
     echo -n "$filename: "
