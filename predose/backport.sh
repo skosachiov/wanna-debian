@@ -48,12 +48,12 @@ while [[ $# -gt 0 ]]; do
 done
 
 # warning if not installed
-if ! dpkg -l | grep -q 'dose-distcheck'; then
+if ! command -v dose-distcheck &> /dev/null; then
     echo "Warning: dose-distcheck package is not installed. Exiting."
     exit 1
 fi
 
-if ! dpkg -l | grep -q 'dose-builddebcheck'; then
+if ! command -v dose-builddebcheck &> /dev/null; then
     echo "Warning: dose-builddebcheck package is not installed. Exiting."
     exit 1
 fi
