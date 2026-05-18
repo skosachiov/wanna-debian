@@ -134,7 +134,7 @@ while [[ -s "$filename.bin" ]]; do
                     }
                     print dep
                 }
-            }' | sort -u >> $next_filename.bin
+            }' | sort -u >> $next_filename.bin || true
     }
 
     # check binary packages in dependencies, broken due to low dependent versions
