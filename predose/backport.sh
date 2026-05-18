@@ -125,9 +125,12 @@ while [[ -s "$filename.bin" ]]; do
             sub(/:.*/, "", dep)
             if (OPT == "true")
                 print pkg
-            else if ($0 ~ /unsat-dependency:.*\([<=]/)
-                print pkg
-            print dep
+            else {
+                if ($0 ~ /unsat-dependency:.*\([<=]/) {
+                    print pkg
+                }
+                print dep
+            }
             }' | sort -u >> $next_filename.bin
     }
 
