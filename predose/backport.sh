@@ -78,6 +78,10 @@ while [[ -s "$filename.bin" ]]; do
         | python3 $SD/predose.py --log-file $base_name.log --resolve-bin ${base_name}_Packages \
         | python3 $SD/predose.py --log-file $base_name.log --remove ${base_name}_Packages > ${base_name}_Packages.tmp && \
         mv -f ${base_name}_Packages.tmp ${base_name}_Packages
+    # remove without resolve
+    cat $filename.bin \
+        | python3 $SD/predose.py --log-file $base_name.log --remove ${base_name}_Packages > ${base_name}_Packages.tmp && \
+        mv -f ${base_name}_Packages.tmp ${base_name}_Packages
 
     if [ "$OPT_BINONLY" = false ]; then
     # resolve to src on orig, remove from target src
