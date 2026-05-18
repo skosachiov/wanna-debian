@@ -69,6 +69,8 @@ cat > "$filename.bin"
 echo "" | python3 $SD/predose.py --log-file $base_name.log $2_Packages $3_Packages > ${base_name}_Packages
 echo "" | python3 $SD/predose.py --log-file $base_name.log $2_Sources $3_Sources > ${base_name}_Sources
 
+echo ""
+
 while [[ -s "$filename.bin" ]]; do
 
     ((counter++)) || true
@@ -162,9 +164,9 @@ while [[ -s "$filename.bin" ]]; do
 
     # print
     echo -n "$filename: "
-    grep '\-packages:' ${base_name}.debcheck.log.tmp | sed "s/-packages//" | paste - - | tr -d '\n'
+    grep '\-packages:' ${base_name}.debcheck.log.tmp | sed "s/-packages//" | paste - - | tr -d '\n' || true
     echo -n " "
-    grep '\-packages:' ${base_name}.builddebcheck.log.tmp | sed "s/-packages//" | paste - - -
+    grep '\-packages:' ${base_name}.builddebcheck.log.tmp | sed "s/-packages//" | paste - - - || true
 
     cat ${base_name}.debcheck.log.tmp >> ${base_name}.debcheck.log
     cat ${base_name}.builddebcheck.log.tmp >> ${base_name}.builddebcheck.log
