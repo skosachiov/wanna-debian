@@ -127,8 +127,7 @@ while [[ -s "$filename.bin" ]]; do
                 print pkg
             else if ($0 ~ /unsat-dependency:.*\([<=]/)
                 print pkg
-            else
-                print dep
+            print dep
             }' | sort -u >> $next_filename.bin
     }
 
