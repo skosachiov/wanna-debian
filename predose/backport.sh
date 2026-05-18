@@ -1,4 +1,6 @@
 #!/bin/bash
+set -euo pipefail
+
 
 SD="$(dirname "${BASH_SOURCE[0]}")"
 
@@ -68,7 +70,6 @@ echo "" | python3 $SD/predose.py --log-file $base_name.log $2_Sources $3_Sources
 
 while [[ -s "$filename.bin" ]]; do
 
-    echo "Processing $filename"
     ((counter++))
     next_filename=$(printf "%s.%03d" "$base_name" $counter)
 
@@ -141,7 +142,7 @@ while [[ -s "$filename.bin" ]]; do
         EXTRA_PARAMS=(--checkonly "$(paste -sd, <(cat $filename.bin | sort -u | grep -v "^\s*$"))")
     fi
     dose-debcheck "${EXTRA_PARAMS[@]}" --latest 1 --deb-native-arch=amd64 -e -f ${base_name}_Packages \
-        | tee >(grepunsat) >> ${base_name}.debcheck.log &
+        | tee >(grepunsat) >> ${base_name}.debcheck.log.tmp &
 
     pid=$!
 
@@ -153,10 +154,19 @@ while [[ -s "$filename.bin" ]]; do
     
     if [ "$OPT_BINONLY" = false ]; then
     dose-builddebcheck "${EXTRA_PARAMS[@]}" --latest 1 --deb-native-arch=amd64 -e -f ${base_name}_Packages ${base_name}_Sources \
-        | tee >(grepunsat) >> ${base_name}.builddebcheck.log
+        | tee >(grepunsat) >> ${base_name}.builddebcheck.log.tmp
     fi
 
     wait $pid
+
+    # print
+    echo -n "$filename: "
+    grep '\-packages:' ${base_name}.debcheck.log.tmp | sed "s/-packages//" | paste - - | tr -d '\n'
+    echo -n " "
+    grep '\-packages:' ${base_name}.builddebcheck.log.tmp | sed "s/-packages//" | paste - - -
+
+    cat ${base_name}.debcheck.log.tmp >> ${base_name}.debcheck.log
+    cat ${base_name}.builddebcheck.log.tmp >> ${base_name}.builddebcheck.log
 
     sort -u -o "$filename.bin" "$filename.bin"
     sort -u -o "$next_filename.bin" "$next_filename.bin"
