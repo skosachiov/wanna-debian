@@ -70,8 +70,8 @@ echo "" | python3 $SD/predose.py --log-file $base_name.log $2_Sources $3_Sources
 
 while [[ -s "$filename.bin" ]]; do
 
-    ((counter++))
-    next_filename=$(printf "%s.%03d" "$base_name" $counter) || true
+    ((counter++)) || true
+    next_filename=$(printf "%s.%03d" "$base_name" $counter)
 
     # resolve to src on orig, resolve src to bins on target, remove from target bin
     cat $filename.bin \
