@@ -157,7 +157,7 @@ while [[ -s "$filename.bin" ]]; do
         | tee >(grepunsat) >> ${base_name}.builddebcheck.log.tmp
     fi
 
-    wait $pid
+    wait $pid || true
 
     # print
     echo -n "$filename: "
