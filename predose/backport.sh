@@ -113,15 +113,9 @@ while [[ -s "$filename.bin" ]]; do
 
     fi # removeonly
 
-    if (( counter % 2 == 0 )); then
-        echo -n > $next_filename.bin
-    else
-        cat $filename.bin > $next_filename.bin
-    fi
+    echo -n > $next_filename.bin
+    cat $filename.bin >> $next_filename.bin
     
-
-
-
     if [ "$OPT_REMOVEONLY" = false ]; then
         GREP_UNSAT="^\s{6}unsat-.*\((<|=)"
     else
