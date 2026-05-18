@@ -1,5 +1,5 @@
 #!/bin/bash
-set -euo pipefail
+set -euxo pipefail
 
 
 SD="$(dirname "${BASH_SOURCE[0]}")"
