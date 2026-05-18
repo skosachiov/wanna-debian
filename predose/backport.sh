@@ -118,7 +118,6 @@ while [[ -s "$filename.bin" ]]; do
     fi # removeonly
 
     echo -n > $next_filename.bin.tmp
-    echo -n > $next_filename.bin
     cat $filename.bin >> $next_filename.bin
 
     grepunsat() {
