@@ -210,12 +210,7 @@ cat /tmp/bootstrap.list | backport bootstrap stable empty
 
 ```
 dose-debcheck --latest 1 --deb-native-arch=amd64 -e -f bootstrap_Packages \
-        | grep -P "^\s{6}(unsat-|package:)" | paste - - | sort | uniq -c | sort -nr
-```
-
-```
-dose-debcheck --latest 1 --deb-native-arch=amd64 -e -f bootstrap_Packages | grep -B 3 -P "^\s{6}unsat-" \
-        | grep -e package: | awk '{print $2}' | sort -u > to-backport.list
+        | grep -P -A 5 "^\s{5}pkg1?:" | grep -P "^\s{6}(unsat-|package:)" | paste - - | sort | uniq -c | sort -nr
 ```
 
 `grep-dctrl -n -s Package,Version -P '' bootstrap_Sources | tr -s "\n" | paste -d = - - | sort -u`

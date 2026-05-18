@@ -61,7 +61,7 @@ counter=0
 
 filename=$(printf "%s.%03d" "$base_name" $counter)
 
-cat > $filename.bin
+cat > "$filename.bin"
 
 echo "" | python3 $SD/predose.py --log-file $base_name.log $2_Packages $3_Packages > ${base_name}_Packages
 echo "" | python3 $SD/predose.py --log-file $base_name.log $2_Sources $3_Sources > ${base_name}_Sources
@@ -115,36 +115,40 @@ while [[ -s "$filename.bin" ]]; do
 
     echo -n > $next_filename.bin
     cat $filename.bin >> $next_filename.bin
-    
-    if [ "$OPT_REMOVEONLY" = false ]; then
-        GREP_UNSAT="^\s{6}unsat-.*\((<|=)"
-    else
-        GREP_UNSAT="^\s{6}unsat-.*\("
-    fi
+
+    grepunsat() {
+        grep -P -A 5 "^\s{5}pkg1?:" | grep -P "^\s{6}(unsat-|package:)" | paste - - | sort -u | tee \
+        | awk -v OPT="$OPT_REMOVEONLY" '
+            {
+            pkg = $2
+            dep = $4
+            sub(/:.*/, "", dep)
+            if (OPT == "true")
+                print pkg
+            else if ($0 ~ /unsat-dependency:.*\([<=]/)
+                print pkg
+            else
+                print dep
+            }' | sort -u >> $next_filename.bin
+    }
 
     # check binary packages in dependencies, broken due to low dependent versions
     if [ "$OPT_CHECKONLY" = true ]; then
-        EXTRA_PARAMS=(--checkonly "$(paste -sd, <(cat $base_name.*.bin | sort -u | grep -v "^\s*$"))")
+        EXTRA_PARAMS=(--checkonly "$(paste -sd, <(cat $filename.bin | sort -u | grep -v "^\s*$"))")
     fi
-    dose-debcheck "${EXTRA_PARAMS[@]}" --latest 1 --deb-native-arch=amd64 -e -f ${base_name}_Packages | tee \
-        >(grep "unsat-dependency:" | sed 's/unsat-dependency: //' |  tr '|' '\n' | awk '{print $1}' \
-            | cut -d: -f1 | grep -v '^[|(>=]*$' | sort -u >> $next_filename.bin) \
-        >(grep -B 4 -P "$GREP_UNSAT" | grep -oP '(package:|version:) \K\S+' | paste -d "=" - - | sort -u >> $next_filename.bin) \
-        >> ${base_name}.debcheck.log &
+    dose-debcheck "${EXTRA_PARAMS[@]}" --latest 1 --deb-native-arch=amd64 -e -f ${base_name}_Packages \
+        | grepunsat >> ${base_name}.debcheck.log &
 
     pid=$!
 
     # check src and append to bin, broken due to low dependent versions
     if [ "$OPT_CHECKONLY" = true ]; then
-        EXTRA_PARAMS=(--checkonly "$(paste -sd, <(cat $base_name.*.bin | sort -u \
+        EXTRA_PARAMS=(--checkonly "$(paste -sd, <(cat $filename.bin | sort -u \
             | python3 $SD/predose.py --log-file $base_name.log --resolve-src $2_Packages | grep -v "^\s*$"))")
     fi
     if [ "$OPT_BINONLY" = false ]; then
-    dose-builddebcheck "${EXTRA_PARAMS[@]}" --latest 1 --deb-native-arch=amd64 -e -f ${base_name}_Packages ${base_name}_Sources | tee \
-        >(grep "unsat-dependency:" | sed 's/unsat-dependency: //' |  tr '|' '\n' | awk '{print $1}' \
-            | cut -d: -f1 | grep -v '^[|(>=]*$' | sort -u >> $next_filename.bin) \
-        >(grep -B 4 -P "$GREP_UNSAT" | grep -oP '(package:|version:) \K\S+' | paste -d "=" - - | sort -u >> $next_filename.bin) \
-        >> ${base_name}.builddebcheck.log
+    dose-builddebcheck "${EXTRA_PARAMS[@]}" --latest 1 --deb-native-arch=amd64 -e -f ${base_name}_Packages ${base_name}_Sources \
+        | grepunsat >> ${base_name}.builddebcheck.log
     fi
 
     wait $pid
