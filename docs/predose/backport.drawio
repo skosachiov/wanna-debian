@@ -99,13 +99,13 @@
             <mxRectangle height="30" width="90" x="500" y="830" as="alternateBounds" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="jdkO46tf3qpjO2ybV3Zm-29" parent="jdkO46tf3qpjO2ybV3Zm-28" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" value="Testing pkg requires a new dep" vertex="1">
+        <mxCell id="jdkO46tf3qpjO2ybV3Zm-29" parent="jdkO46tf3qpjO2ybV3Zm-28" style="text;strokeColor=default;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" value="Testing pkg requires a new dep" vertex="1">
           <mxGeometry height="30" width="253" y="30" as="geometry" />
         </mxCell>
-        <mxCell id="jdkO46tf3qpjO2ybV3Zm-30" parent="jdkO46tf3qpjO2ybV3Zm-28" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" value="Stable pkg requires dep&amp;nbsp; (&amp;lt;= version)" vertex="1">
+        <mxCell id="jdkO46tf3qpjO2ybV3Zm-30" parent="jdkO46tf3qpjO2ybV3Zm-28" style="text;strokeColor=default;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" value="Stable pkg requires dep&amp;nbsp; (&amp;lt;= version)" vertex="1">
           <mxGeometry height="30" width="253" y="60" as="geometry" />
         </mxCell>
-        <mxCell id="BYnsBLyXqSKAvp99Cp04-0" parent="jdkO46tf3qpjO2ybV3Zm-28" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" value="Pkg dependent on ABI deps&amp;nbsp;" vertex="1">
+        <mxCell id="BYnsBLyXqSKAvp99Cp04-0" parent="jdkO46tf3qpjO2ybV3Zm-28" style="text;strokeColor=default;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" value="Pkg dependent on ABI deps" vertex="1">
           <mxGeometry height="30" width="253" y="90" as="geometry" />
         </mxCell>
         <mxCell id="jdkO46tf3qpjO2ybV3Zm-53" edge="1" parent="WIyWlLk6GJQsqaUBKTNV-1" source="jdkO46tf3qpjO2ybV3Zm-33" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.25;entryY=0;entryDx=0;entryDy=0;" target="jdkO46tf3qpjO2ybV3Zm-35">

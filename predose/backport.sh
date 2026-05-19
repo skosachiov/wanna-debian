@@ -65,20 +65,24 @@ counter=0
 filename=$(printf "%s.%03d" "$base_name" $counter)
 
 cat > "$filename.bin"
+echo -n > $filename.src
 
 echo "" | python3 $SD/predose.py --log-file $base_name.log $2_Packages $3_Packages > ${base_name}_Packages
 echo "" | python3 $SD/predose.py --log-file $base_name.log $2_Sources $3_Sources > ${base_name}_Sources
 
 echo ""
 
-while [[ -s "$filename.bin" ]]; do
+while [[ -s "$filename.bin" && -s "$filename.src" ]]; do
 
     ((counter++)) || true
     next_filename=$(printf "%s.%03d" "$base_name" $counter)
 
-    # resolve to src on orig, resolve src to bins on target, remove from target bin
+    # resolve to src on orig
     cat $filename.bin \
-        | python3 $SD/predose.py --log-file $base_name.log --resolve-src $2_Packages \
+        | python3 $SD/predose.py --log-file $base_name.log --resolve-src $2_Packages >> $filename.src
+
+    # resolve src to bins on target, remove from target bin
+    cat $filename.src \
         | python3 $SD/predose.py --log-file $base_name.log --resolve-bin ${base_name}_Packages \
         | python3 $SD/predose.py --log-file $base_name.log --remove ${base_name}_Packages > ${base_name}_Packages.tmp && \
         mv -f ${base_name}_Packages.tmp ${base_name}_Packages
@@ -89,8 +93,7 @@ while [[ -s "$filename.bin" ]]; do
 
     if [ "$OPT_BINONLY" = false ]; then
     # resolve to src on orig, remove from target src
-    cat $filename.bin \
-        | python3 $SD/predose.py --log-file $base_name.log --resolve-src $2_Packages \
+    cat $filename.src \
         | python3 $SD/predose.py --log-file $base_name.log --remove ${base_name}_Sources > ${base_name}_Sources.tmp && \
         mv -f ${base_name}_Sources.tmp ${base_name}_Sources
     fi
@@ -104,8 +107,7 @@ while [[ -s "$filename.bin" ]]; do
 
     # all-bin implantation
     if [ "$OPT_ALLBIN" = true ]; then
-    cat $filename.bin \
-        | python3 $SD/predose.py --log-file $base_name.log --resolve-src $2_Packages \
+    cat $filename.src \
         | python3 $SD/predose.py --log-file $base_name.log --resolve-bin $2_Packages \
         | python3 $SD/predose.py --log-file $base_name.log $2_Packages ${base_name}_Packages > ${base_name}_Packages.tmp && \
         mv -f ${base_name}_Packages.tmp ${base_name}_Packages
@@ -113,8 +115,7 @@ while [[ -s "$filename.bin" ]]; do
 
     if [ "$OPT_BINONLY" = false ]; then
     # src implantation
-    cat $filename.bin \
-        | python3 $SD/predose.py --log-file $base_name.log --resolve-src $2_Packages \
+    cat $filename.src\
         | python3 $SD/predose.py --log-file $base_name.log $2_Sources ${base_name}_Sources > ${base_name}_Sources.tmp && \
         mv -f ${base_name}_Sources.tmp ${base_name}_Sources
     fi
@@ -122,6 +123,7 @@ while [[ -s "$filename.bin" ]]; do
     fi # removeonly
 
     cat $filename.bin >> $next_filename.bin
+    cat $filename.src >> $next_filename.src
 
     grepunsat() {
         grep -P -A 5 "^\s{5}pkg1?:" | grep -P "^\s{6}(unsat-|package:)" | paste - - | sort -u
@@ -154,8 +156,7 @@ while [[ -s "$filename.bin" ]]; do
 
     # check src and append to bin, broken due to low dependent versions
     if [ "$OPT_CHECKONLY" = true ]; then
-        EXTRA_PARAMS=(--checkonly "$(paste -sd, <(cat $filename.bin | sort -u \
-            | python3 $SD/predose.py --log-file $base_name.log --resolve-src $2_Packages | grep -v "^\s*$"))")
+        EXTRA_PARAMS=(--checkonly "$(paste -sd, <(cat $filename.src | sort -u | grep -v "^\s*$"))")
     fi
     if [ "$OPT_BINONLY" = false ]; then
     dose-builddebcheck "${EXTRA_PARAMS[@]}" --latest 1 --deb-native-arch=amd64 -e -f ${base_name}_Packages ${base_name}_Sources \
@@ -168,8 +169,9 @@ while [[ -s "$filename.bin" ]]; do
     cat ${base_name}.builddebcheck.log.tmp | grepunsat | awkunsat | sort -u >> $next_filename.bin || true
 
     # select packages dependent on deps missing from the origin
-    cat ${base_name}.debcheck.log.tmp | grepunsat \
-        | awk -v pkg_file="$2_Packages" \
+    dependentonmissing() {
+        local pkg_file="$1"
+        awk -v pkg_file="$pkg_file" \
         '
         function isinmetadata(dep) {
             cmd = "grep-dctrl -q -X -F Package " dep " " pkg_file
@@ -182,7 +184,11 @@ while [[ -s "$filename.bin" ]]; do
             if (!isinmetadata(dep)) {
                 print pkg
             }
-        }' >> $next_filename.bin || true
+        }'
+    }
+
+    cat ${base_name}.debcheck.log.tmp | grepunsat | dependentonmissing "$2_Packages" >> $next_filename.bin || true
+    cat ${base_name}.builddebcheck.log.tmp | grepunsat | dependentonmissing "$2_Packages" >> $next_filename.src || true
 
     # print
     echo -n "$filename: "
@@ -195,11 +201,13 @@ while [[ -s "$filename.bin" ]]; do
 
     sort -u -o "$filename.bin" "$filename.bin"
     sort -u -o "$next_filename.bin" "$next_filename.bin"
+    sort -u -o "$filename.src" "$filename.src"
+    sort -u -o "$next_filename.src" "$next_filename.src"
 
     cp -f ${base_name}_Sources ${base_name}_Sources.prev
     cp -f ${base_name}_Packages ${base_name}_Packages.prev
 
-    if cmp -s "$filename.bin" "$next_filename.bin"; then
+    if cmp -s "$filename.bin" "$next_filename.bin" && cmp -s "$filename.src" "$next_filename.src"; then
         echo "Stopping: '$next_filename' has identical content to '$filename'"
         exit 0
     fi
