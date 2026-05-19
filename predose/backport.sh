@@ -72,7 +72,7 @@ echo "" | python3 $SD/predose.py --log-file $base_name.log $2_Sources $3_Sources
 
 echo ""
 
-while [[ -s "$filename.bin" && -s "$filename.src" ]]; do
+while true; do
 
     ((counter++)) || true
     next_filename=$(printf "%s.%03d" "$base_name" $counter)
@@ -219,5 +219,3 @@ while [[ -s "$filename.bin" && -s "$filename.src" ]]; do
 
     filename="$next_filename"
 done
-
-echo "Stopping: '$filename.bin' is empty"
