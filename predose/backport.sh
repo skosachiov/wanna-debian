@@ -65,7 +65,8 @@ counter=0
 filename=$(printf "%s.%03d" "$base_name" $counter)
 
 cat > "$filename.bin"
-echo -n > $filename.src
+cat $filename.bin \
+    | python3 $SD/predose.py --log-file $base_name.log --resolve-src $2_Packages > $filename.src
 
 echo "" | python3 $SD/predose.py --log-file $base_name.log $2_Packages $3_Packages > ${base_name}_Packages
 echo "" | python3 $SD/predose.py --log-file $base_name.log $2_Sources $3_Sources > ${base_name}_Sources
@@ -79,9 +80,7 @@ while true; do
 
     # resolve to src on orig and target
     cat $filename.bin \
-        | python3 $SD/predose.py --log-file $base_name.log --resolve-src $2_Packages >> $filename.src
-    cat $filename.bin \
-        | python3 $SD/predose.py --log-file $base_name.log --resolve-src $3_Packages >> $filename.src
+        | python3 $SD/predose.py --log-file $base_name.log --resolve-src ${base_name}_Packages >> $filename.src
 
     # resolve src to bins on target, remove from target bin
     cat $filename.src \
