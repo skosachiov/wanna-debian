@@ -122,8 +122,8 @@ while true; do
 
     fi # removeonly
 
-    cat $filename.bin >> $next_filename.bin
-    cat $filename.src >> $next_filename.src
+    echo -n > $next_filename.bin
+    echo -n > $next_filename.src
 
     grepunsat() {
         grep -P -A 5 "^\s{5}pkg1?:" | grep -P "^\s{6}(unsat-|package:)" | paste - - | sort -u
@@ -147,7 +147,7 @@ while true; do
 
     # check binary packages in dependencies, broken due to low dependent versions
     if [ "$OPT_CHECKONLY" = true ]; then
-        EXTRA_PARAMS=(--checkonly "$(paste -sd, <(cat $filename.bin | sort -u | grep -v "^\s*$"))")
+        EXTRA_PARAMS=(--checkonly "$(paste -sd, <(cat $filename.bin.* | sort -u | grep -v "^\s*$"))")
     fi
     dose-debcheck "${EXTRA_PARAMS[@]}" --latest 1 --deb-native-arch=amd64 -e -f ${base_name}_Packages \
         > ${base_name}.debcheck.log.tmp || true &
@@ -156,7 +156,7 @@ while true; do
 
     # check src and append to bin, broken due to low dependent versions
     if [ "$OPT_CHECKONLY" = true ]; then
-        EXTRA_PARAMS=(--checkonly "$(paste -sd, <(cat $filename.src | sort -u | grep -v "^\s*$"))")
+        EXTRA_PARAMS=(--checkonly "$(paste -sd, <(cat $filename.src.* | sort -u | grep -v "^\s*$"))")
     fi
     if [ "$OPT_BINONLY" = false ]; then
     dose-builddebcheck "${EXTRA_PARAMS[@]}" --latest 1 --deb-native-arch=amd64 -e -f ${base_name}_Packages ${base_name}_Sources \
