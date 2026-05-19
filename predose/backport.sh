@@ -109,7 +109,7 @@ while [[ -s "$filename.bin" ]]; do
         | python3 $SD/predose.py --log-file $base_name.log --resolve-bin $2_Packages \
         | python3 $SD/predose.py --log-file $base_name.log $2_Packages ${base_name}_Packages > ${base_name}_Packages.tmp && \
         mv -f ${base_name}_Packages.tmp ${base_name}_Packages
-    fi        
+    fi
 
     if [ "$OPT_BINONLY" = false ]; then
     # src implantation
@@ -124,20 +124,23 @@ while [[ -s "$filename.bin" ]]; do
     cat $filename.bin >> $next_filename.bin
 
     grepunsat() {
-        grep -P -A 5 "^\s{5}pkg1?:" | grep -P "^\s{6}(unsat-|package:)" | paste - - | sort -u \
-            | awk -v OPT="$OPT_REMOVEONLY" '{
-                pkg = $2
-                dep = $4
-                sub(/:.*/, "", dep)
-                if (OPT == "true")
+        grep -P -A 5 "^\s{5}pkg1?:" | grep -P "^\s{6}(unsat-|package:)" | paste - - | sort -u
+    }
+
+    awkunsat() {
+        awk -v OPT="$OPT_REMOVEONLY" '{
+            pkg = $2
+            dep = $4
+            sub(/:.*/, "", dep)
+            if (OPT == "true")
+                print pkg
+            else {
+                if ($0 ~ /unsat-dependency:.*\([<=]/) {
                     print pkg
-                else {
-                    if ($0 ~ /unsat-dependency:.*\([<=]/) {
-                        print pkg
-                    }
-                    print dep
                 }
-            }' | sort -u >> $next_filename.bin || true
+                print dep
+            }
+        }'
     }
 
     # check binary packages in dependencies, broken due to low dependent versions
@@ -161,8 +164,25 @@ while [[ -s "$filename.bin" ]]; do
 
     wait $pid || true
 
-    cat ${base_name}.debcheck.log.tmp | grepunsat >> $next_filename.bin || true
-    cat ${base_name}.builddebcheck.log.tmp | grepunsat >> $next_filename.bin || true
+    cat ${base_name}.debcheck.log.tmp | grepunsat | awkunsat | sort -u >> $next_filename.bin || true
+    cat ${base_name}.builddebcheck.log.tmp | grepunsat | awkunsat | sort -u >> $next_filename.bin || true
+
+    # select packages dependent on deps missing from the origin
+    cat ${base_name}.debcheck.log.tmp | grepunsat \
+        | awk -v pkg_file="$2_Packages" \
+        '
+        function isinmetadata(dep) {
+            cmd = "grep-dctrl -q -X -F Package " dep " " pkg_file
+            return (system(cmd) == 0)
+        }
+        {
+            pkg = $2
+            dep = $4
+            sub(/:.*/, "", dep)
+            if (!isinmetadata(dep)) {
+                print pkg
+            }
+        }' >> $next_filename.bin || true
 
     # print
     echo -n "$filename: "

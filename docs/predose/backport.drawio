@@ -95,7 +95,7 @@
           <mxGeometry height="60" width="120" x="610" y="330" as="geometry" />
         </mxCell>
         <mxCell id="jdkO46tf3qpjO2ybV3Zm-28" parent="WIyWlLk6GJQsqaUBKTNV-1" style="swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=30;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" value="Problems" vertex="1">
-          <mxGeometry height="90" width="253" x="271" y="600" as="geometry">
+          <mxGeometry height="120" width="253" x="271" y="600" as="geometry">
             <mxRectangle height="30" width="90" x="500" y="830" as="alternateBounds" />
           </mxGeometry>
         </mxCell>
@@ -105,11 +105,14 @@
         <mxCell id="jdkO46tf3qpjO2ybV3Zm-30" parent="jdkO46tf3qpjO2ybV3Zm-28" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" value="Stable pkg requires dep&amp;nbsp; (&amp;lt;= version)" vertex="1">
           <mxGeometry height="30" width="253" y="60" as="geometry" />
         </mxCell>
+        <mxCell id="BYnsBLyXqSKAvp99Cp04-0" parent="jdkO46tf3qpjO2ybV3Zm-28" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" value="Pkg dependent on ABI deps&amp;nbsp;" vertex="1">
+          <mxGeometry height="30" width="253" y="90" as="geometry" />
+        </mxCell>
         <mxCell id="jdkO46tf3qpjO2ybV3Zm-53" edge="1" parent="WIyWlLk6GJQsqaUBKTNV-1" source="jdkO46tf3qpjO2ybV3Zm-33" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.25;entryY=0;entryDx=0;entryDy=0;" target="jdkO46tf3qpjO2ybV3Zm-35">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="jdkO46tf3qpjO2ybV3Zm-33" parent="WIyWlLk6GJQsqaUBKTNV-1" style="rounded=0;whiteSpace=wrap;html=1;" value="Upd dep from Testing" vertex="1">
-          <mxGeometry height="60" width="120" x="270" y="830" as="geometry" />
+          <mxGeometry height="60" width="120" x="94" y="830" as="geometry" />
         </mxCell>
         <mxCell id="jdkO46tf3qpjO2ybV3Zm-54" edge="1" parent="WIyWlLk6GJQsqaUBKTNV-1" source="jdkO46tf3qpjO2ybV3Zm-34" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="jdkO46tf3qpjO2ybV3Zm-35">
           <mxGeometry relative="1" as="geometry" />
@@ -178,6 +181,12 @@
           </mxGeometry>
         </mxCell>
         <mxCell id="agVh6EhSCwiN8bkbG3hr-0" edge="1" parent="WIyWlLk6GJQsqaUBKTNV-1" source="jdkO46tf3qpjO2ybV3Zm-29" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="jdkO46tf3qpjO2ybV3Zm-33">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="BYnsBLyXqSKAvp99Cp04-1" parent="WIyWlLk6GJQsqaUBKTNV-1" style="shape=process;whiteSpace=wrap;html=1;backgroundOutline=1;" value="Remove pkg" vertex="1">
+          <mxGeometry height="35" width="100" x="240" y="760" as="geometry" />
+        </mxCell>
+        <mxCell id="BYnsBLyXqSKAvp99Cp04-2" edge="1" parent="WIyWlLk6GJQsqaUBKTNV-1" source="BYnsBLyXqSKAvp99Cp04-0" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="BYnsBLyXqSKAvp99Cp04-1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
       </root>
