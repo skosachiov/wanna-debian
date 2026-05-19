@@ -77,9 +77,11 @@ while true; do
     ((counter++)) || true
     next_filename=$(printf "%s.%03d" "$base_name" $counter)
 
-    # resolve to src on orig
+    # resolve to src on orig and target
     cat $filename.bin \
         | python3 $SD/predose.py --log-file $base_name.log --resolve-src $2_Packages >> $filename.src
+    cat $filename.bin \
+        | python3 $SD/predose.py --log-file $base_name.log --resolve-src $3_Packages >> $filename.src
 
     # resolve src to bins on target, remove from target bin
     cat $filename.src \
