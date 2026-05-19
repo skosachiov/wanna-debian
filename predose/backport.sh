@@ -7,7 +7,7 @@ SD="$(dirname "${BASH_SOURCE[0]}")"
 
 # print help
 if [ -z "$1" ] || [ "$1" = "--help" ] || [ "$1" = "-h" ]; then
-    echo "Usage: cat <pkgslist> | backport [--checkonly] [--binonly] [--removeonly] [--allbin] <basename> <newerprefix> <olderprefix>"
+    echo "Usage: cat <pkgslist> | backport [--checkonly] [--binonly] [--removeonly] [--onlyunsat] <basename> <newerprefix> <olderprefix>"
     echo ""
     echo "The script backport expects to find the following metadata files in the current directory:"
     echo "newerprefix_Packages, newerprefix_Sources, olderprefix_Packages, olderprefix_Sources"
@@ -20,7 +20,7 @@ fi
 OPT_CHECKONLY=false
 OPT_BINONLY=false
 OPT_REMOVEONLY=false
-OPT_ALLBIN=false
+OPT_ONLYUNSAT=false
 EXTRA_PARAMS=()
 # Process options
 while [[ $# -gt 0 ]]; do
@@ -37,8 +37,8 @@ while [[ $# -gt 0 ]]; do
             OPT_REMOVEONLY=true
             shift
             ;;
-        --allbin)
-            OPT_ALLBIN=true
+        --onlyunsat)
+            OPT_ONLYUNSAT=true
             shift
             ;;
         *)
@@ -107,7 +107,7 @@ while true; do
         mv -f ${base_name}_Packages.tmp ${base_name}_Packages
 
     # all-bin implantation
-    if [ "$OPT_ALLBIN" = true ]; then
+    if [ "$OPT_ONLYUNSAT" = false ]; then
     cat $filename.src \
         | python3 $SD/predose.py --log-file $base_name.log --resolve-bin $2_Packages \
         | python3 $SD/predose.py --log-file $base_name.log $2_Packages ${base_name}_Packages > ${base_name}_Packages.tmp && \
