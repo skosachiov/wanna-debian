@@ -201,9 +201,9 @@ while true; do
 
     # print
     echo -n "$filename: "
-    grep -P '^[a-z]+\-packages:' ${base_name}.debcheck.log.tmp | sed "s/-packages//" | paste -sd ' ' | tr -d '\n' || true
+    grep -P '^[a-z]+\-packages:' ${base_name}.debcheck.log.tmp | sed "s/-packages//" | paste -sd '\t' | tr -d '\n' || true
     echo -n " "
-    grep -P '^[a-z]+\-packages:' ${base_name}.builddebcheck.log.tmp | sed "s/-packages//" | paste -sd ' ' || true
+    grep -P '^[a-z]+\-packages:' ${base_name}.builddebcheck.log.tmp | sed "s/-packages//" | paste -sd '\t' || true
 
     cat ${base_name}.debcheck.log.tmp >> ${base_name}.debcheck.log
     cat ${base_name}.builddebcheck.log.tmp >> ${base_name}.builddebcheck.log
