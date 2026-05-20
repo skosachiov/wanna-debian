@@ -156,7 +156,7 @@ while true; do
 
     # check binary packages in dependencies, broken due to low dependent versions
     if [ "$OPT_CHECKONLY" = true ]; then
-        EXTRA_PARAMS=(--checkonly "$(paste -sd, <(cat ${base_name}.*.bin | sort -u | grep -v "^\s*$"))")
+        EXTRA_PARAMS=(--checkonly "$(paste -sd, <(cat ${base_name}.*.bin | sort -u | grep -v "^\s*$" | sed 's/$/:amd64/'))")
     fi
     dose-debcheck "${EXTRA_PARAMS[@]}" --latest 1 --deb-native-arch=amd64 -e -f ${base_name}_Packages \
         > ${base_name}.debcheck.log.tmp || true &
@@ -165,7 +165,7 @@ while true; do
 
     # check src and append to bin, broken due to low dependent versions
     if [ "$OPT_CHECKONLY" = true ]; then
-        EXTRA_PARAMS=(--checkonly "$(paste -sd, <(cat ${base_name}.*.src | sort -u | grep -v "^\s*$"))")
+        EXTRA_PARAMS=(--checkonly "$(paste -sd, <(cat ${base_name}.*.src | sort -u | grep -v "^\s*$" | sed 's/$/:amd64/'))")
     fi
     if [ "$OPT_BINONLY" = false ]; then
     dose-builddebcheck "${EXTRA_PARAMS[@]}" --latest 1 --deb-native-arch=amd64 -e -f ${base_name}_Packages ${base_name}_Sources \
