@@ -12,7 +12,7 @@ if [ -z "$1" ] || [ "$1" = "--help" ] || [ "$1" = "-h" ]; then
     echo "The script backport expects to find the following metadata files in the current directory:"
     echo "newerprefix_Packages, newerprefix_Sources, olderprefix_Packages, olderprefix_Sources"
     echo ""
-    echo "Example: echo gnome-core | backport gnome-core sid trixie"
+    echo "Example: echo gnome-core | backport gnome-core testing stable"
     echo "Example: cat debootstrap.list | backport minimal sid empty"
     exit 0
 fi
@@ -143,7 +143,15 @@ while true; do
                 if ($0 ~ /unsat-dependency:.*\([<=]/) {
                     print pkg
                 }
-                print dep
+                else {
+                    dep_part = $0
+                    sub(/.*unsat-dependency: /, "", dep_part)
+                    n = split(dep_part, deps, " \\| ")
+                    for (i = 1; i <= n; i++) {
+                        gsub(/:.*/, "", deps[i])
+                        print deps[i]
+                    }
+                }
             }
         }'
     }
