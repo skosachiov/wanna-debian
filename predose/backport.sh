@@ -143,7 +143,13 @@ while true; do
                 if ($0 ~ /unsat-dependency:.*\([<=]/) {
                     print pkg
                 }
-                print dep
+                dep_part = $0
+                sub(/.*unsat-dependency: /, "", dep_part)
+                n = split(dep_part, deps, " \\| ")
+                for (i = 1; i <= n; i++) {
+                    gsub(/:.*/, "", deps[i])
+                    print deps[i]
+                }
             }
         }'
     }
