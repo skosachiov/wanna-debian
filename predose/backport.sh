@@ -80,7 +80,9 @@ while true; do
 
     # resolve to src on orig and target
     cat $filename.bin \
-        | python3 $SD/predose.py --log-file $base_name.log --resolve-src ${base_name}_Packages >> $filename.src
+        | python3 $SD/predose.py --log-file $base_name.log --resolve-src $2_Packages >> $filename.src
+    cat $filename.bin \
+        | python3 $SD/predose.py --log-file $base_name.log --resolve-src $3_Packages >> $filename.src
 
     # resolve src to bins on target, remove from target bin
     cat $filename.src \
@@ -116,7 +118,7 @@ while true; do
 
     if [ "$OPT_BINONLY" = false ]; then
     # src implantation
-    cat $filename.src\
+    cat $filename.src \
         | python3 $SD/predose.py --log-file $base_name.log $2_Sources ${base_name}_Sources > ${base_name}_Sources.tmp && \
         mv -f ${base_name}_Sources.tmp ${base_name}_Sources
     fi
