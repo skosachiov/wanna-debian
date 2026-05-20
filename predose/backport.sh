@@ -143,15 +143,7 @@ while true; do
                 if ($0 ~ /unsat-dependency:.*\([<=]/) {
                     print pkg
                 }
-                else {
-                    dep_part = $0
-                    sub(/.*unsat-dependency: /, "", dep_part)
-                    n = split(dep_part, deps, " \\| ")
-                    for (i = 1; i <= n; i++) {
-                        gsub(/:.*/, "", deps[i])
-                        print deps[i]
-                    }
-                }
+                print dep
             }
         }'
     }
@@ -203,9 +195,9 @@ while true; do
 
     # print
     echo -n "$filename: "
-    grep '\-packages:' ${base_name}.debcheck.log.tmp | sed "s/-packages//" | paste - - | tr -d '\n' || true
+    grep -P '^\[a-z]+\-packages:' ${base_name}.debcheck.log.tmp | sed "s/-packages//" | paste - - | tr -d '\n' || true
     echo -n " "
-    grep '\-packages:' ${base_name}.builddebcheck.log.tmp | sed "s/-packages//" | paste - - - || true
+    grep -P '^\[a-z]+\-packages:' ${base_name}.builddebcheck.log.tmp | sed "s/-packages//" | paste - - - || true
 
     cat ${base_name}.debcheck.log.tmp >> ${base_name}.debcheck.log
     cat ${base_name}.builddebcheck.log.tmp >> ${base_name}.builddebcheck.log
