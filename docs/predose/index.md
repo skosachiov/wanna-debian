@@ -89,7 +89,7 @@ or
 ```
 echo gnome-core | pre-dose -e 2 testing_Packages 2> /dev/null \
 | xargs -I {} grep-dctrl -P -n -e "^{}$" -s Package,Version,Maintainer,Section testing_Packages \
-| tr -s "\n" | paste -d ' ' - - - - | grep 'GNOME Maintainers' | cut -f 1 -d ' ' > gnome.list 
+| tr -s "\n" | paste -d ' ' - - - - | grep 'GNOME Maintainers' | cut -f 1 -d ' ' > gnome.list
 ```
 
 or
@@ -97,7 +97,7 @@ or
 ```
 echo kde-plasma-desktop | pre-dose -e 2 testing_Packages 2> /dev/null \
 | xargs -I {} grep-dctrl -P -n -e "^{}$" -s Package,Version,Maintainer,Section testing_Packages \
-| tr -s "\n" | paste -d ' ' - - - - | grep 'KDE Main' | cut -f 1 -d ' ' > kde.list 
+| tr -s "\n" | paste -d ' ' - - - - | grep 'KDE Main' | cut -f 1 -d ' ' > kde.list
 ```
 
 ### convert to binary
@@ -259,5 +259,5 @@ comm -23 <(grep-dctrl -n -s Package,Version -P '' gnome-core_Packages | tr -s "\
 ```
 comm -23 <(grep-dctrl -n -s Package,Version -P '' gnome-core_Packages | tr -s "\n" \
 | paste -d = - - | sort -u) <(grep-dctrl -n -s Package,Version -P '' t202501_Packages | tr -s "\n" | paste -d = - - | sort -u) \
-| pre-dose -s -p stable_Packages stable_Sources stable_Sources
+| pre-dose -s stable_Packages
 ```
