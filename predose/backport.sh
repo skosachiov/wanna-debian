@@ -71,7 +71,7 @@ cat $filename.bin \
 echo "" | python3 $SD/predose.py --log-file $base_name.log $2_Packages $3_Packages > ${base_name}_Packages
 echo "" | python3 $SD/predose.py --log-file $base_name.log $2_Sources $3_Sources > ${base_name}_Sources
 
-grep-dctrl -s Package -n '' > ${base_name}.origin.list
+grep-dctrl -s Package -n '' $2_Packages > ${base_name}.origin.list
 
 echo ""
 
