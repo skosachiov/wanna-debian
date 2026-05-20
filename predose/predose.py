@@ -369,7 +369,7 @@ def main():
             pkg_name = line_left_side
         else:
             pkg_name = resolve_pkg_name(line_left_side, origin, src_dict, prov_dict)
-            
+
         if pkg_name is not None: packages.add(pkg_name)
 
         # Handle different operation modes via dedicated functions (all return strings)
@@ -394,9 +394,9 @@ def main():
         else:
             logging.error(f'No deletion request and package name is not resolved: {line_left_side}')
 
-    # Print collected output for resolve/depends modes
-    if result:
-        print(result)
+        # Print collected output for resolve/depends modes
+        if result:
+            print(result)
 
     # Perform topological sort if requested (prints directly)
     if args.topo_sort:
