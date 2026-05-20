@@ -165,7 +165,7 @@ while true; do
 
     # check src and append to bin, broken due to low dependent versions
     if [ "$OPT_CHECKONLY" = true ]; then
-        EXTRA_PARAMS=(--checkonly "$(paste -sd, <(cat ${base_name}.*.src | sort -u | grep -v "^\s*$" | sed 's/$/:all/'))")
+        EXTRA_PARAMS=(--checkonly "$(paste -sd, <(cat ${base_name}.*.src | sort -u | grep -v "^\s*$"))")
     fi
     if [ "$OPT_BINONLY" = false ]; then
     dose-builddebcheck "${EXTRA_PARAMS[@]}" --latest 1 --deb-native-arch=amd64 -e -f ${base_name}_Packages ${base_name}_Sources \
