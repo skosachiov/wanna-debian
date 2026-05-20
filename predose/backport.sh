@@ -71,6 +71,8 @@ cat $filename.bin \
 echo "" | python3 $SD/predose.py --log-file $base_name.log $2_Packages $3_Packages > ${base_name}_Packages
 echo "" | python3 $SD/predose.py --log-file $base_name.log $2_Sources $3_Sources > ${base_name}_Sources
 
+grep-dctrl -s Package -n '' > ${base_name}.origin.list
+
 echo ""
 
 while true; do
@@ -179,11 +181,11 @@ while true; do
 
     # select packages dependent on deps missing from the origin
     dependentonmissing() {
-        local pkg_file="$1"
-        awk -v pkg_file="$pkg_file" \
+        local pkg_list_file="$1"
+        awk -v pkg_list_file="$pkg_list_file" \
         '
         function isinmetadata(dep) {
-            cmd = "grep-dctrl -q -X -F Package " dep " " pkg_file
+            cmd = "grep ^" dep "$ " pkg_list_file
             return (system(cmd) == 0)
         }
         {
@@ -196,8 +198,8 @@ while true; do
         }'
     }
 
-    cat ${base_name}.debcheck.log.tmp | grepunsat | dependentonmissing "$2_Packages" >> $next_filename.bin || true
-    cat ${base_name}.builddebcheck.log.tmp | grepunsat | dependentonmissing "$2_Packages" >> $next_filename.src || true
+    cat ${base_name}.debcheck.log.tmp | grepunsat | dependentonmissing ${base_name}.origin.list >> $next_filename.bin || true
+    cat ${base_name}.builddebcheck.log.tmp | grepunsat | dependentonmissing ${base_name}.origin.list >> $next_filename.src || true
 
     # print
     echo -n "$filename: "
