@@ -78,3 +78,13 @@ EXAMPLE,{{ dist }}, {% for item in items %} {{item.source}}={{item.source_versio
 ```
 find metadata/ -name Packages -type f -exec sh -c 'echo {} | cut -f 3,4 -d\/; grep-dctrl -n -s Package,Version,Section -P "" {} \
     | tr -s "\n" | paste -d = - - - | sed "s/^/    /" | grep -h " gnome-shell=" ' \;
+```
+
+## extract last-modified from pool
+
+```
+echo vim | distrotracker --hold --find --local-dir metadata-debian --dist trixie --source --build binary-amd64 \
+| jq -c -r '.[] | "https://ftp.debian.org/debian/\(.filename)"' \
+| xargs -I {} sh -c 'url="{}"; echo "$(basename "$url" | sed "s/_.*//") \
+$(curl -sI "$url" | grep -i last-modified | sed "s/^last-modified: //I" | date -f - +%Y-%m-%dT%H:%M:%S%z)"'
+```
