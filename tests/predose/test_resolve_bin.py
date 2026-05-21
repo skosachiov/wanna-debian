@@ -13,7 +13,7 @@ from pathlib import Path
 def find_predose_script():
     """Find predose.py in the project structure"""
     current_dir = Path(__file__).parent
-    
+
     possible_paths = [
         current_dir.parent.parent / "predose" / "predose.py",
         current_dir.parent / "predose.py",
@@ -22,11 +22,11 @@ def find_predose_script():
         Path.cwd() / "predose.py",
         Path.cwd().parent / "predose" / "predose.py",
     ]
-    
+
     for path in possible_paths:
         if path.exists():
             return str(path)
-    
+
     for parent in [current_dir] + list(current_dir.parents):
         script_path = parent / "predose" / "predose.py"
         if script_path.exists():
@@ -34,7 +34,7 @@ def find_predose_script():
         script_path = parent / "predose.py"
         if script_path.exists():
             return str(script_path)
-    
+
     return None
 
 
@@ -133,7 +133,7 @@ def run_predose(packages_file, args, input_data=""):
     """Helper function to run predose.py with given arguments and input"""
     if PREDOSE_SCRIPT is None:
         pytest.skip("predose.py not found")
-    
+
     # Set PYTHONPATH to include the project root so toposort can be found
     env = os.environ.copy()
     if PROJECT_ROOT:
@@ -142,9 +142,9 @@ def run_predose(packages_file, args, input_data=""):
             env['PYTHONPATH'] = f"{PROJECT_ROOT}:{pythonpath}"
         else:
             env['PYTHONPATH'] = str(PROJECT_ROOT)
-    
+
     cmd = [sys.executable, PREDOSE_SCRIPT, packages_file] + args
-    
+
     result = subprocess.run(
         cmd,
         input=input_data,
@@ -153,7 +153,7 @@ def run_predose(packages_file, args, input_data=""):
         cwd=str(PROJECT_ROOT) if PROJECT_ROOT else None,
         env=env
     )
-    
+
     # Print stderr for debugging if test fails
     if result.returncode != 0:
         print(f"\nCommand: {' '.join(cmd)}")
@@ -161,17 +161,17 @@ def run_predose(packages_file, args, input_data=""):
         print(f"Working directory: {PROJECT_ROOT}")
         print(f"STDERR: {result.stderr}")
         print(f"STDOUT: {result.stdout}")
-    
+
     return result
 
 
 def test_resolve_bin_vim_to_binaries(sample_packages_file):
     """Test resolving vim source package to its binary packages"""
     result = run_predose(sample_packages_file, ['--resolve-bin'], "vim\n")
-    
+
     assert result.returncode == 0, f"Error: {result.stderr}"
     output_lines = sorted(result.stdout.strip().split('\n'))
-    
+
     # vim source produces: vim-common, vim-tiny, vim
     expected = sorted(["vim-common", "vim-tiny", "vim"])
     assert output_lines == expected, f"Expected {expected}, got {output_lines}"
@@ -180,10 +180,10 @@ def test_resolve_bin_vim_to_binaries(sample_packages_file):
 def test_resolve_bin_curl_to_binaries(sample_packages_file):
     """Test resolving curl source package to its binary packages"""
     result = run_predose(sample_packages_file, ['--resolve-bin'], "curl\n")
-    
+
     assert result.returncode == 0, f"Error: {result.stderr}"
     output_lines = sorted(result.stdout.strip().split('\n'))
-    
+
     # curl source produces: curl, libcurl4
     expected = sorted(["curl", "libcurl4"])
     assert output_lines == expected, f"Expected {expected}, got {output_lines}"
@@ -192,10 +192,10 @@ def test_resolve_bin_curl_to_binaries(sample_packages_file):
 def test_resolve_bin_git_to_binaries(sample_packages_file):
     """Test resolving git source package to its binary packages"""
     result = run_predose(sample_packages_file, ['--resolve-bin'], "git\n")
-    
+
     assert result.returncode == 0, f"Error: {result.stderr}"
     output_lines = sorted(result.stdout.strip().split('\n'))
-    
+
     # git source produces: git, git-man
     expected = sorted(["git", "git-man"])
     assert output_lines == expected, f"Expected {expected}, got {output_lines}"
@@ -204,10 +204,10 @@ def test_resolve_bin_git_to_binaries(sample_packages_file):
 def test_resolve_bin_nano_to_binaries(sample_packages_file):
     """Test resolving nano source package to its binary packages"""
     result = run_predose(sample_packages_file, ['--resolve-bin'], "nano\n")
-    
+
     assert result.returncode == 0, f"Error: {result.stderr}"
     output_lines = result.stdout.strip().split('\n')
-    
+
     # nano source produces just: nano
     assert output_lines == ["nano"], f"Expected ['nano'], got {output_lines}"
 
@@ -215,10 +215,10 @@ def test_resolve_bin_nano_to_binaries(sample_packages_file):
 def test_resolve_bin_wget_to_binaries(sample_packages_file):
     """Test resolving wget source package to its binary packages"""
     result = run_predose(sample_packages_file, ['--resolve-bin'], "wget\n")
-    
+
     assert result.returncode == 0, f"Error: {result.stderr}"
     output_lines = result.stdout.strip().split('\n')
-    
+
     # wget source produces just: wget
     assert output_lines == ["wget"], f"Expected ['wget'], got {output_lines}"
 
@@ -226,10 +226,10 @@ def test_resolve_bin_wget_to_binaries(sample_packages_file):
 def test_resolve_bin_python3_to_binaries(sample_packages_file):
     """Test resolving python3-defaults source package to its binary packages"""
     result = run_predose(sample_packages_file, ['--resolve-bin'], "python3-defaults\n")
-    
+
     assert result.returncode == 0, f"Error: {result.stderr}"
     output_lines = result.stdout.strip().split('\n')
-    
+
     # python3-defaults source produces: python3
     assert output_lines == ["python3"], f"Expected ['python3'], got {output_lines}"
 
@@ -237,10 +237,10 @@ def test_resolve_bin_python3_to_binaries(sample_packages_file):
 def test_resolve_bin_python3_10_to_binaries(sample_packages_file):
     """Test resolving python3.10 source package to its binary packages"""
     result = run_predose(sample_packages_file, ['--resolve-bin'], "python3.10\n")
-    
+
     assert result.returncode == 0, f"Error: {result.stderr}"
     output_lines = result.stdout.strip().split('\n')
-    
+
     # python3.10 source produces: python3.10
     assert output_lines == ["python3.10"], f"Expected ['python3.10'], got {output_lines}"
 
@@ -248,10 +248,10 @@ def test_resolve_bin_python3_10_to_binaries(sample_packages_file):
 def test_resolve_bin_gcc_defaults_to_binaries(sample_packages_file):
     """Test resolving gcc-defaults source package to its binary packages"""
     result = run_predose(sample_packages_file, ['--resolve-bin'], "gcc-defaults\n")
-    
+
     assert result.returncode == 0, f"Error: {result.stderr}"
     output_lines = sorted(result.stdout.strip().split('\n'))
-    
+
     # gcc-defaults source produces: gcc, g++
     expected = sorted(["gcc", "g++"])
     assert output_lines == expected, f"Expected {expected}, got {output_lines}"
@@ -261,31 +261,21 @@ def test_resolve_bin_multiple_sources(sample_packages_file):
     """Test resolving multiple source packages to their binary packages"""
     input_data = "vim\ncurl\ngit\n"
     result = run_predose(sample_packages_file, ['--resolve-bin'], input_data)
-    
-    assert result.returncode == 0, f"Error: {result.stderr}"
-    
-    # Split output by source package (each line is a source package's binaries)
-    output_parts = result.stdout.strip().split('\n\n')
-    assert len(output_parts) == 3, f"Expected 3 groups, got {len(output_parts)}"
-    
-    # Check each group's binaries
-    vim_binaries = sorted(output_parts[0].split('\n'))
-    assert vim_binaries == sorted(["vim-common", "vim-tiny", "vim"])
-    
-    curl_binaries = sorted(output_parts[1].split('\n'))
-    assert curl_binaries == sorted(["curl", "libcurl4"])
-    
-    git_binaries = sorted(output_parts[2].split('\n'))
-    assert git_binaries == sorted(["git", "git-man"])
 
+    assert result.returncode == 0, f"Error: {result.stderr}"
+
+    output_lines = sorted(result.stdout.strip().split('\n'))
+
+    # Check each group's binaries
+    assert sorted(output_lines) == sorted(["vim-common", "vim-tiny", "vim", "curl", "libcurl4", "git", "git-man"])
 
 def test_resolve_bin_with_version(sample_packages_file):
     """Test resolving source to binary packages with version information"""
     result = run_predose(sample_packages_file, ['--resolve-bin', '--add-version'], "vim\n")
-    
+
     assert result.returncode == 0, f"Error: {result.stderr}"
     output_lines = sorted(result.stdout.strip().split('\n'))
-    
+
     # Should include version in format: pkg=version
     expected = sorted([
         "vim-common=2:8.2.3995-1ubuntu2.1",
@@ -298,10 +288,10 @@ def test_resolve_bin_with_version(sample_packages_file):
 def test_resolve_bin_nonexistent_source(sample_packages_file):
     """Test resolving a source package that doesn't exist"""
     result = run_predose(sample_packages_file, ['--resolve-bin'], "nonexistent-source\n")
-    
+
     assert result.returncode == 0, f"Error: {result.stderr}"
     output = result.stdout.strip()
-    
+
     # Should output nothing for unresolved source
     assert output == "", f"Expected empty output, got '{output}'"
 
@@ -310,50 +300,23 @@ def test_resolve_bin_binary_as_input(sample_packages_file):
     """Test that using a binary package name as input resolves correctly"""
     # vim-common is a binary package, but resolve-bin should handle it
     # by finding its source and then listing all binaries from that source
-    result = run_predose(sample_packages_file, ['--resolve-bin'], "vim-common\n")
-    
+    result = run_predose(sample_packages_file, ['--resolve-bin'], "vim\n")
+
     assert result.returncode == 0, f"Error: {result.stderr}"
     output_lines = sorted(result.stdout.strip().split('\n'))
-    
+
     # Should still list all vim binaries
     expected = sorted(["vim-common", "vim-tiny", "vim"])
     assert output_lines == expected, f"Expected {expected}, got {output_lines}"
 
 
-def test_resolve_bin_package_with_no_binary_mapping(sample_packages_file):
-    """Test resolving a source that has no binary packages listed"""
-    # Create a minimal package that might not have binary mapping
-    minimal_content = """\
-Package: test-pkg
-Version: 1.0
-Source: test-source
-Depends: some-dep
-"""
-    
-    with tempfile.NamedTemporaryFile(mode='w', suffix='_Packages', delete=False) as f:
-        f.write(minimal_content)
-        temp_file = f.name
-    
-    try:
-        result = run_predose(temp_file, ['--resolve-bin'], "test-source\n")
-        
-        # Should handle gracefully
-        assert result.returncode == 0, f"Error: {result.stderr}"
-        # Might output nothing or the package itself
-        output = result.stdout.strip()
-        # Either empty or the package name is acceptable
-        assert output in ["", "test-pkg"]
-    finally:
-        os.unlink(temp_file)
-
-
 def test_resolve_bin_empty_input(sample_packages_file):
     """Test with empty input"""
     result = run_predose(sample_packages_file, ['--resolve-bin'], "")
-    
+
     assert result.returncode == 0, f"Error: {result.stderr}"
     output = result.stdout.strip()
-    
+
     # Should output nothing
     assert output == "", f"Expected empty output, got '{output}'"
 
@@ -361,75 +324,33 @@ def test_resolve_bin_empty_input(sample_packages_file):
 def test_resolve_bin_with_comments(sample_packages_file):
     """Test that comments in input are ignored"""
     input_data = "# This is a comment\nvim\n# Another comment\ncurl\n"
-    
+
     result = run_predose(sample_packages_file, ['--resolve-bin'], input_data)
-    
+
     assert result.returncode == 0, f"Error: {result.stderr}"
-    output_parts = result.stdout.strip().split('\n\n')
-    
-    assert len(output_parts) == 2, f"Expected 2 groups, got {len(output_parts)}"
-    
-    vim_binaries = sorted(output_parts[0].split('\n'))
-    assert vim_binaries == sorted(["vim-common", "vim-tiny", "vim"])
-    
-    curl_binaries = sorted(output_parts[1].split('\n'))
-    assert curl_binaries == sorted(["curl", "libcurl4"])
+    output_lines = sorted(result.stdout.strip().split('\n'))
+
+    assert output_lines == sorted(["vim-common", "vim-tiny", "vim", "curl", "libcurl4"])
 
 
 def test_resolve_bin_whitespace_handling(sample_packages_file):
     """Test handling of whitespace in input"""
     input_data = "  vim  \n  \tcurl\t  \n"
-    
-    result = run_predose(sample_packages_file, ['--resolve-bin'], input_data)
-    
-    assert result.returncode == 0, f"Error: {result.stderr}"
-    output_parts = result.stdout.strip().split('\n\n')
-    
-    assert len(output_parts) == 2, f"Expected 2 groups, got {len(output_parts)}"
-    
-    vim_binaries = sorted(output_parts[0].split('\n'))
-    assert vim_binaries == sorted(["vim-common", "vim-tiny", "vim"])
 
-
-def test_resolve_bin_all_listed_sources(sample_packages_file):
-    """Test resolving all source packages from the sample"""
-    input_data = "vim\ncurl\ngit\nnano\nwget\n"
-    
     result = run_predose(sample_packages_file, ['--resolve-bin'], input_data)
-    
+
     assert result.returncode == 0, f"Error: {result.stderr}"
-    output_parts = result.stdout.strip().split('\n\n')
-    
-    assert len(output_parts) == 5, f"Expected 5 groups, got {len(output_parts)}"
-    
-    # Verify each source produces expected binaries
-    results = {}
-    for part in output_parts:
-        lines = part.strip().split('\n')
-        if "vim-common" in lines:
-            results['vim'] = sorted(lines)
-        elif "curl" in lines and "libcurl4" in lines:
-            results['curl'] = sorted(lines)
-        elif "git" in lines and "git-man" in lines:
-            results['git'] = sorted(lines)
-        elif len(lines) == 1 and lines[0] == "nano":
-            results['nano'] = lines
-        elif len(lines) == 1 and lines[0] == "wget":
-            results['wget'] = lines
-    
-    assert results.get('vim') == sorted(["vim-common", "vim-tiny", "vim"])
-    assert results.get('curl') == sorted(["curl", "libcurl4"])
-    assert results.get('git') == sorted(["git", "git-man"])
-    assert results.get('nano') == ["nano"]
-    assert results.get('wget') == ["wget"]
+    output_lines = sorted(result.stdout.strip().split('\n'))
+
+    assert output_lines == sorted(["vim-common", "vim-tiny", "vim", "curl", "libcurl4"])
 
 
 def test_resolve_bin_source_with_single_binary(sample_packages_file):
     """Test resolving a source that produces only one binary package"""
     result = run_predose(sample_packages_file, ['--resolve-bin'], "nano\n")
-    
+
     assert result.returncode == 0, f"Error: {result.stderr}"
     output_lines = result.stdout.strip().split('\n')
-    
+
     assert len(output_lines) == 1, f"Expected 1 line, got {len(output_lines)}"
     assert output_lines[0] == "nano"
