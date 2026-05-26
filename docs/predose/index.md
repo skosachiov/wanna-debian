@@ -209,6 +209,11 @@ cat /tmp/bootstrap.list | backport bootstrap stable empty
 `dose-builddebcheck --latest 1 --deb-native-arch=amd64 -e -f bootstrap_Packages bootstrap_Sources`
 
 ```
+dose-builddebcheck --latest 1 --deb-native-arch=amd64 -e -f bootstrap_Packages bootstrap_Sources \
+        | grep -P -A 5 "^\s{5}pkg1?:" | grep -P "^\s{6}(unsat-|package:)" | paste - - | sort | uniq -c | sort -nr
+```
+
+```
 dose-debcheck --latest 1 --deb-native-arch=amd64 -e -f bootstrap_Packages \
         | grep -P -A 5 "^\s{5}pkg1?:" | grep -P "^\s{6}(unsat-|package:)" | paste - - | sort | uniq -c | sort -nr
 ```
