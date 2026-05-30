@@ -136,11 +136,7 @@ while true; do
     echo -n > $next_filename.src
 
     grepunsat() {
-        if [ "$OPT_REMOVEONLY" = false ]; then
-            grep -P -A 5 "^\s{5}pkg1?:" | grep -P "^\s{6}(unsat-|package:)" | paste - - | sort -u
-        else
-            grep -P -A 5 "^\s{5}pkg:" | grep -P "^\s{6}(unsat-|package:)" | paste - - | sort -u
-        fi
+        grep -P -A 5 "^\s{5}pkg1?:" | grep -P "^\s{6}(unsat-|package:)" | paste - - | sort -u
     }
 
     awkunsat() {
@@ -149,7 +145,18 @@ while true; do
             dep = $4
             sub(/:.*/, "", dep)
             if (OPT == "true")
-                print pkg
+                if ($0 ~ /unsat-conflict:/) {
+                    dep_part = $0
+                    sub(/.*unsat-conflict: /, "", dep_part)
+                    n = split(dep_part, deps, " \\| ")
+                    for (i = 1; i <= n; i++) {
+                        gsub(/:.*/, "", deps[i])
+                        print deps[i]
+                    }
+                }
+                else {
+                    print pkg
+                }
             else {
                 if ($0 ~ /unsat-dependency:.*\([<=]/) {
                     print pkg
