@@ -101,6 +101,7 @@ while true; do
         mv -f ${base_name}_Packages.tmp ${base_name}_Packages
 
     if [ "$OPT_BINONLY" = false ]; then
+    
     # resolve to src on orig, remove from target src
     cat $filename.src \
         | python3 $SD/predose.py --log-file $base_name.log --remove ${base_name}_Sources > ${base_name}_Sources.tmp && \
@@ -135,7 +136,11 @@ while true; do
     echo -n > $next_filename.src
 
     grepunsat() {
-        grep -P -A 5 "^\s{5}pkg1?:" | grep -P "^\s{6}(unsat-|package:)" | paste - - | sort -u
+        if [ "$OPT_REMOVEONLY" = false ]; then
+            grep -P -A 5 "^\s{5}pkg1?:" | grep -P "^\s{6}(unsat-|package:)" | paste - - | sort -u
+        else
+            grep -P -A 5 "^\s{5}pkg:" | grep -P "^\s{6}(unsat-|package:)" | paste - - | sort -u
+        fi
     }
 
     awkunsat() {
