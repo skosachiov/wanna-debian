@@ -88,11 +88,13 @@ while true; do
     cat $filename.bin \
         | python3 $SD/predose.py --log-file $base_name.log --resolve-src $3_Packages >> $filename.src
 
+    if [ "$OPT_BINONLY" = false ]; then
     # resolve src to bins on target, remove from target bin
     cat $filename.src \
         | python3 $SD/predose.py --log-file $base_name.log --resolve-bin ${base_name}_Packages \
         | python3 $SD/predose.py --log-file $base_name.log --remove ${base_name}_Packages > ${base_name}_Packages.tmp && \
         mv -f ${base_name}_Packages.tmp ${base_name}_Packages
+    fi
     # remove without resolve
     cat $filename.bin \
         | python3 $SD/predose.py --log-file $base_name.log --remove ${base_name}_Packages > ${base_name}_Packages.tmp && \
