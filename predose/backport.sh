@@ -214,8 +214,10 @@ while true; do
         }'
     }
 
+    if [ "$OPT_REMOVEONLY" = false ]; then
     cat ${base_name}.debcheck.log.tmp | grepunsat | dependentonmissing ${base_name}.origin.list >> $next_filename.bin || true
     cat ${base_name}.builddebcheck.log.tmp | grepunsat | dependentonmissing ${base_name}.origin.list >> $next_filename.src || true
+    fi
 
     # print
     echo -n "$filename: "
