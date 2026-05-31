@@ -220,6 +220,7 @@ while true; do
     fi
 
     # print
+    echo -n "$(date '+%Y-%m-%d %H:%M:%S') "
     echo -n "$filename: "
     grep -P '^[a-z]+\-packages:' ${base_name}.debcheck.log.tmp | sed "s/-packages//" | paste -sd '\t' | tr -d '\n' || true
     echo -n " "
