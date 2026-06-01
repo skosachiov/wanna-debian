@@ -234,7 +234,7 @@ def handle_depends(pkg_name, origin, src_dict, prov_dict, depends_depth, depends
     output = '\n'.join(depends_set.keys())
     return depends_set, output
 
-def handle_depends_on(pkg_name, origin):
+def handle_rdepends(pkg_name, origin):
     output = []
     if pkg_name is not None:
         for p in origin.keys():
@@ -312,7 +312,7 @@ def main():
     parser.add_argument('-r', '--remove', action='store_true', help='remove packages instead of replacing or adding')
     parser.add_argument('-p', '--provide', type=str, metavar='PATH', help="path to binary Packages metadata to provide replacements for sources implantation")
     parser.add_argument('-e', '--depends', type=int, metavar='DEPTH', help='print repository package dependencies and exit')
-    parser.add_argument('-n', '--depends-on', action='store_true', help='determine which package depends on a given dependency and exit')
+    parser.add_argument('-n', '--rdepends', action='store_true', help='determine which package depends on a given dependency and exit')
     parser.add_argument('-s', '--resolve-src', action='store_true', help='resolve source code package names and exit')
     parser.add_argument('-b', '--resolve-bin', action='store_true', help='resolve binary package names by original source metadata and exit')
     parser.add_argument('-o', '--resolve-group', action='store_true', help='resolve target binary group and exit')
@@ -325,7 +325,7 @@ def main():
     args = parser.parse_args()
 
     # only target args
-    only_one_repo = any((args.remove, args.resolve_bin, args.resolve_src, args.resolve_group, args.depends, args.depends_on, args.topo_sort))
+    only_one_repo = any((args.remove, args.resolve_bin, args.resolve_src, args.resolve_group, args.depends, args.rdepends, args.topo_sort))
 
     # Check args
     if only_one_repo and args.origin_repo is not None:
@@ -383,8 +383,8 @@ def main():
             result = handle_resolve_group(pkg_name, origin, is_bin_metadata, bin_dict, group_dict)
         elif args.depends:
             depends_set, result = handle_depends(pkg_name, origin, src_dict, prov_dict, args.depends, depends_set)
-        elif args.depends_on:
-            result = handle_depends_on(pkg_name, origin)
+        elif args.rdepends:
+            result = handle_rdepends(pkg_name, origin)
         elif args.topo_sort:
             pass  # Handled after loop
         elif args.remove:
@@ -405,7 +405,7 @@ def main():
             print(result)
 
     # Output modified package metadata if not in special mode
-    if not any((args.add_version, args.depends, args.resolve_src, args.resolve_bin, args.depends_on,
+    if not any((args.add_version, args.depends, args.resolve_src, args.resolve_bin, args.rdepends,
         args.resolve_group, args.topo_sort)):
         output_metadata(origin, target if not only_one_repo else origin, only_one_repo)
 
