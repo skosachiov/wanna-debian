@@ -7,7 +7,7 @@ import apt_pkg
 apt_pkg.init_system()
 
 # Parse package metadata from repository file
-def parse_metadata(filepath, src_dict = None, prov_dict = None, bin_dict = None):
+def parse_metadata(filepath, src_dict = None, prov_dict = None, bin_dict = None, multiversion = False):
     packages = {}
     is_bin_metadata = True
     with open(filepath, 'rt', encoding='utf-8') as f:
@@ -75,6 +75,8 @@ def parse_metadata(filepath, src_dict = None, prov_dict = None, bin_dict = None)
                                 continue
                             depends.append(p.split()[0].split(":")[0])
             # Store package metadata if valid
+            if multiversion == True:
+                pkg_name = (pkg_name, version)
             if pkg_name is not None:
                 if pkg_name not in packages or apt_pkg.version_compare(version, packages[pkg_name]['version']) > 0:
                     if source is None:
@@ -309,6 +311,7 @@ def main():
     parser.add_argument('origin_repo', metavar='ORIGIN_REPO', nargs='?', help='newer repository Packages/Sources')
     parser.add_argument('target_repo', metavar='TARGET_REPO', help='older repository Packages/Sources')
     parser.add_argument('-m', '--add-missing', action='store_true', help='add missing packages do not change versions')
+    parser.add_argument('-u', '--multiversion', action='store_true', help='take into account the package version when copying')
     parser.add_argument('-r', '--remove', action='store_true', help='remove packages instead of replacing or adding')
     parser.add_argument('-p', '--provide', type=str, metavar='PATH', help="path to binary Packages metadata to provide replacements for sources implantation")
     parser.add_argument('-e', '--depends', type=int, metavar='DEPTH', help='print repository package dependencies and exit')
@@ -354,7 +357,7 @@ def main():
 
     # Parse repository metadata
     origin, is_bin_metadata = parse_metadata(args.origin_repo if not only_one_repo else args.target_repo, \
-        src_dict = src_dict, prov_dict = prov_dict, bin_dict = bin_dict)
+        src_dict = src_dict, prov_dict = prov_dict, bin_dict = bin_dict, multiversion = args.multiversion)
     if not only_one_repo: target, _ = parse_metadata(args.target_repo, bin_dict = group_dict)
     if args.provide: parse_metadata(args.provide, prov_dict = prov_dict)
 
@@ -363,14 +366,18 @@ def main():
     # Process input packages from stdin
     for line in sys.stdin:
         if line[0] == "#" or line.strip() == "": continue
-        line_left_side = line.strip().split("=")[0] # Package name
-        lines.append(line_left_side)
+        line_left_side = line.strip().split("=") # Package name
         if any((args.resolve_bin, args.resolve_src)):
-            pkg_name = line_left_side
+            pkg_name = line_left_side[0]
         else:
-            pkg_name = resolve_pkg_name(line_left_side, origin, src_dict, prov_dict)
+            if args.multiversion:
+                pkg_name = (line_left_side[0], "" if len(line_left_side) < 1 else line_left_side[1])
+            else:
+                pkg_name = resolve_pkg_name(line_left_side[0], origin, src_dict, prov_dict)
 
         if pkg_name is not None: packages.add(pkg_name)
+
+        lines.append(line_left_side)
 
         # Handle different operation modes via dedicated functions (all return strings)
         if args.resolve_src:
@@ -378,7 +385,7 @@ def main():
         elif args.resolve_bin:
             result = handle_resolve_bin(pkg_name, origin, is_bin_metadata, bin_dict, args.add_version)
         elif args.add_version:
-            result = handle_add_version(line_left_side, origin)
+            result = handle_add_version(line_left_side[0], origin)
         elif args.resolve_group:
             result = handle_resolve_group(pkg_name, origin, is_bin_metadata, bin_dict, group_dict)
         elif args.depends:
