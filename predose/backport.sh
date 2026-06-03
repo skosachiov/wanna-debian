@@ -7,7 +7,7 @@ SD="$(dirname "${BASH_SOURCE[0]}")"
 
 # print help
 if [ -z "$1" ] || [ "$1" = "--help" ] || [ "$1" = "-h" ]; then
-    echo "Usage: cat <pkgslist> | backport [--checkonly] [--binonly] [--removeonly] [--onlyunsat] <basename> <newerprefix> <olderprefix>"
+    echo "Usage: cat <pkgslist> | backport [--checkonly] [--binonly] [--removeonly] [--onlyunsat] [--nosrcfix] <basename> <newerprefix> <olderprefix>"
     echo ""
     echo "The script backport expects to find the following metadata files in the current directory:"
     echo "newerprefix_Packages, newerprefix_Sources, olderprefix_Packages, olderprefix_Sources"
@@ -21,6 +21,7 @@ OPT_CHECKONLY=false
 OPT_BINONLY=false
 OPT_REMOVEONLY=false
 OPT_ONLYUNSAT=false
+OPT_NOSRCFIX=false
 EXTRA_PARAMS=()
 # Process options
 while [[ $# -gt 0 ]]; do
@@ -39,6 +40,10 @@ while [[ $# -gt 0 ]]; do
             ;;
         --onlyunsat)
             OPT_ONLYUNSAT=true
+            shift
+            ;;
+        --nosrcfix)
+            OPT_NOSRCFIX=true
             shift
             ;;
         *)
@@ -101,7 +106,7 @@ while true; do
         mv -f ${base_name}_Packages.tmp ${base_name}_Packages
 
     if [ "$OPT_BINONLY" = false ]; then
-    
+
     # resolve to src on orig, remove from target src
     cat $filename.src \
         | python3 $SD/predose.py --log-file $base_name.log --remove ${base_name}_Sources > ${base_name}_Sources.tmp && \
@@ -193,7 +198,9 @@ while true; do
     wait $pid || true
 
     cat ${base_name}.debcheck.log.tmp | grepunsat | awkunsat | sort -u >> $next_filename.bin || true
+    if [ "$OPT_NOSRCFIX" = false ]; then
     cat ${base_name}.builddebcheck.log.tmp | grepunsat | awkunsat | sort -u >> $next_filename.bin || true
+    fi
 
     # select packages dependent on deps missing from the origin
     dependentonmissing() {
@@ -216,7 +223,9 @@ while true; do
 
     if [ "$OPT_REMOVEONLY" = false ]; then
     cat ${base_name}.debcheck.log.tmp | grepunsat | dependentonmissing ${base_name}.origin.list >> $next_filename.bin || true
+    if [ "$OPT_NOSRCFIX" = false ]; then
     cat ${base_name}.builddebcheck.log.tmp | grepunsat | dependentonmissing ${base_name}.origin.list >> $next_filename.src || true
+    fi
     fi
 
     # print
