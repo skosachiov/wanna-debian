@@ -75,8 +75,7 @@ def parse_metadata(filepath, src_dict = None, prov_dict = None, bin_dict = None,
                                 continue
                             depends.append(p.split()[0].split(":")[0])
             # Store package metadata if valid
-            if multiversion == True:
-                pkg_name = (pkg_name, version)
+            if multiversion: pkg_name = (pkg_name, version)
             if pkg_name is not None:
                 if pkg_name not in packages or apt_pkg.version_compare(version, packages[pkg_name]['version']) > 0:
                     if source is None:
@@ -87,6 +86,7 @@ def parse_metadata(filepath, src_dict = None, prov_dict = None, bin_dict = None,
                             else:
                                 bin_dict[source].append(pkg_name)
                     if source_version is None: source_version = version
+                    if multiversion: source = (source, source_version) 
                     packages[pkg_name] = {'version': version, 'block': block, 'depends': depends, \
                         'source': source, 'source_version': source_version}
                 else:
@@ -367,11 +367,11 @@ def main():
     for line in sys.stdin:
         if line[0] == "#" or line.strip() == "": continue
         line_left_side = line.strip().split("=") # Package name
-        if any((args.resolve_bin, args.resolve_src)):
-            pkg_name = line_left_side[0]
+        if args.multiversion:
+            pkg_name = (line_left_side[0], "" if len(line_left_side) < 2 else line_left_side[1])
         else:
-            if args.multiversion:
-                pkg_name = (line_left_side[0], "" if len(line_left_side) < 1 else line_left_side[1])
+            if any((args.resolve_bin, args.resolve_src)):
+                pkg_name = line_left_side[0]
             else:
                 pkg_name = resolve_pkg_name(line_left_side[0], origin, src_dict, prov_dict)
 
