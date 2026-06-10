@@ -171,7 +171,7 @@ def handle_resolve_src(pkg_name, origin, is_bin_metadata, bin_dict, add_version)
                 output.append(f'{origin[pkg_name]["source"]}={origin[pkg_name]["source_version"]}')
             else:
                 output.append(f'{origin[pkg_name]["source"]}')
-    return '\n'.join(output)
+    return '\n'.join(['='.join(p) if isinstance(p, tuple) else p for p in output])
 
 
 def handle_resolve_bin(pkg_name, origin, is_bin_metadata, bin_dict, add_version):
@@ -188,7 +188,7 @@ def handle_resolve_bin(pkg_name, origin, is_bin_metadata, bin_dict, add_version)
                         output.append(f'{p}={origin[p]["version"]}')
                     else:
                         output.append(p)
-    return '\n'.join(output)
+    return '\n'.join(['='.join(p) if isinstance(p, tuple) else p for p in output])
 
 
 def handle_add_version(line_left_side, origin):
