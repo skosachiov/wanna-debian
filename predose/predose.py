@@ -86,7 +86,7 @@ def parse_metadata(filepath, src_dict = None, prov_dict = None, bin_dict = None,
                             else:
                                 bin_dict[source].append(pkg_name)
                     if source_version is None: source_version = version
-                    if multiversion: source = (source, source_version) 
+                    if multiversion: source = (source[0] if isinstance(source, tuple) else source, source_version)
                     packages[pkg_name] = {'version': version, 'block': block, 'depends': depends, \
                         'source': source, 'source_version': source_version}
                 else:
@@ -163,14 +163,15 @@ def handle_resolve_src(pkg_name, origin, is_bin_metadata, bin_dict, add_version)
             for p in bin_dict.keys():
                 if pkg_name in bin_dict[p]:
                     if add_version:
-                        output.append(f'{p}={origin[p]["source_version"]}')
+                        output.append(f'{p[0] if isinstance(p, tuple) else p}={origin[p]["source_version"]}')
                     else:
                         output.append(p)
         elif pkg_name in origin:
+            p = origin[pkg_name]["source"]
             if add_version:
-                output.append(f'{origin[pkg_name]["source"]}={origin[pkg_name]["source_version"]}')
+                output.append(f'{p[0] if isinstance(p, tuple) else p}={origin[pkg_name]["source_version"]}')
             else:
-                output.append(f'{origin[pkg_name]["source"]}')
+                output.append(p)
     return '\n'.join(['='.join(p) if isinstance(p, tuple) else p for p in output])
 
 
@@ -185,7 +186,7 @@ def handle_resolve_bin(pkg_name, origin, is_bin_metadata, bin_dict, add_version)
             for p in origin.keys():
                 if origin[p]['source'] == pkg_name:
                     if add_version:
-                        output.append(f'{p}={origin[p]["version"]}')
+                        output.append(f'{p[0] if isinstance(p, tuple) else p}={origin[p]["version"]}')
                     else:
                         output.append(p)
     return '\n'.join(['='.join(p) if isinstance(p, tuple) else p for p in output])
