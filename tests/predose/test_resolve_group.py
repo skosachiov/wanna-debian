@@ -4,11 +4,9 @@ import os
 import sys
 from io import StringIO
 
-# Add the directory to path if needed
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 
-# Import from the module
-from predose.predose import handle_resolve_group, parse_metadata
+from predose import Metadata
 
 @pytest.fixture
 def sample_sources_metadata():
@@ -81,35 +79,27 @@ def sample_binary_file(sample_binary_metadata):
 @pytest.fixture
 def setup_origin_metadata(sample_sources_file):
     """Parse origin metadata (Sources)"""
-    src_dict, prov_dict, bin_dict = {}, {}, {}
-    origin, is_bin = parse_metadata(
-        sample_sources_file,
-        src_dict=src_dict,
-        prov_dict=prov_dict,
-        bin_dict=bin_dict
-    )
+    meta = Metadata.from_file(sample_sources_file)
     os.unlink(sample_sources_file)
-    return origin, is_bin, src_dict, prov_dict, bin_dict
+    return meta
 
 @pytest.fixture
 def setup_target_metadata(sample_binary_file):
     """Parse target metadata (binary Packages)"""
-    src_dict, prov_dict, bin_dict = {}, {}, {}
-    target, is_bin = parse_metadata(
-        sample_binary_file,
-        src_dict=src_dict,
-        prov_dict=prov_dict,
-        bin_dict=bin_dict
-    )
+    meta = Metadata.from_file(sample_binary_file)
     os.unlink(sample_binary_file)
-    return target, is_bin, src_dict, prov_dict, bin_dict
+    return meta
+
+def make_pkg_key(name, version=""):
+    return (name, version) if version else (name, "")
 
 def test_resolve_group_on_source_metadata(setup_origin_metadata):
     """Test resolve-group on source metadata (is_bin_metadata=False)"""
-    origin, is_bin_metadata, src_dict, prov_dict, bin_dict = setup_origin_metadata
+    meta = setup_origin_metadata
 
-    # Test resolving source package 'linux' to its binary group
-    result = handle_resolve_group('linux', origin, is_bin_metadata, bin_dict, origin)
+    result = Metadata.handle_resolve_group(
+        make_pkg_key("linux"), meta.packages, meta.is_bin, meta.bin_dict, meta.packages
+    )
     output_lines = result.split('\n')
 
     assert len(output_lines) == 3
@@ -117,8 +107,9 @@ def test_resolve_group_on_source_metadata(setup_origin_metadata):
     assert 'linux-headers' in output_lines
     assert 'linux-libc-dev' in output_lines
 
-    # Test resolving source package 'glibc'
-    result = handle_resolve_group('glibc', origin, is_bin_metadata, bin_dict, origin)
+    result = Metadata.handle_resolve_group(
+        make_pkg_key("glibc"), meta.packages, meta.is_bin, meta.bin_dict, meta.packages
+    )
     output_lines = result.split('\n')
 
     assert len(output_lines) == 3
@@ -128,10 +119,11 @@ def test_resolve_group_on_source_metadata(setup_origin_metadata):
 
 def test_resolve_group_on_binary_metadata(setup_target_metadata):
     """Test resolve-group on binary metadata (is_bin_metadata=True)"""
-    target, is_bin_metadata, src_dict, prov_dict, bin_dict = setup_target_metadata
+    meta = setup_target_metadata
 
-    # Test resolving binary package 'linux-image' to all binaries from same source
-    result = handle_resolve_group('linux-image', target, is_bin_metadata, bin_dict, target)
+    result = Metadata.handle_resolve_group(
+        make_pkg_key("linux-image"), meta.packages, meta.is_bin, meta.bin_dict, meta.packages
+    )
     output_lines = result.split('\n')
 
     assert len(output_lines) == 3
@@ -139,8 +131,9 @@ def test_resolve_group_on_binary_metadata(setup_target_metadata):
     assert 'linux-headers' in output_lines
     assert 'linux-libc-dev' in output_lines
 
-    # Test resolving 'libc6' to all glibc binaries
-    result = handle_resolve_group('libc6', target, is_bin_metadata, bin_dict, target)
+    result = Metadata.handle_resolve_group(
+        make_pkg_key("libc6"), meta.packages, meta.is_bin, meta.bin_dict, meta.packages
+    )
     output_lines = result.split('\n')
 
     assert len(output_lines) == 3
@@ -165,20 +158,14 @@ Source: linux
 """)
         temp_file = f.name
 
-    src_dict, prov_dict, bin_dict = {}, {}, {}
-    # Build binary-to-source mapping
-    bin_dict['linux'] = ['linux-image', 'linux-headers', 'linux-tools', 'linux-firmware']
-
-    origin, is_bin_metadata = parse_metadata(
-        temp_file,
-        src_dict=src_dict,
-        prov_dict=prov_dict,
-        bin_dict=bin_dict
-    )
+    meta = Metadata.from_file(temp_file)
+    meta.bin_dict[('linux', '')] = ['linux-image', 'linux-headers', 'linux-tools', 'linux-firmware']
 
     os.unlink(temp_file)
 
-    result = handle_resolve_group('linux-image', origin, is_bin_metadata, bin_dict, origin)
+    result = Metadata.handle_resolve_group(
+        make_pkg_key("linux-image"), meta.packages, meta.is_bin, meta.bin_dict, meta.packages
+    )
     output_lines = result.split('\n')
 
     assert len(set(output_lines)) == 4
