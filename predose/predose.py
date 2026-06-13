@@ -327,16 +327,10 @@ class Metadata:
         out = '\n'.join(str(k) for k in depends_set.keys())
         return depends_set, out
 
-    def rdepends(self, pkg_key: Optional[PkgKey]) -> str:
-        if pkg_key is None:
-            return ''
-        resolved = self._resolve_key(pkg_key)
-        if resolved is None:
-            return ''
-        pn = resolved[0]
+    def rdepends(self, name: str) -> str:
         out: List[str] = []
         for p in self.packages:
-            if pn in self.packages[p].depends:
+            if name in self.packages[p].depends:
                 out.append(_format_key(p))
         return '\n'.join(out)
 
@@ -568,18 +562,18 @@ class PreDoseApp:
                 result = self.origin_meta.resolve_bin(pkg_key, self.args.add_version)
             elif self.args.resolve_group:
                 result = self.origin_meta.resolve_group(pkg_key, self.args.add_version)
-            elif self.args.add_version:
-                result = self.origin_meta.add_version(parts[0])
             elif self.args.depends:
                 depends_set, result = self.origin_meta.depends(
                     pkg_key, self.args.depends, depends_set,
                 )
             elif self.args.rdepends:
-                result = self.origin_meta.rdepends(pkg_key)
+                result = self.origin_meta.rdepends(name)
             elif self.args.topo_sort:
                 pass
             elif self.args.remove:
                 self.origin_meta.remove(pkg_key)
+            elif self.args.add_version:
+                result = self.origin_meta.add_version(parts[0])
             elif pkg_key is not None:
                 tgt = self.target_meta if not only_one else self.origin_meta
                 self.origin_meta.backport(pkg_key, tgt, self.args.add_missing)
