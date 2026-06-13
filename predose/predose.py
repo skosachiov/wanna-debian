@@ -346,14 +346,7 @@ class Metadata:
                 del self.packages[pkg_key]
                 logging.info(f'Removed: {pkg_key}')
             else:
-                pn = pkg_key[0]
-                for k in list(self.packages.keys()):
-                    if k[0] == pn:
-                        del self.packages[k]
-                        logging.info(f'Removed: {k}')
-                        break
-                else:
-                    logging.error(f'Not present: {pkg_key}')
+                logging.error(f'Not present: {pkg_key}')
         return ''
 
     def backport(self, pkg_key: Optional[PkgKey], target: 'Metadata', add_missing: bool = False) -> str:
