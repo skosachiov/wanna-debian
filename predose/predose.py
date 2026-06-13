@@ -30,10 +30,6 @@ def _format_key(key: PkgKey) -> str:
     return f'{key[0]}={key[1]}'
 
 
-# ---------------------------------------------------------------------------
-# Metadata — combined handler for Sources and Packages repos
-# ---------------------------------------------------------------------------
-
 class Metadata:
     """Parsed Debian repository metadata (Sources or Packages)."""
 
@@ -47,7 +43,6 @@ class Metadata:
         self.latest_src: Dict[str, PkgKey] = {}
         self.latest_bin: Dict[str, PkgKey] = {}
 
-    # ---- parsing -----------------------------------------------------------
 
     @classmethod
     def from_file(cls, filepath: str) -> 'Metadata':
@@ -173,7 +168,6 @@ class Metadata:
 
         logging.debug(f'Parsed {len(self.packages)} packages from {filepath}')
 
-    # ---- lookups -----------------------------------------------------------
 
     def find_latest(self, name: str) -> Optional[PkgKey]:
         found = self.latest_index.get(name)
@@ -211,85 +205,95 @@ class Metadata:
         logging.warning(f'Package not found: {pkg_name}')
         return None
 
-# ---- resolve operations ------------------------------------------------
+    def _resolve_key(self, pkg_key: PkgKey) -> Optional[PkgKey]:
+        name, version = pkg_key
+        if version:
+            if pkg_key in self.packages:
+                return pkg_key
+            logging.error(f'Package not found: {_format_key(pkg_key)}')
+            return None
+        found = self.find_latest(name)
+        if found is not None:
+            return found
+        return pkg_key
 
-    def _version_matches(self, pkg_key: PkgKey, version: str) -> bool:
-        return not pkg_key[1] or version == pkg_key[1]
 
     def resolve_src(self, pkg_key: Optional[PkgKey], add_version: bool = False) -> str:
-        out: List[str] = []
         if pkg_key is None:
             return ''
-        pn = pkg_key[0]
+        resolved = self._resolve_key(pkg_key)
+        if resolved is None:
+            return ''
+        pn, pv = resolved
+
         if not self.is_bin:
-            for src_candidate, bins in self.bin_dict.items():
-                if pn in set(bins):
-                    n = src_candidate[0]
-                    v = src_candidate[1]
-                    if not pkg_key[1] or v == pkg_key[1]:
-                        out.append(f'{n}={v}' if (add_version and v) else n)
+            for src_key, bins in self.bin_dict.items():
+                if pn in bins and (not src_key[1] or src_key[1] == pv):
+                    n, v = src_key
+                    return f'{n}={v}' if (add_version and v) else n
+            return ''
         else:
-            ek = pkg_key if pkg_key in self.packages else self.find_latest(pn)
-            if ek:
-                entry = self.packages[ek]
-                if self._version_matches(pkg_key, entry.source_version):
-                    out.append(f'{entry.source}={entry.source_version}' if (add_version and entry.source_version) else entry.source)
-        return '\n'.join(out)
+            entry = self.packages.get(resolved)
+            if entry is None:
+                return ''
+            return f'{entry.source}={entry.source_version}' if (add_version and entry.source_version) else entry.source
 
     def resolve_bin(self, pkg_key: Optional[PkgKey], add_version: bool = False) -> str:
         out: List[str] = []
         if pkg_key is None:
             return ''
-        pn = pkg_key[0]
+        resolved = self._resolve_key(pkg_key)
+        if resolved is None:
+            return ''
+        pn, pv = resolved
+
         if not self.is_bin:
             for s, bins in self.bin_dict.items():
-                if s[0] == pn and self._version_matches(pkg_key, s[1]):
-                    for b in bins:
-                        out.append(b)
+                if s[0] == pn and (not s[1] or s[1] == pv):
+                    out.extend(bins)
         else:
             for p, entry in self.packages.items():
-                if entry.source == pn and self._version_matches(pkg_key, entry.source_version):
-                    out.append(f'{p[0]}={entry.version}' if add_version else p[0])
+                if entry.source == pn:
+                    if not pv:
+                        out.append(f'{p[0]}={entry.version}' if add_version else p[0])
+                    elif entry.source_version == pv:
+                        out.append(f'{p[0]}={entry.version}' if add_version else p[0])
+                    elif not entry.source_version and entry.version == pv:
+                        out.append(f'{p[0]}={entry.version}' if add_version else p[0])
+
         return '\n'.join(out)
 
     def resolve_group(self, pkg_key: Optional[PkgKey], add_version: bool = False) -> str:
         if pkg_key is None:
             return ''
-        pn = pkg_key[0]
-        av = add_version is True
-        ek = pkg_key if pkg_key in self.packages else self.find_latest(pn)
-        if ek:
-            sn = self.packages[ek].source
-            bk = self.find_bin_dict_keys(sn)
-            if not bk:
-                if self.is_bin:
-                    logging.error(f'Cannot resolve group for {pkg_key}')
-                    return ''
-                for src, bins in self.bin_dict.items():
-                    if pn in bins and self._version_matches(pkg_key, src[1]):
-                        bk = [src]
-                        break
-            out: List[str] = []
-            seen: Set[str] = set()
-            for k in bk:
-                for b in self.bin_dict[k]:
-                    if b not in seen:
-                        if av:
-                            v = ''
-                            for p, entry in self.packages.items():
-                                if p[0] == b:
-                                    if p[1] == pkg_key[1]:
-                                        v = entry.version
-                                        break
-                                    if not v:
-                                        v = entry.version
-                            out.append(f'{b}={v}' if v else b)
-                        else:
-                            out.append(b)
-                        seen.add(b)
-            return '\n'.join(out)
-        logging.error(f'Cannot resolve group for {pkg_key}')
-        return ''
+        resolved = self._resolve_key(pkg_key)
+        if resolved is None:
+            return ''
+        entry = self.packages.get(resolved)
+        if entry is None:
+            return ''
+
+        src_name = entry.source
+        src_version = entry.source_version
+        out: List[str] = []
+        seen: Set[str] = set()
+
+        if self.is_bin:
+            for p, e in self.packages.items():
+                if e.source == src_name:
+                    if e.source_version == src_version or (not e.source_version and e.version == src_version):
+                        if p[0] not in seen:
+                            seen.add(p[0])
+                            out.append(f'{p[0]}={e.version}' if add_version else p[0])
+        else:
+            for src_key, bins in self.bin_dict.items():
+                if src_key[0] == src_name and (not src_key[1] or src_key[1] == src_version):
+                    for b in bins:
+                        if b not in seen:
+                            seen.add(b)
+                            out.append(f'{b}={src_version}' if add_version else b)
+
+        return '\n'.join(out)
 
     def add_version(self, line_left_side: str) -> str:
         parts = line_left_side.split('=')
@@ -324,12 +328,16 @@ class Metadata:
         return depends_set, out
 
     def rdepends(self, pkg_key: Optional[PkgKey]) -> str:
+        if pkg_key is None:
+            return ''
+        resolved = self._resolve_key(pkg_key)
+        if resolved is None:
+            return ''
+        pn = resolved[0]
         out: List[str] = []
-        if pkg_key is not None:
-            pn = pkg_key[0]
-            for p in self.packages:
-                if pn in self.packages[p].depends:
-                    out.append(_format_key(p))
+        for p in self.packages:
+            if pn in self.packages[p].depends:
+                out.append(_format_key(p))
         return '\n'.join(out)
 
     def remove(self, pkg_key: Optional[PkgKey]) -> str:
@@ -407,10 +415,6 @@ class Metadata:
         return '\n'.join(str(t) for t in sorted(tl))
 
 
-# ---------------------------------------------------------------------------
-# Graph utilities
-# ---------------------------------------------------------------------------
-
 def reverse_graph(graph: Dict) -> Dict:
     rev: Dict = {n: set() for n in graph}
     for n, nb in graph.items():
@@ -431,10 +435,6 @@ def dict_to_dot(d: Dict, graph_name: str = 'G') -> str:
     lines.append("}")
     return '\n'.join(lines)
 
-
-# ---------------------------------------------------------------------------
-# PreDoseApp
-# ---------------------------------------------------------------------------
 
 class PreDoseApp:
     """Main application class for pre-dose."""
@@ -514,7 +514,6 @@ class PreDoseApp:
             found = self.origin_meta.find_latest(name)
             if found:
                 return found
-        logging.error(f'Package not found in metadata: {name}')
         return None
 
     def _parse_input_line(self, line: str) -> Tuple[Optional[PkgKey], List[str]]:
@@ -563,12 +562,14 @@ class PreDoseApp:
             name = parts[0]
             version = parts[1] if len(parts) > 1 else ''
 
-            if self.args.resolve_src or self.args.resolve_bin or self.args.resolve_group:
-                pkg_key = (name, version) if version else (name, '')
+            if version:
+                pkg_key = (name, version)
             else:
-                pkg_key, _ = self._parse_input_line(line)
-                if pkg_key is None:
-                    continue
+                resolved = self._resolve_name(name)
+                if resolved is not None:
+                    pkg_key = resolved
+                else:
+                    pkg_key = (name, '')
 
             packages_set.add(pkg_key)
             input_lines.append(parts)
