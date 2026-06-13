@@ -1,0 +1,121 @@
+Package: vim
+Version: 2:9.2.0461-1
+Installed-Size: 4123
+Maintainer: Debian Vim Maintainers <team+vim@tracker.debian.org>
+Architecture: amd64
+Provides: editor
+Depends: vim-common (= 2:9.2.0461-1), vim-runtime (= 2:9.2.0461-1), libacl1 (>= 2.2.23), libc6 (>= 2.38), libgpm2 (>= 1.20.7), libselinux1 (>= 3.1~), libsodium26 (>= 1.0.14), libtinfo6 (>= 6)
+Suggests: ctags, vim-doc, vim-scripts
+Description: Vi IMproved - enhanced vi editor
+Homepage: https://www.vim.org/
+Description-md5: 59e8b8f7757db8b53566d5d119872de8
+Tag: devel::editor, implemented-in::c, interface::commandline,
+ interface::text-mode, role::program, scope::application,
+ uitoolkit::ncurses, use::editing, works-with::text, works-with::unicode
+Section: editors
+Priority: optional
+Filename: pool/main/v/vim/vim_9.2.0461-1_amd64.deb
+Size: 1742240
+MD5sum: f0f5adcc6bd72cca93b179e8ab0801a8
+SHA256: 8a11d3ed725c46aa98a368a84b1924ccbffd94be89efc2cbe249126018115a37
+
+Package: vim-common
+Source: vim
+Version: 2:9.2.0461-1
+Installed-Size: 2238
+Maintainer: Debian Vim Maintainers <team+vim@tracker.debian.org>
+Architecture: all
+Replaces: vim-runtime (<< 2:9.0.1658-1~)
+Recommends: xxd, vim | vim-gtk3 | vim-motif | vim-nox | vim-tiny
+Breaks: vim-runtime (<< 2:9.0.1658-1~)
+Description: Vi IMproved - Common files
+Multi-Arch: foreign
+Homepage: https://www.vim.org/
+Description-md5: 30b64c3dceccc4faef229eafc38d0069
+Tag: devel::editor, interface::text-mode, role::app-data, role::program,
+ uitoolkit::ncurses, use::editing, works-with::text, works-with::unicode
+Section: editors
+Priority: important
+Filename: pool/main/v/vim/vim-common_9.2.0461-1_all.deb
+Size: 482796
+MD5sum: e7a43a3b8b9814d5a9a35ec51c020614
+SHA256: df5453cfcc1e48a4b06aeebafe2ffde909668e2a7902f7aa712dd131b6b04681
+
+Package: 0xffff
+Source: 0xffff (0.9-1)
+Version: 0.9-1+b1
+Installed-Size: 167
+Maintainer: Sebastian Reichel <sre@debian.org>
+Architecture: amd64
+Depends: libc6 (>= 2.34), libusb-0.1-4 (>= 2:0.1.12)
+Description: Open Free Fiasco Firmware Flasher
+Multi-Arch: foreign
+Homepage: https://github.com/pali/0xFFFF
+Description-md5: 183c49f6505eb3432d1b069800f1f5b6
+Tag: admin::hardware, hardware::usb, implemented-in::c,
+ interface::commandline, role::program, scope::utility, works-with::file
+Section: misc
+Priority: optional
+Filename: pool/main/0/0xffff/0xffff_0.9-1+b1_amd64.deb
+Size: 58660
+MD5sum: 71f299ac99fa5b7ef97f7254b5da5a30
+SHA256: 1a50bcb6b41e418b4b5447cb4b47e9f50e1f75176126cdff653260a53a58593c
+
+Package: 2048
+Version: 1.0.3-1
+Installed-Size: 45
+Maintainer: Debian Games Team <pkg-games-devel@lists.alioth.debian.org>
+Architecture: amd64
+Depends: libc6 (>= 2.34)
+Description: Slide and add puzzle game for text mode
+Homepage: https://github.com/mevdschee/2048.c
+Description-md5: 2d3a24661b5ec0391d6bd1aedf7c20b7
+Section: games
+Priority: optional
+Filename: pool/main/2/2048/2048_1.0.3-1_amd64.deb
+Size: 15556
+MD5sum: 6e9d9df0b49320db6427fecb608870ba
+SHA256: 72a1659aaa2171bd0bd47f0f7cda5ba82611f3597a7343299c52d3574ef56f9f
+
+Package: 0ad
+Source: 0ad (0.28.0-3)
+Version: 0.28.0-3+b2
+Installed-Size: 30502
+Maintainer: Debian Games Team <pkg-games-devel@lists.alioth.debian.org>
+Architecture: amd64
+Depends: 0ad-data (>= 0.28.0), 0ad-data (<= 0.28.0-3), 0ad-data-common (>= 0.28.0), 0ad-data-common (<= 0.28.0-3), libc6 (>= 2.38), libcurl3t64-gnutls (>= 7.16.2), libenet7 (>= 1.3), libfmt10 (>= 10.1.1+d
+s1), libfreetype6 (>= 2.2.1), libgcc-s1 (>= 4.2), libgloox18 (>= 1.0.28), libicu78 (>= 78.1-1~), libminiupnpc21 (>= 2.3.3), libopenal1 (>= 1.14), libpng16-16t64 (>= 1.6.46), libsdl2-2.0-0 (>= 2.0.12), lib
+sodium26 (>= 1.0.14), libstdc++6 (>= 14), libvorbis0a (>= 1.2.3), libvorbisfile3 (>= 1.1.2), libwxbase3.2-1t64 (>= 3.2.9+dfsg), libwxgtk-gl3.2-1t64 (>= 3.2.9+dfsg), libwxgtk3.2-1t64 (>= 3.2.9+dfsg), libx1
+1-6, libxml2-16 (>= 2.14.1), zlib1g (>= 1:1.2.0)
+Pre-Depends: dpkg (>= 1.15.6~)
+Description: Real-time strategy game of ancient warfare
+Homepage: https://play0ad.com/
+Description-md5: d943033bedada21853d2ae54a2578a7b
+Tag: game::strategy, interface::graphical, interface::x11, role::program,
+ uitoolkit::sdl, uitoolkit::wxwidgets, use::gameplaying,
+ x11::application
+Section: games
+Priority: optional
+Filename: pool/main/0/0ad/0ad_0.28.0-3+b2_amd64.deb
+Size: 10181020
+MD5sum: 2cad99c3b566a249b9306d5b208d1f4c
+SHA256: 4600f44e9f57dcb8a5c050867e9cfe44937299f15f3e7493230ed9091fab57f2
+
+Package: 0ad-data
+Version: 0.28.0-1
+Installed-Size: 3517859
+Maintainer: Debian Games Team <pkg-games-devel@lists.alioth.debian.org>
+Architecture: all
+Pre-Depends: dpkg (>= 1.15.6~)
+Suggests: 0ad
+Description: Real-time strategy game of ancient warfare (data files)
+Multi-Arch: foreign
+Homepage: https://play0ad.com/
+Description-md5: 26581e685027d5ae84824362a4ba59ee
+Tag: role::app-data
+Section: games
+Priority: optional
+Filename: pool/main/0/0ad-data/0ad-data_0.28.0-1_all.deb
+Size: 1449425436
+MD5sum: c3953497a2b761c479aba00f151cb08e
+SHA256: 80273f5229b3f93b2faf8b0e794c17cb9c1a2431731ae3938d36f7bb0f438fae

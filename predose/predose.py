@@ -503,13 +503,6 @@ class PreDoseApp:
         ))
 
     def _resolve_name(self, name: str) -> Optional[PkgKey]:
-        src = self.origin_meta
-        if not self._only_one() and self.target_meta:
-            src = self.target_meta
-        if src:
-            found = src.find_latest(name)
-            if found:
-                return found
         if self.origin_meta:
             found = self.origin_meta.find_latest(name)
             if found:
