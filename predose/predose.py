@@ -15,10 +15,11 @@ apt_pkg.init_system()
 
 @dataclass
 class PackageEntry:
+    package: str
     version: str
     block: str
     depends: List[str]
-    source: Tuple[str, str]
+    source: str
     source_version: str
 
 
@@ -37,29 +38,25 @@ class Metadata:
     """Parsed Debian repository metadata (Sources or Packages)."""
 
     def __init__(self) -> None:
-        self.packages: Dict[PkgKey, PackageEntry] = {}
         self.is_bin: bool = True
+        self.packages: Dict[PkgKey, PackageEntry] = {}
         self.src_dict: Dict[str, str] = {}
-        self.bin_dict: Dict = {}
+        self.bin_dict: Dict[PkgKey, List[str]] = {}
         self.prov_dict: Dict[str, str] = {}
         self.latest_index: Dict[str, PkgKey] = {}
+        self.latest_src: Dict[str, PkgKey] = {}
+        self.latest_bin: Dict[str, PkgKey] = {}
 
     # ---- parsing -----------------------------------------------------------
 
     @classmethod
-    def from_file(cls, filepath: str, provide_mode: bool = False) -> 'Metadata':
+    def from_file(cls, filepath: str) -> 'Metadata':
         meta = cls()
-        meta._parse(filepath, provide_mode)
+        meta._parse(filepath)
         return meta
 
-    def _parse(self, filepath: str, provide_mode: bool = False) -> None:
+    def _parse(self, filepath: str) -> None:
         is_bin_metadata = True
-        src_dict = None if provide_mode else self.src_dict
-        bin_dict = None if provide_mode else self.bin_dict
-        prov_dict = self.prov_dict if provide_mode else None
-
-        if provide_mode:
-            prov_dict = self.prov_dict
 
         with open(filepath, 'rt', encoding='utf-8') as f:
             content = f.read()
@@ -80,9 +77,7 @@ class Metadata:
                     block_list.append(line.rstrip())
 
             for line in block_list:
-                if not line or line[0].isspace():
-                    continue
-                if ':' not in line:
+                if not line or line[0].isspace() or ':' not in line:
                     continue
 
                 key, value = line.split(':', 1)
@@ -90,14 +85,14 @@ class Metadata:
 
                 if key == 'Package':
                     pkg_name = value
-                elif key == 'Binary' and bin_dict is not None and src_dict is not None:
+                elif key == 'Binary':
                     is_bin_metadata = False
                     bin_pkgs = [p.strip() for p in value.split(',')]
                     src_key = (pkg_name, '')
-                    bin_dict[src_key] = bin_pkgs
+                    self.bin_dict[src_key] = bin_pkgs
                     for p in bin_pkgs:
-                        src_dict[p] = pkg_name
-                elif key == 'Source' and bin_dict is not None:
+                        self.src_dict[p] = pkg_name
+                elif key == 'Source':
                     source_line = value.split()
                     src_name = source_line[0]
                     src_ver: Optional[str] = None
@@ -108,14 +103,14 @@ class Metadata:
                     source = src_name
                     source_version = src_ver or ''
                     src_key = (src_name, source_version)
-                    if src_key not in bin_dict:
-                        bin_dict[src_key] = [pkg_name]
+                    if src_key not in self.bin_dict:
+                        self.bin_dict[src_key] = [pkg_name]
                     else:
-                        bin_dict[src_key].append(pkg_name)
-                elif key == 'Provides' and prov_dict is not None:
+                        self.bin_dict[src_key].append(pkg_name)
+                elif key == 'Provides':
                     prov_pkgs = [p.strip().split()[0] for p in value.split(',')]
                     for p in prov_pkgs:
-                        prov_dict[p] = pkg_name
+                        self.prov_dict[p] = pkg_name
                 elif key == 'Version':
                     version = value
                 elif key in ('Build-Depends', 'Build-Depends-Indep', 'Build-Depends-Arch',
@@ -144,27 +139,36 @@ class Metadata:
                 if source is None:
                     source = pkg_name
                     source_version = version
-                    if is_bin_metadata and bin_dict is not None:
+                    if is_bin_metadata:
                         src_key = (source, source_version)
-                        if src_key not in bin_dict:
-                            bin_dict[src_key] = [pkg_name]
+                        if src_key not in self.bin_dict:
+                            self.bin_dict[src_key] = [pkg_name]
                         else:
-                            bin_dict[src_key].append(pkg_name)
+                            self.bin_dict[src_key].append(pkg_name)
                 elif not source_version:
                     source_version = version
 
                 self.packages[pkg_key] = PackageEntry(
+                    package=pkg_name,
                     version=version,
                     block=block,
                     depends=depends,
-                    source=(source, source_version),
+                    source=source,
                     source_version=source_version,
                 )
 
-                # Update latest_index: keep the highest version for each package name
                 latest = self.latest_index.get(pkg_name)
                 if latest is None or apt_pkg.version_compare(version, latest[1]) > 0:
                     self.latest_index[pkg_name] = pkg_key
+
+                if is_bin_metadata:
+                    latest = self.latest_bin.get(pkg_name)
+                    if latest is None or apt_pkg.version_compare(version, latest[1]) > 0:
+                        self.latest_bin[pkg_name] = pkg_key
+                else:
+                    latest = self.latest_src.get(pkg_name)
+                    if latest is None or apt_pkg.version_compare(version, latest[1]) > 0:
+                        self.latest_src[pkg_name] = pkg_key
             else:
                 logging.warning(f'Package already in list: {pkg_key}')
 
@@ -209,92 +213,9 @@ class Metadata:
         logging.warning(f'Package not found: {pkg_name}')
         return None
 
-    # ---- classmethod handlers (backward compat) ----------------------------
-
-    @classmethod
-    def handle_resolve_src(
-        cls, pkg_key: Optional[PkgKey], origin: Dict, is_bin: bool, bin_dict: Dict, add_version: bool,
-    ) -> str:
-        meta = cls()
-        meta.packages = origin
-        meta.is_bin = is_bin
-        meta.bin_dict = bin_dict
-        return meta.resolve_src(pkg_key, add_version)
-
-    @classmethod
-    def handle_resolve_bin(
-        cls, pkg_key: Optional[PkgKey], origin: Dict, is_bin: bool, bin_dict: Dict, add_version: bool,
-    ) -> str:
-        meta = cls()
-        meta.packages = origin
-        meta.is_bin = is_bin
-        meta.bin_dict = bin_dict
-        return meta.resolve_bin(pkg_key, add_version)
-
-    @classmethod
-    def handle_resolve_group(
-        cls, pkg_key: Optional[PkgKey], origin: Dict, is_bin: bool, bin_dict: Dict, target: Dict,
-    ) -> str:
-        src_meta = cls()
-        src_meta.packages = origin
-        src_meta.is_bin = is_bin
-        src_meta.bin_dict = bin_dict
-        tgt_meta = cls()
-        tgt_meta.bin_dict = bin_dict
-        return src_meta.resolve_group(pkg_key, tgt_meta)
-
-    @classmethod
-    def handle_add_version(cls, line_left_side: str, origin: Dict) -> str:
-        meta = cls()
-        meta.packages = origin
-        return meta.add_version(line_left_side)
-
-    @classmethod
-    def handle_depends(
-        cls, pkg_key: Optional[PkgKey], origin: Dict, src_dict: Dict, prov_dict: Dict,
-        depth: int, depends_set: Dict,
-    ) -> Tuple[Dict, str]:
-        meta = cls()
-        meta.packages = origin
-        meta.src_dict = src_dict
-        meta.prov_dict = prov_dict
-        return meta.depends(pkg_key, depth, depends_set)
-
-    @classmethod
-    def handle_rdepends(cls, pkg_key: Optional[PkgKey], origin: Dict) -> str:
-        meta = cls()
-        meta.packages = origin
-        return meta.rdepends(pkg_key)
-
-    @classmethod
-    def handle_remove(cls, pkg_key: Optional[PkgKey], origin: Dict) -> str:
-        meta = cls()
-        meta.packages = origin
-        return meta.remove(pkg_key)
-
-    @classmethod
-    def handle_backport(cls, pkg_key: Optional[PkgKey], origin: Dict, target: Dict, add_missing: bool) -> str:
-        src_meta = cls()
-        src_meta.packages = origin
-        tgt_meta = cls()
-        tgt_meta.packages = target
-        return src_meta.backport(pkg_key, tgt_meta, add_missing)
-
-    @classmethod
-    def handle_topo_sort(
-        cls, packages_set: Set[PkgKey], target: Dict, src_dict: Dict, prov_dict: Dict,
-        dot_file: Optional[str] = None,
-    ) -> str:
-        meta = cls()
-        meta.packages = target
-        meta.src_dict = src_dict
-        meta.prov_dict = prov_dict
-        return meta.toposort(packages_set, dot_file)
-
 # ---- resolve operations ------------------------------------------------
 
     def _version_matches(self, pkg_key: PkgKey, version: str) -> bool:
-        """True when pkg_key's version is empty (match-all) or equals the given version."""
         return not pkg_key[1] or version == pkg_key[1]
 
     def resolve_src(self, pkg_key: Optional[PkgKey], add_version: bool = False) -> str:
@@ -312,9 +233,9 @@ class Metadata:
         else:
             ek = pkg_key if pkg_key in self.packages else self.find_latest(pn)
             if ek:
-                src = self.packages[ek].source
-                if self._version_matches(pkg_key, src[1]):
-                    out.append(f'{src[0]}={src[1]}' if (add_version and src[1]) else src[0])
+                entry = self.packages[ek]
+                if self._version_matches(pkg_key, entry.source_version):
+                    out.append(f'{entry.source}={entry.source_version}' if (add_version and entry.source_version) else entry.source)
         return '\n'.join(out)
 
     def resolve_bin(self, pkg_key: Optional[PkgKey], add_version: bool = False) -> str:
@@ -329,8 +250,7 @@ class Metadata:
                         out.append(b)
         else:
             for p, entry in self.packages.items():
-                src = entry.source
-                if src[0] == pn and self._version_matches(pkg_key, src[1]):
+                if entry.source == pn and self._version_matches(pkg_key, entry.source_version):
                     out.append(f'{p[0]}={entry.version}' if add_version else p[0])
         return '\n'.join(out)
 
@@ -340,9 +260,8 @@ class Metadata:
             return ''
         pn = pkg_key[0]
         ek = pkg_key if pkg_key in self.packages else self.find_latest(pn)
-        if ek and self.packages[ek].source is not None:
-            src = self.packages[ek].source
-            sn = src[0]
+        if ek:
+            sn = self.packages[ek].source
             bin_keys = target.find_bin_dict_keys(sn)
             if bin_keys:
                 seen: Set[str] = set()
@@ -358,7 +277,7 @@ class Metadata:
                             for b in bins:
                                 out.append(b)
             else:
-                logging.error(f'Cannot resolve group for {pkg_key} via {src}')
+                logging.error(f'Cannot resolve group for {pkg_key} via {sn}')
         return '\n'.join(out)
 
     def add_version(self, line_left_side: str) -> str:
@@ -611,15 +530,14 @@ class PreDoseApp:
         if only_one and self.args.origin_repo is not None:
             argparse.ArgumentParser().error("option does not require ORIGIN_REPO")
 
-        # Parse metadata via Metadata class
         path = self.args.origin_repo if not only_one else self.args.target_repo
         self.origin_meta = Metadata.from_file(path)
         if not only_one:
             self.target_meta = Metadata.from_file(self.args.target_repo)
         if self.args.provide:
-            provide_meta = Metadata()
-            provide_meta._parse(self.args.provide, provide_mode=True)
-            self.origin_meta.prov_dict.update(provide_meta.prov_dict)
+            provide_meta = Metadata.from_file(self.args.provide)
+            for k in provide_meta.prov_dict:
+                self.origin_meta.prov_dict[k] = provide_meta.prov_dict[k]
 
         packages_set: Set[PkgKey] = set()
         depends_set: Dict = {}

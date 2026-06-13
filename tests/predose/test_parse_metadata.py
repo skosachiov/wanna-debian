@@ -26,27 +26,33 @@ def test_parse_metadata_packages():
         assert isinstance(pkg_key[0], str)
         assert isinstance(pkg_key[1], str)
         assert isinstance(entry.version, str)
-        assert isinstance(entry.source, tuple)
+        assert isinstance(entry.source, str)
         assert isinstance(entry.source_version, str)
         assert isinstance(entry.depends, list)
         assert isinstance(entry.block, str)
 
 def test_parse_metadata_sources():
-    """Test parsing Sources file"""
     data_dir = Path(__file__).parent / "data"
-    sources_file = data_dir / "sample_Sources"
+    packages_file = data_dir / "sample_Sources"
 
-    meta = Metadata.from_file(sources_file)
+    meta = Metadata.from_file(packages_file)
 
-    assert isinstance(meta.src_dict, dict)
-    assert isinstance(meta.bin_dict, dict)
+    assert meta.is_bin == False
+    assert isinstance(meta.packages, dict)
 
-    expected_source_count = 1213
-    assert len(meta.src_dict) == expected_source_count
+    expected_package_count = 600
+    assert len(meta.packages) == expected_package_count
 
-    for bin_name, src_name in meta.src_dict.items():
-        assert isinstance(bin_name, str)
-        assert isinstance(src_name, str)
+    for pkg_key, entry in meta.packages.items():
+        assert isinstance(pkg_key, tuple)
+        assert len(pkg_key) == 2
+        assert isinstance(pkg_key[0], str)
+        assert isinstance(pkg_key[1], str)
+        assert isinstance(entry.version, str)
+        assert isinstance(entry.source, str)
+        assert isinstance(entry.source_version, str)
+        assert isinstance(entry.depends, list)
+        assert isinstance(entry.block, str)
 
 def test_parse_metadata_file_not_found():
     """Test handling of non-existent file"""
@@ -86,7 +92,7 @@ def test_package_specific_fields():
 
     for pkg_key, entry in list(meta.packages.items())[:1]:
         assert isinstance(entry.version, str)
-        assert isinstance(entry.source, tuple)
+        assert isinstance(entry.source, str)
         assert isinstance(entry.source_version, str)
         assert isinstance(entry.depends, list)
         assert isinstance(entry.block, str)
@@ -96,9 +102,12 @@ def test_provides_mapping():
     data_dir = Path(__file__).parent / "data"
     packages_file = data_dir / "sample_Packages"
 
-    meta = Metadata.from_file(packages_file, provide_mode=True)
+    meta = Metadata.from_file(packages_file)
 
     assert isinstance(meta.prov_dict, dict)
+    print(len(meta.prov_dict))
+    for k,v in meta.prov_dict.items():
+        print(k, v)
 
 def test_binary_to_source_mapping():
     """Test binary to source mapping"""

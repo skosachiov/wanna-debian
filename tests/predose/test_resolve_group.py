@@ -97,8 +97,8 @@ def test_resolve_group_on_source_metadata(setup_origin_metadata):
     """Test resolve-group on source metadata (is_bin_metadata=False)"""
     meta = setup_origin_metadata
 
-    result = Metadata.handle_resolve_group(
-        make_pkg_key("linux"), meta.packages, meta.is_bin, meta.bin_dict, meta.packages
+    result = meta.resolve_group(
+        make_pkg_key("linux"), meta
     )
     output_lines = result.split('\n')
 
@@ -107,8 +107,8 @@ def test_resolve_group_on_source_metadata(setup_origin_metadata):
     assert 'linux-headers' in output_lines
     assert 'linux-libc-dev' in output_lines
 
-    result = Metadata.handle_resolve_group(
-        make_pkg_key("glibc"), meta.packages, meta.is_bin, meta.bin_dict, meta.packages
+    result = meta.resolve_group(
+        make_pkg_key("glibc"), meta
     )
     output_lines = result.split('\n')
 
@@ -121,8 +121,8 @@ def test_resolve_group_on_binary_metadata(setup_target_metadata):
     """Test resolve-group on binary metadata (is_bin_metadata=True)"""
     meta = setup_target_metadata
 
-    result = Metadata.handle_resolve_group(
-        make_pkg_key("linux-image"), meta.packages, meta.is_bin, meta.bin_dict, meta.packages
+    result = meta.resolve_group(
+        make_pkg_key("linux-image"), meta
     )
     output_lines = result.split('\n')
 
@@ -131,8 +131,8 @@ def test_resolve_group_on_binary_metadata(setup_target_metadata):
     assert 'linux-headers' in output_lines
     assert 'linux-libc-dev' in output_lines
 
-    result = Metadata.handle_resolve_group(
-        make_pkg_key("libc6"), meta.packages, meta.is_bin, meta.bin_dict, meta.packages
+    result = meta.resolve_group(
+        make_pkg_key("libc6"), meta
     )
     output_lines = result.split('\n')
 
@@ -163,8 +163,8 @@ Source: linux
 
     os.unlink(temp_file)
 
-    result = Metadata.handle_resolve_group(
-        make_pkg_key("linux-image"), meta.packages, meta.is_bin, meta.bin_dict, meta.packages
+    result = meta.resolve_group(
+        make_pkg_key("linux-image"), meta
     )
     output_lines = result.split('\n')
 
