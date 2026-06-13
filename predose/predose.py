@@ -252,31 +252,44 @@ class Metadata:
                     out.append(f'{p[0]}={entry.version}' if add_version else p[0])
         return '\n'.join(out)
 
-    def resolve_group(self, pkg_key: Optional[PkgKey], target: 'Metadata') -> str:
-        out: List[str] = []
+    def resolve_group(self, pkg_key: Optional[PkgKey], add_version: bool = False) -> str:
         if pkg_key is None:
             return ''
         pn = pkg_key[0]
+        av = add_version is True
         ek = pkg_key if pkg_key in self.packages else self.find_latest(pn)
         if ek:
             sn = self.packages[ek].source
-            bin_keys = target.find_bin_dict_keys(sn)
-            if bin_keys:
-                seen: Set[str] = set()
-                for bk in bin_keys:
-                    for b in target.bin_dict[bk]:
-                        if b not in seen:
+            bk = self.find_bin_dict_keys(sn)
+            if not bk:
+                if self.is_bin:
+                    logging.error(f'Cannot resolve group for {pkg_key}')
+                    return ''
+                for src, bins in self.bin_dict.items():
+                    if pn in bins and self._version_matches(pkg_key, src[1]):
+                        bk = [src]
+                        break
+            out: List[str] = []
+            seen: Set[str] = set()
+            for k in bk:
+                for b in self.bin_dict[k]:
+                    if b not in seen:
+                        if av:
+                            v = ''
+                            for p, entry in self.packages.items():
+                                if p[0] == b:
+                                    if p[1] == pkg_key[1]:
+                                        v = entry.version
+                                        break
+                                    if not v:
+                                        v = entry.version
+                            out.append(f'{b}={v}' if v else b)
+                        else:
                             out.append(b)
-                            seen.add(b)
-            elif not self.is_bin:
-                for src_candidate, bins in self.bin_dict.items():
-                    if pn in bins:
-                        if self._version_matches(pkg_key, src_candidate[1]):
-                            for b in bins:
-                                out.append(b)
-            else:
-                logging.error(f'Cannot resolve group for {pkg_key} via {sn}')
-        return '\n'.join(out)
+                        seen.add(b)
+            return '\n'.join(out)
+        logging.error(f'Cannot resolve group for {pkg_key}')
+        return ''
 
     def add_version(self, line_left_side: str) -> str:
         parts = line_left_side.split('=')
@@ -566,10 +579,10 @@ class PreDoseApp:
                 result = self.origin_meta.resolve_src(pkg_key, self.args.add_version)
             elif self.args.resolve_bin:
                 result = self.origin_meta.resolve_bin(pkg_key, self.args.add_version)
+            elif self.args.resolve_group:
+                result = self.origin_meta.resolve_group(pkg_key, self.args.add_version)
             elif self.args.add_version:
                 result = self.origin_meta.add_version(parts[0])
-            elif self.args.resolve_group:
-                result = self.origin_meta.resolve_group(pkg_key, self.target_meta or self.origin_meta)
             elif self.args.depends:
                 depends_set, result = self.origin_meta.depends(
                     pkg_key, self.args.depends, depends_set,
