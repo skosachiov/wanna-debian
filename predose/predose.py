@@ -56,7 +56,6 @@ class Metadata:
         return meta
 
     def _parse(self, filepath: str) -> None:
-        is_bin_metadata = True
 
         with open(filepath, 'rt', encoding='utf-8') as f:
             content = f.read()
@@ -86,7 +85,7 @@ class Metadata:
                 if key == 'Package':
                     pkg_name = value
                 elif key == 'Binary':
-                    is_bin_metadata = False
+                    self.is_bin = False
                     bin_pkgs = [p.strip() for p in value.split(',')]
                     src_key = (pkg_name, '')
                     self.bin_dict[src_key] = bin_pkgs
@@ -139,7 +138,7 @@ class Metadata:
                 if source is None:
                     source = pkg_name
                     source_version = version
-                    if is_bin_metadata:
+                    if self.is_bin:
                         src_key = (source, source_version)
                         if src_key not in self.bin_dict:
                             self.bin_dict[src_key] = [pkg_name]
@@ -161,7 +160,7 @@ class Metadata:
                 if latest is None or apt_pkg.version_compare(version, latest[1]) > 0:
                     self.latest_index[pkg_name] = pkg_key
 
-                if is_bin_metadata:
+                if self.is_bin:
                     latest = self.latest_bin.get(pkg_name)
                     if latest is None or apt_pkg.version_compare(version, latest[1]) > 0:
                         self.latest_bin[pkg_name] = pkg_key
@@ -172,7 +171,6 @@ class Metadata:
             else:
                 logging.warning(f'Package already in list: {pkg_key}')
 
-        self.is_bin = is_bin_metadata
         logging.debug(f'Parsed {len(self.packages)} packages from {filepath}')
 
     # ---- lookups -----------------------------------------------------------
