@@ -198,6 +198,13 @@ class Metadata:
             return found
         return pkg_key
 
+    def leave_latest(self):
+        to_delete = []
+        for p in self.packages:
+            if p not in self.latest_index.values():
+                to_delete.append(p)
+        for p in to_delete:
+            del self.packages[p]
 
     def resolve_src(self, pkg_key: Optional[PkgKey], add_version: bool = False) -> str:
         if pkg_key is None:
@@ -451,11 +458,13 @@ class PreDoseApp:
                             help='resolve target binary group and exit')
         parser.add_argument('-t', '--topo-sort', action='store_true',
                             help='perform topological sort and exit')
+        parser.add_argument('-l', '--latest', action='store_true',
+                            help='leave only the latest versions of packages')
         parser.add_argument('-g', '--dot', type=str,
                             help='save toposort graph to dot file')
         parser.add_argument('-a', '--add-version', action='store_true',
                             help='add version to output for resolve operations and exit')
-        parser.add_argument('-l', '--log-level', default='INFO',
+        parser.add_argument('-d', '--log-level', default='INFO',
                             choices=['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'],
                             help='set the logging level (default: INFO)')
         parser.add_argument('--log-file',
@@ -503,8 +512,12 @@ class PreDoseApp:
 
         path = self.args.origin_repo if not only_one else self.args.target_repo
         self.origin_meta = Metadata.from_file(path)
+        if self.args.latest:
+            self.origin_meta.leave_latest()
         if not only_one:
             self.target_meta = Metadata.from_file(self.args.target_repo)
+            if self.args.latest:
+                self.target_meta.leave_latest()
         if self.args.provide:
             provide_meta = Metadata.from_file(self.args.provide)
             for k in provide_meta.prov_dict:
