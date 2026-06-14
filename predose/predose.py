@@ -458,13 +458,13 @@ class PreDoseApp:
                             help='resolve target binary group and exit')
         parser.add_argument('-t', '--topo-sort', action='store_true',
                             help='perform topological sort and exit')
-        parser.add_argument('-l', '--latest', action='store_true',
+        parser.add_argument('-c', '--latest', action='store_true',
                             help='leave only the latest versions of packages')
         parser.add_argument('-g', '--dot', type=str,
                             help='save toposort graph to dot file')
         parser.add_argument('-a', '--add-version', action='store_true',
                             help='add version to output for resolve operations and exit')
-        parser.add_argument('-d', '--log-level', default='INFO',
+        parser.add_argument('-l', '--log-level', default='INFO',
                             choices=['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'],
                             help='set the logging level (default: INFO)')
         parser.add_argument('--log-file',
