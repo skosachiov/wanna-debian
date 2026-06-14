@@ -168,36 +168,17 @@ class Metadata:
 
         logging.debug(f'Parsed {len(self.packages)} packages from {filepath}')
 
-
-    def find_latest(self, name: str) -> Optional[PkgKey]:
-        found = self.latest_index.get(name)
-        if found is not None:
-            return found
-        best = None
-        for k in self.packages:
-            if k[0] == name:
-                if best is None or apt_pkg.version_compare(k[1], best[1]) > 0:
-                    best = k
-        return best
-
-    def find_bin_dict_keys(self, name: str, version: str = '') -> List[PkgKey]:
-        result: List[PkgKey] = []
-        for k in self.bin_dict:
-            if k[0] == name and (not version or k[1] == version):
-                result.append(k)
-        return result
-
     def resolve_pkg_name(self, pkg_name: str) -> Optional[PkgKey]:
-        found = self.find_latest(pkg_name)
+        found = self.latest_index.get(pkg_name)
         if found is not None:
             return found
         if pkg_name in self.src_dict:
-            return self.find_latest(self.src_dict[pkg_name])
+            return self.latest_index.get(self.src_dict[pkg_name])
         if pkg_name in self.prov_dict:
             provider = self.prov_dict[pkg_name]
             if provider in self.src_dict:
-                return self.find_latest(self.src_dict[provider])
-            found = self.find_latest(provider)
+                return self.latest_index.get(self.src_dict[provider])
+            found = self.latest_index.get(provider)
             if found is not None:
                 return found
             logging.error(f'Cannot resolve provided package: {pkg_name}')
@@ -212,7 +193,7 @@ class Metadata:
                 return pkg_key
             logging.error(f'Package not found: {_format_key(pkg_key)}')
             return None
-        found = self.find_latest(name)
+        found = self.latest_index.get(name)
         if found is not None:
             return found
         return pkg_key
@@ -491,7 +472,7 @@ class PreDoseApp:
 
     def _resolve_name(self, name: str) -> Optional[PkgKey]:
         if self.origin_meta:
-            found = self.origin_meta.find_latest(name)
+            found = self.origin_meta.latest_index.get(name)
             if found:
                 return found
         return None
