@@ -312,7 +312,7 @@ class Metadata:
                     break
             else:
                 logging.warning(f'Dependency search did not reach leaves: {depth}')
-        out = '\n'.join(str(k) for k in depends_set.keys())
+        out = '\n'.join(_format_key(k) for k in depends_set.keys())
         return depends_set, out
 
     def rdepends(self, name: str) -> str:
