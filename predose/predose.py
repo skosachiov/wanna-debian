@@ -331,23 +331,21 @@ class Metadata:
                 logging.error(f'Not present: {pkg_key}')
         return ''
 
-    def backport(self, pkg_key: Optional[PkgKey], target: 'Metadata', add_missing: bool = False) -> str:
-        if pkg_key is None:
-            logging.error('Package name not resolved')
-            return ''
+    def backport(self, pkg_key: Optional[PkgKey], target: 'Metadata', add_missing: bool = False) -> bool:
         if pkg_key not in self.packages:
             logging.error(f'No package in origin: {pkg_key}')
-            return ''
-        if pkg_key not in target.packages:
+            return False
+        if pkg_key[0] not in target.latest_index.keys():
             target.packages[pkg_key] = self.packages[pkg_key]
             logging.info(f'Add to target: {pkg_key}')
-            return ''
+            return True
         if not add_missing:
+            del target.packages[target.latest_index[pkg_key[0]]]
             target.packages[pkg_key] = self.packages[pkg_key]
             logging.info(f'Replace in target: {pkg_key}={self.packages[pkg_key].version}')
-            return ''
+            return True
         logging.warning(f'Already in target: {pkg_key}')
-        return ''
+        return False
 
     def output_blocks(self) -> None:
         for entry in self.packages.values():
