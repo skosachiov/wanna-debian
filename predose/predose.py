@@ -113,7 +113,7 @@ class Metadata:
                     for p in deps_pkgs:
                         dep_name = p.split()[0].split(":")[0]
                         if dep_name == pkg_name:
-                            logging.warning(
+                            logging.debug(
                                 f'Package depends on itself, excluded: {pkg_name}'
                             )
                             continue
