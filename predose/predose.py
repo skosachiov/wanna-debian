@@ -254,6 +254,8 @@ class Metadata:
         return '\n'.join(out)
 
     def remove(self, pkg_key: Optional[PkgKey]) -> str:
+        if pkg_key[1] == "":
+            pkg_key = self.latest_index.get(pkg_key[0], "")
         if pkg_key is not None:
             if pkg_key in self.packages:
                 del self.packages[pkg_key]
@@ -263,9 +265,11 @@ class Metadata:
         return ''
 
     def backport(self, pkg_key: Optional[PkgKey], target: 'Metadata', add_missing: bool = False) -> bool:
+        if pkg_key[1] == "":
+            pkg_key = self.latest_index.get(pkg_key[0], "")
         if pkg_key not in self.packages:
             logging.error(f'No package in origin: {pkg_key}')
-            return False
+            return False         
         if pkg_key[0] not in target.latest_index.keys():
             target.packages[pkg_key] = self.packages[pkg_key]
             logging.info(f'Add to target: {pkg_key}')
