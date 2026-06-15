@@ -264,19 +264,15 @@ class Metadata:
                 logging.error(f'Not present: {pkg_key}')
         return ''
 
-    def backport(self, pkg_key: Optional[PkgKey], target: 'Metadata', add_missing: bool = False) -> bool:
+    def backport(self, pkg_key: Optional[PkgKey], target: 'Metadata') -> bool:
         if pkg_key[1] == "":
             pkg_key = self.latest_index.get(pkg_key[0], "")
         if pkg_key not in self.packages:
             logging.error(f'No package in origin: {pkg_key}')
             return False         
-        if pkg_key[0] not in target.latest_index.keys():
+        if pkg_key not in target.latest_index.keys():
             target.packages[pkg_key] = self.packages[pkg_key]
             logging.info(f'Add to target: {pkg_key}')
-            return True
-        if not add_missing:
-            target.packages[pkg_key] = self.packages[pkg_key]
-            logging.info(f'Replace in target: {pkg_key}={self.packages[pkg_key].version}')
             return True
         logging.warning(f'Already in target: {pkg_key}')
         return False
@@ -369,8 +365,6 @@ class PreDoseApp:
                             help='newer repository Packages/Sources')
         parser.add_argument('target_repo', metavar='TARGET_REPO',
                             help='older repository Packages/Sources')
-        parser.add_argument('-m', '--add-missing', action='store_true',
-                            help='add missing packages, do not change versions')
         parser.add_argument('-r', '--remove', action='store_true',
                             help='remove packages instead of replacing or adding')
         parser.add_argument('-p', '--provide', type=str, metavar='PATH',
@@ -492,7 +486,7 @@ class PreDoseApp:
                 result = self.origin_meta.add_version(parts[0])
             elif pkg_key is not None:
                 tgt = self.target_meta if not only_one else self.origin_meta
-                self.origin_meta.backport(pkg_key, tgt, self.args.add_missing)
+                self.origin_meta.backport(pkg_key, tgt)
             else:
                 logging.error(f'Unresolved package: {line.strip()}')
 
