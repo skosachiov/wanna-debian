@@ -287,16 +287,17 @@ class Metadata:
             print(entry.block)
             print()
 
-    def toposort(self, packages: Set[PkgKey], dot_file: Optional[str] = None) -> str:
+    def toposort(self, packages_set: Set[PkgKey], dot_file: Optional[str] = None) -> str:
         graph: Dict = {}
         # Build dependency graph
-        for p in packages:
-            if p not in graph: graph[p] = set()
-            for d in target[p]['depends']:
-                pkg_name = resolve_pkg_name(d.split()[0], target, src_dict, prov_dict)
-                if pkg_name in packages:
-                    graph[p].add(pkg_name)
-                    if pkg_name not in graph: graph[pkg_name] = set()
+        for p in packages_set:
+            if p[0] not in graph: graph[p[0]] = set()
+            for d in self.packages[self.latest_index.get(p[0])].depends:
+                pkg_name = self.src_dict.get((d, ''))
+                if pkg_name is None: continue
+                if (pkg_name[0], '') in packages_set:
+                    graph[p[0]].add(pkg_name[0])
+                    if pkg_name[0] not in graph: graph[pkg_name[0]] = set()
         # Save graph to dot file
         if dot_file:
             with open(dot_file, 'w') as f:
