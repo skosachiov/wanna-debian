@@ -275,6 +275,9 @@ class Metadata:
             return False
         if pkg_key not in target.latest_index.keys():
             target.packages[pkg_key] = self.packages[pkg_key]
+            latest = target.latest_index.get(pkg_key[0])
+            if latest is None or apt_pkg.version_compare(pkg_key[1], latest[1]) > 0:
+                target.latest_index[pkg_key[0]] = pkg_key
             logging.info(f'Add to target: {pkg_key}')
             return True
         return False
@@ -284,7 +287,7 @@ class Metadata:
             print(entry.block)
             print()
 
-    def toposort(self, packages_set: Set[PkgKey], dot_file: Optional[str] = None) -> str:
+    def toposort(self, packages: Set[PkgKey], dot_file: Optional[str] = None) -> str:
         graph: Dict = {}
         # Build dependency graph
         for p in packages:
@@ -513,6 +516,8 @@ class PreDoseApp:
             else:
                 src = self.origin_meta if self._only_one() else self.target_meta
                 if src:
+                    if self.args.latest:
+                        src.leave_latest()
                     src.output_blocks()
 
         logging.debug(f'Pre-dose finished, input lines: {input_lines}')
