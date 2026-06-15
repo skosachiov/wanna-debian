@@ -26,8 +26,12 @@ class PackageEntry:
 PkgKey = Tuple[str, str]
 
 
-def _format_key(key: PkgKey) -> str:
-    return f'{key[0]}{"=" if key[1] != "" else ""}{key[1]}'
+def _format_key(key: PkgKey, add_version: bool = True) -> str:
+    if len(key) < 2: return ""
+    if add_version:
+        return f'{key[0]}{"=" if key[1] != "" else ""}{key[1]}'
+    else:
+        return key[0]
 
 
 class Metadata:
@@ -174,7 +178,7 @@ class Metadata:
         if version:
             if pkg_key in self.packages:
                 return pkg_key
-            logging.error(f'Package not found: {_format_key(pkg_key)}')
+            logging.error(f'Package not found: {pkg_key}')
             return None
         found = self.latest_index.get(name)
         if found is not None:
@@ -192,13 +196,13 @@ class Metadata:
     def resolve_src(self, pkg_key: Optional[PkgKey], add_version: bool = False) -> str:
         if self.is_bin:
             if pkg_key[1] == "":
-                pkg_key = self.latest_index.get(pkg_key[0])
-        return _format_key(self.src_dict[pkg_key])
+                pkg_key = self.latest_index.get(pkg_key[0], "")
+        return _format_key(self.src_dict.get(pkg_key, ""), add_version)
 
     def resolve_bin(self, pkg_key: Optional[PkgKey], add_version: bool = False) -> str:
         if pkg_key[1] == "":
             pkg_key = self.latest_src.get(pkg_key[0])
-        out = '\n'.join(_format_key(k) for k in self.bin_dict[pkg_key])        
+        out = '\n'.join(_format_key(k, add_version) for k in self.bin_dict.get(pkg_key, []))     
         return out
 
     def resolve_group(self, pkg_key: Optional[PkgKey], add_version: bool = False) -> str:
@@ -262,14 +266,14 @@ class Metadata:
                     break
             else:
                 logging.warning(f'Dependency search did not reach leaves: {depth}')
-        out = '\n'.join(_format_key(k) for k in depends_set.keys())
+        out = '\n'.join(_format_key(k, False) for k in depends_set.keys())
         return depends_set, out
 
     def rdepends(self, name: str) -> str:
         out: List[str] = []
         for p in self.packages:
             if name in self.packages[p].depends:
-                out.append(_format_key(p))
+                out.append(_format_key(p, False))
         return '\n'.join(out)
 
     def remove(self, pkg_key: Optional[PkgKey]) -> str:
@@ -351,7 +355,7 @@ def dict_to_dot(d: Dict, graph_name: str = 'G') -> str:
         label = _format_key(key)
         lines.append(f'    "{label}";')
         for value in values:
-            vlabel = _format_key(value)
+            vlabel = _format_key(value, False)
             lines.append(f'    "{vlabel}";')
             lines.append(f'    "{label}" -> "{vlabel}";')
     lines.append("}")
