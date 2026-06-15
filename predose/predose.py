@@ -284,46 +284,43 @@ class Metadata:
 
     def toposort(self, packages_set: Set[PkgKey], dot_file: Optional[str] = None) -> str:
         graph: Dict = {}
-        for p in packages_set:
-            if p not in graph:
-                graph[p] = set()
-            if p not in self.packages:
-                continue
-            for d in self.packages[p].depends:
-                pk = self.resolve_pkg_name(d.split()[0])
-                if pk and pk in packages_set:
-                    graph[p].add(pk)
-                    if pk not in graph:
-                        graph[pk] = set()
-
+        # Build dependency graph
+        for p in packages:
+            if p not in graph: graph[p] = set()
+            for d in target[p]['depends']:
+                pkg_name = resolve_pkg_name(d.split()[0], target, src_dict, prov_dict)
+                if pkg_name in packages:
+                    graph[p].add(pkg_name)
+                    if pkg_name not in graph: graph[pkg_name] = set()
+        # Save graph to dot file
         if dot_file:
             with open(dot_file, 'w') as f:
                 f.write(dict_to_dot(graph))
-
-        rev = {n: set() for n in graph}
-        for n, nb in graph.items():
-            for nb2 in nb:
-                rev[nb2].add(n)
-        nodes = {name: Node(str(name)) for name in rev}
-        edge_count = 0
-        for name, edges in rev.items():
+        # Prepare graph for topological sort
+        graph_dict = reverse_graph(graph)
+        nodes = {name: Node(name) for name in graph_dict}
+        edges_counter = 0
+        for name, edges in graph_dict.items():
             node = nodes[name]
-            edge_count += len(edges)
-            for en in edges:
-                node.edges.append(nodes[en])
-        nlist = list(nodes.values())
-        logging.debug(f'Toposort started, edges: {edge_count}')
-        sl = StableTopoSort.stable_topo_sort(nlist)
-        tl = [(level, node.name) for level, node in sl]
-        return '\n'.join(str(t) for t in sorted(tl))
-
+            edges_counter += len(edges)
+            for edge_name in edges:
+                node.edges.append(nodes[edge_name])
+        nodes = list(nodes.values())
+        logging.debug(f'Stable topological sort started, number of edges: {edges_counter}')
+        # Perform and output topological sort
+        sorted_nodes_with_levels = StableTopoSort.stable_topo_sort(nodes)
+        tl = []
+        for level, node in sorted_nodes_with_levels:
+            tl.append((level, node.name))
+        output_lines = [str(t) for t in sorted(tl)]
+        return '\n'.join(output_lines)
 
 def reverse_graph(graph: Dict) -> Dict:
-    rev: Dict = {n: set() for n in graph}
-    for n, nb in graph.items():
-        for nb2 in nb:
-            rev[nb2].add(n)
-    return rev
+    reversed_graph: Dict = {node: set() for node in graph}
+    for node, neighbors in graph.items():
+        for neighbor in neighbors:
+            reversed_graph[neighbor].add(node)
+    return reversed_graph
 
 
 def dict_to_dot(d: Dict, graph_name: str = 'G') -> str:
