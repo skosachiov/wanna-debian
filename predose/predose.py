@@ -27,7 +27,7 @@ PkgKey = Tuple[str, str]
 
 
 def _format_key(key: PkgKey) -> str:
-    return f'{key[0]}={key[1]}'
+    return f'{key[0]}{"=" if key[1] != "" else ""}{key[1]}'
 
 
 class Metadata:
@@ -41,8 +41,6 @@ class Metadata:
         self.prov_dict: Dict[str, str] = {}
         self.latest_index: Dict[str, PkgKey] = {}
         self.latest_src: Dict[str, PkgKey] = {}
-        self.latest_bin: Dict[str, PkgKey] = {}
-
 
     @classmethod
     def from_file(cls, filepath: str) -> 'Metadata':
@@ -82,22 +80,12 @@ class Metadata:
                     pkg_name = value
                 elif key == 'Binary':
                     self.is_bin = False
-                    bin_pkgs = [p.strip() for p in value.split(',')]
+                    bin_pkgs = [(p.strip(), '') for p in value.split(',')]
                 elif key == 'Source':
-                    source_line = value.split()
-                    src_name = source_line[0]
-                    src_ver: Optional[str] = None
-                    if len(source_line) > 1:
-                        m = re.findall(r'\((.*?)\)', source_line[1])
-                        if m:
-                            src_ver = m[0]
-                    source = src_name
-                    source_version = src_ver or ''
-                    src_key = (src_name, source_version)
-                    if src_key not in self.bin_dict:
-                        self.bin_dict[src_key] = [pkg_name]
-                    else:
-                        self.bin_dict[src_key].append(pkg_name)
+                    source_line = value.strip().split()
+                    if len(source_line) > 0:
+                        source = source_line[0]
+                        if len(source_line) > 1: source_version = re.findall(r'\((.*?)\)', source_line[1])[0]
                 elif key == 'Provides':
                     prov_pkgs = [p.strip().split()[0] for p in value.split(',')]
                     for p in prov_pkgs:
@@ -124,48 +112,42 @@ class Metadata:
             if pkg_name is None:
                 continue
 
+            if source is None: source = pkg_name
+            if source_version is None: source_version = version
             pkg_key = (pkg_name, version)
+            src_key = (source, source_version)
 
-            if pkg_key not in self.packages:
-                if source is None:
-                    source = pkg_name
-                    source_version = version
-                    if self.is_bin:
-                        src_key = (source, source_version)
-                        if src_key not in self.bin_dict:
-                            self.bin_dict[src_key] = [pkg_name]
-                        else:
-                            self.bin_dict[src_key].append(pkg_name)
-                elif not source_version:
-                    source_version = version
-                
-                self.bin_dict[(source, source_version)] = bin_pkgs
-                for p in bin_pkgs:
-                    self.src_dict[p] = (source, source_version)
+            if pkg_key in self.packages:
+                logging.warning(f'Duplicate package detected: {pkg_key}')
+                continue
 
-                self.packages[pkg_key] = PackageEntry(
-                    package=pkg_name,
-                    version=version,
-                    block=block,
-                    depends=depends,
-                    source=source,
-                    source_version=source_version,
-                )
+            if self.is_bin:
+                bin_pkgs = [pkg_key]
 
-                latest = self.latest_index.get(pkg_name)
-                if latest is None or apt_pkg.version_compare(version, latest[1]) > 0:
-                    self.latest_index[pkg_name] = pkg_key
-
-                if self.is_bin:
-                    latest = self.latest_bin.get(pkg_name)
-                    if latest is None or apt_pkg.version_compare(version, latest[1]) > 0:
-                        self.latest_bin[pkg_name] = pkg_key
-                else:
-                    latest = self.latest_src.get(pkg_name)
-                    if latest is None or apt_pkg.version_compare(version, latest[1]) > 0:
-                        self.latest_src[pkg_name] = pkg_key
+            if src_key not in self.bin_dict:
+                self.bin_dict[src_key] = bin_pkgs
             else:
-                logging.warning(f'Package already in list: {pkg_key}')
+                self.bin_dict[src_key].extend(bin_pkgs)
+            
+            for p in bin_pkgs:
+                self.src_dict[p] = src_key
+
+            self.packages[pkg_key] = PackageEntry(
+                package=pkg_name,
+                version=version,
+                block=block,
+                depends=depends,
+                source=source,
+                source_version=source_version,
+            )
+
+            latest = self.latest_index.get(pkg_name)
+            if latest is None or apt_pkg.version_compare(version, latest[1]) > 0:
+                self.latest_index[pkg_name] = pkg_key
+
+            latest = self.latest_src.get(source)
+            if latest is None or apt_pkg.version_compare(source_version, latest[1]) > 0:
+                self.latest_src[source] = src_key
 
         logging.debug(f'Parsed {len(self.packages)} packages from {filepath}')
 
@@ -208,50 +190,16 @@ class Metadata:
             del self.packages[p]
 
     def resolve_src(self, pkg_key: Optional[PkgKey], add_version: bool = False) -> str:
-        if pkg_key is None:
-            return ''
-        resolved = self._resolve_key(pkg_key)
-        if resolved is None:
-            return ''
-        pn, pv = resolved
-
-        if not self.is_bin:
-            for src_key, bins in self.bin_dict.items():
-                if pn in bins and (not src_key[1] or src_key[1] == pv):
-                    n, v = src_key
-                    return f'{n}={v}' if (add_version and v) else n
-            return ''
-        else:
-            entry = self.packages.get(resolved)
-            if entry is None:
-                return ''
-            return f'{entry.source}={entry.source_version}' if (add_version and entry.source_version) else entry.source
+        if self.is_bin:
+            if pkg_key[1] == "":
+                pkg_key = self.latest_index.get(pkg_key[0])
+        return _format_key(self.src_dict[pkg_key])
 
     def resolve_bin(self, pkg_key: Optional[PkgKey], add_version: bool = False) -> str:
-        out: List[str] = []
-        if pkg_key is None:
-            return ''
-        resolved = self._resolve_key(pkg_key)
-        if resolved is None:
-            return ''
-        pn, pv = resolved
-        print("D", self.bin_dict, pn, pv )
-
-        if not self.is_bin:
-            for s, bins in self.bin_dict.items():
-                if s[0] == pn and (not s[1] or s[1] == pv):
-                    out.extend(bins)
-        else:
-            for p, entry in self.packages.items():
-                if entry.source == pn:
-                    if not pv:
-                        out.append(f'{p[0]}={entry.version}' if add_version else p[0])
-                    elif entry.source_version == pv:
-                        out.append(f'{p[0]}={entry.version}' if add_version else p[0])
-                    elif not entry.source_version and entry.version == pv:
-                        out.append(f'{p[0]}={entry.version}' if add_version else p[0])
-
-        return '\n'.join(out)
+        if pkg_key[1] == "":
+            pkg_key = self.latest_src.get(pkg_key[0])
+        out = '\n'.join(_format_key(k) for k in self.bin_dict[pkg_key])        
+        return out
 
     def resolve_group(self, pkg_key: Optional[PkgKey], add_version: bool = False) -> str:
         if pkg_key is None:
@@ -535,14 +483,7 @@ class PreDoseApp:
             name = parts[0]
             version = parts[1] if len(parts) > 1 else ''
 
-            if version:
-                pkg_key = (name, version)
-            else:
-                resolved = self._resolve_name(name)
-                if resolved is not None:
-                    pkg_key = resolved
-                else:
-                    pkg_key = (name, '')
+            pkg_key = (name, version)
 
             packages_set.add(pkg_key)
             input_lines.append(parts)
