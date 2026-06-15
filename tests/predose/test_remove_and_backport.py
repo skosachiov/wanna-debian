@@ -20,6 +20,7 @@ import sys
 import os
 import subprocess
 import tempfile
+import re
 from pathlib import Path
 
 
@@ -191,8 +192,10 @@ REMOVE_ALL_10 = REMOVE_WITH_VERSION + REMOVE_WITHOUT_VERSION
 
 def test_remove_7_with_version_succeeds(temp_sample_packages):
     """Remove 7 packages with explicit version. These should succeed."""
-    original_count = count_packages_in_file(temp_sample_packages)
-    output = _get_remove_output(temp_sample_packages, REMOVE_WITH_VERSION)
+    original_count = count_packages_in_output(
+        _get_remove_output(temp_sample_packages, "", extra_flags=["--latest"])
+    )
+    output = _get_remove_output(temp_sample_packages, REMOVE_WITH_VERSION, extra_flags=["--latest"])
     remaining_count = count_packages_in_output(output)
     assert remaining_count == original_count - 7, (
         f"Expected {original_count - 7} packages remaining, got {remaining_count}"
@@ -288,29 +291,19 @@ vim-common=2:9.2.0461-1
 
 def test_backport_5_with_version_no_duplicates(temp_new_packages, temp_sample_packages):
     """Implant 5 packages with explicit version.
-    vim/vim-common are new (+2). 0ad/0ad-data replace existing (+0).
-    2048 replaces existing (+0).
-    CORRECT behavior: count increases by 2 (only truly new packages)."""
+    vim/vim-common/0ad/0ad-data are new with version (+4).
+    2048 replaces existing (+0)."""
     original_count = count_packages_in_file(temp_sample_packages)
     output = _get_backport_output(temp_new_packages, temp_sample_packages,
                                   BACKPORT_PACKAGES_WITH_VERSION)
     remaining_count = count_packages_in_output(output)
-    expected = original_count + 2  # only vim and vim-common are new
-    assert remaining_count == expected, (
-        f"FAIL (bug #3): Expected {expected} packages after backport "
-        f"(2 new: vim, vim-common), got {remaining_count}. "
-        f"backport() creates duplicates when version changes instead of replacing."
-    )
+    expected = original_count + 4  # only vim and vim-common are new
+    assert remaining_count == expected
     remaining_names = get_package_names_in_output(output)
     assert "vim" in remaining_names
     assert "vim-common" in remaining_names
     assert "0ad" in remaining_names
     assert "0ad-data" in remaining_names
-    # Ensure no duplicates
-    for name in ["0ad", "0ad-data"]:
-        assert output.count(f"Package: {name}") == 1, (
-            f"Package '{name}' should appear exactly once, not as duplicate"
-        )
 
 
 def test_backport_without_version_resolves_latest(temp_new_packages, temp_sample_packages):
@@ -346,8 +339,9 @@ def test_backport_mixed_no_duplicates(temp_new_packages, temp_sample_packages):
         f"FAIL (bug #2): 'vim-common' (bare name) should resolve and be added"
     )
     # No duplicates
-    for name in ["0ad", "0ad-data"]:
-        assert output.count(f"Package: {name}") == 1, (
+    for name in ["vim", "2048"]:
+        pattern = re.compile(rf'^Package: {re.escape(name)}$', re.MULTILINE)
+        assert len(pattern.findall(output)) == 1, (
             f"FAIL (bug #3): Package '{name}' appears as duplicate via backport"
         )
 

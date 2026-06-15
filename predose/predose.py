@@ -266,15 +266,17 @@ class Metadata:
 
     def backport(self, pkg_key: Optional[PkgKey], target: 'Metadata') -> bool:
         if pkg_key[1] == "":
-            pkg_key = self.latest_index.get(pkg_key[0], "")
+            pkg_key = self.latest_index.get(pkg_key[0], (pkg_key[0], ""))
         if pkg_key not in self.packages:
             logging.error(f'No package in origin: {pkg_key}')
-            return False         
+            return False
+        if pkg_key in target.packages.keys():
+            logging.warning(f'Already in target: {pkg_key}')
+            return False
         if pkg_key not in target.latest_index.keys():
             target.packages[pkg_key] = self.packages[pkg_key]
             logging.info(f'Add to target: {pkg_key}')
             return True
-        logging.warning(f'Already in target: {pkg_key}')
         return False
 
     def output_blocks(self) -> None:
@@ -435,12 +437,14 @@ class PreDoseApp:
 
         path = self.args.origin_repo if not only_one else self.args.target_repo
         self.origin_meta = Metadata.from_file(path)
-        if self.args.latest:
-            self.origin_meta.leave_latest()
-        if not only_one:
+        if only_one:
+            if self.args.latest:
+                self.origin_meta.leave_latest()                
+        else:
             self.target_meta = Metadata.from_file(self.args.target_repo)
             if self.args.latest:
                 self.target_meta.leave_latest()
+            
         if self.args.provide:
             provide_meta = Metadata.from_file(self.args.provide)
             for k in provide_meta.prov_dict:

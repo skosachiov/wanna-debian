@@ -102,6 +102,25 @@ MD5sum: 2cad99c3b566a249b9306d5b208d1f4c
 SHA256: 4600f44e9f57dcb8a5c050867e9cfe44937299f15f3e7493230ed9091fab57f2
 
 Package: 0ad-data
+Version: 0.27.0-1
+Installed-Size: 3433612
+Maintainer: Debian Games Team <pkg-games-devel@lists.alioth.debian.org>
+Architecture: all
+Pre-Depends: dpkg (>= 1.15.6~)
+Suggests: 0ad
+Description: Real-time strategy game of ancient warfare (data files)
+Multi-Arch: foreign
+Homepage: https://play0ad.com/
+Description-md5: 26581e685027d5ae84824362a4ba59ee
+Tag: role::app-data
+Section: games
+Priority: optional
+Filename: pool/main/0/0ad-data/0ad-data_0.27.0-1_all.deb
+Size: 1389812248
+MD5sum: 8bc5ae2a785f8a88e4c6a1ecc1e0e245
+SHA256: 7a25d66175bdc75cbd6a90e98b71dcb0d76f7763c589bd71880503f1c6185e4c
+
+Package: 0ad-data
 Version: 0.28.0-1
 Installed-Size: 3517859
 Maintainer: Debian Games Team <pkg-games-devel@lists.alioth.debian.org>
