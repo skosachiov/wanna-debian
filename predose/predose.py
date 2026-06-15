@@ -340,7 +340,6 @@ class Metadata:
             logging.info(f'Add to target: {pkg_key}')
             return True
         if not add_missing:
-            del target.packages[target.latest_index[pkg_key[0]]]
             target.packages[pkg_key] = self.packages[pkg_key]
             logging.info(f'Replace in target: {pkg_key}={self.packages[pkg_key].version}')
             return True
