@@ -96,14 +96,14 @@ def make_pkg_key(name, version=""):
 
 def test_resolve_group_on_source_metadata(setup_origin_metadata):
     meta = setup_origin_metadata
-    result = meta.resolve_group(make_pkg_key("linux"))
+    result = meta.resolve_group(make_pkg_key("linux-headers"))
     names = result.split('\n')
     assert len(names) == 3
     assert 'linux-image' in names
     assert 'linux-headers' in names
     assert 'linux-libc-dev' in names
 
-    result = meta.resolve_group(make_pkg_key("glibc"))
+    result = meta.resolve_group(make_pkg_key("libc-bin"))
     names = result.split('\n')
     assert len(names) == 3
     assert 'libc6' in names

@@ -206,36 +206,13 @@ class Metadata:
         return out
 
     def resolve_group(self, pkg_key: Optional[PkgKey], add_version: bool = False) -> str:
-        if pkg_key is None:
-            return ''
-        resolved = self._resolve_key(pkg_key)
-        if resolved is None:
-            return ''
-        entry = self.packages.get(resolved)
-        if entry is None:
-            return ''
-
-        src_name = entry.source
-        src_version = entry.source_version
-        out: List[str] = []
-        seen: Set[str] = set()
-
         if self.is_bin:
-            for p, e in self.packages.items():
-                if e.source == src_name:
-                    if e.source_version == src_version or (not e.source_version and e.version == src_version):
-                        if p[0] not in seen:
-                            seen.add(p[0])
-                            out.append(f'{p[0]}={e.version}' if add_version else p[0])
-        else:
-            for src_key, bins in self.bin_dict.items():
-                if src_key[0] == src_name and (not src_key[1] or src_key[1] == src_version):
-                    for b in bins:
-                        if b not in seen:
-                            seen.add(b)
-                            out.append(f'{b}={src_version}' if add_version else b)
-
-        return '\n'.join(out)
+            if pkg_key[1] == "":
+                pkg_key = self.latest_index.get(pkg_key[0], "")
+        for bin_pkgs in self.bin_dict.values():
+            if pkg_key in bin_pkgs:
+                return '\n'.join(_format_key(k, add_version) for k in bin_pkgs)
+        return ""
 
     def add_version(self, line_left_side: str) -> str:
         parts = line_left_side.split('=')
