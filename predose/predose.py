@@ -186,12 +186,9 @@ class Metadata:
         return pkg_key
 
     def leave_latest(self):
-        to_delete = []
-        for p in self.packages:
-            if p not in self.latest_index.values():
-                to_delete.append(p)
-        for p in to_delete:
-            del self.packages[p]
+        latest_set = set(self.latest_index.values())
+        # Keep only packages whose key is in the latest_set
+        self.packages = {k: v for k, v in self.packages.items() if k in latest_set}
 
     def resolve_src(self, pkg_key: Optional[PkgKey], add_version: bool = False) -> str:
         if self.is_bin:
