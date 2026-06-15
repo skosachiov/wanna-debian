@@ -62,6 +62,7 @@ class Metadata:
 
             pkg_name = version = source = source_version = None
             depends: List[str] = []
+            bin_pkgs: List[str] = []
             block_list: List[str] = []
 
             for line in block.splitlines():
@@ -82,10 +83,6 @@ class Metadata:
                 elif key == 'Binary':
                     self.is_bin = False
                     bin_pkgs = [p.strip() for p in value.split(',')]
-                    src_key = (pkg_name, '')
-                    self.bin_dict[src_key] = bin_pkgs
-                    for p in bin_pkgs:
-                        self.src_dict[p] = pkg_name
                 elif key == 'Source':
                     source_line = value.split()
                     src_name = source_line[0]
@@ -141,6 +138,10 @@ class Metadata:
                             self.bin_dict[src_key].append(pkg_name)
                 elif not source_version:
                     source_version = version
+                
+                self.bin_dict[(source, source_version)] = bin_pkgs
+                for p in bin_pkgs:
+                    self.src_dict[p] = (source, source_version)
 
                 self.packages[pkg_key] = PackageEntry(
                     package=pkg_name,
@@ -234,6 +235,7 @@ class Metadata:
         if resolved is None:
             return ''
         pn, pv = resolved
+        print("D", self.bin_dict, pn, pv )
 
         if not self.is_bin:
             for s, bins in self.bin_dict.items():
