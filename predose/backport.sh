@@ -71,10 +71,10 @@ filename=$(printf "%s.%03d" "$base_name" $counter)
 
 cat > "$filename.bin"
 cat $filename.bin \
-    | python3 $SD/predose.py --log-file $base_name.log --resolve-src $2_Packages > $filename.src
+    | python3 $SD/predose.py --log-file $base_name.log --resolve-src -c $2_Packages > $filename.src
 
-echo "" | python3 $SD/predose.py --log-file $base_name.log $2_Packages $3_Packages > ${base_name}_Packages
-echo "" | python3 $SD/predose.py --log-file $base_name.log $2_Sources $3_Sources > ${base_name}_Sources
+echo "" | python3 $SD/predose.py --log-file $base_name.log -c $2_Packages $3_Packages > ${base_name}_Packages
+echo "" | python3 $SD/predose.py --log-file $base_name.log -c $2_Sources $3_Sources > ${base_name}_Sources
 
 grep-dctrl -s Package -n '' $2_Packages > ${base_name}.origin.list
 
@@ -89,27 +89,27 @@ while true; do
 
     # resolve to src on orig and target
     cat $filename.bin \
-        | python3 $SD/predose.py --log-file $base_name.log --resolve-src $2_Packages >> $filename.src
+        | python3 $SD/predose.py --log-file $base_name.log --resolve-src -c $2_Packages >> $filename.src
     cat $filename.bin \
-        | python3 $SD/predose.py --log-file $base_name.log --resolve-src $3_Packages >> $filename.src
+        | python3 $SD/predose.py --log-file $base_name.log --resolve-src -c $3_Packages >> $filename.src
 
     if [ "$OPT_BINONLY" = false ]; then
     # resolve src to bins on target, remove from target bin
     cat $filename.src \
-        | python3 $SD/predose.py --log-file $base_name.log --resolve-bin ${base_name}_Packages \
-        | python3 $SD/predose.py --log-file $base_name.log --remove ${base_name}_Packages > ${base_name}_Packages.tmp && \
+        | python3 $SD/predose.py --log-file $base_name.log --resolve-bin -c ${base_name}_Packages \
+        | python3 $SD/predose.py --log-file $base_name.log --remove -c ${base_name}_Packages > ${base_name}_Packages.tmp && \
         mv -f ${base_name}_Packages.tmp ${base_name}_Packages
     fi
     # remove without resolve
     cat $filename.bin \
-        | python3 $SD/predose.py --log-file $base_name.log --remove ${base_name}_Packages > ${base_name}_Packages.tmp && \
+        | python3 $SD/predose.py --log-file $base_name.log --remove -c ${base_name}_Packages > ${base_name}_Packages.tmp && \
         mv -f ${base_name}_Packages.tmp ${base_name}_Packages
 
     if [ "$OPT_BINONLY" = false ]; then
 
     # resolve to src on orig, remove from target src
     cat $filename.src \
-        | python3 $SD/predose.py --log-file $base_name.log --remove ${base_name}_Sources > ${base_name}_Sources.tmp && \
+        | python3 $SD/predose.py --log-file $base_name.log --remove -c ${base_name}_Sources > ${base_name}_Sources.tmp && \
         mv -f ${base_name}_Sources.tmp ${base_name}_Sources
     fi
 
@@ -117,21 +117,21 @@ while true; do
 
     # bin implantation
     cat $filename.bin \
-        | python3 $SD/predose.py --log-file $base_name.log $2_Packages ${base_name}_Packages > ${base_name}_Packages.tmp && \
+        | python3 $SD/predose.py --log-file $base_name.log -c $2_Packages ${base_name}_Packages > ${base_name}_Packages.tmp && \
         mv -f ${base_name}_Packages.tmp ${base_name}_Packages
 
     # all-bin implantation
     if [ "$OPT_ONLYUNSAT" = false ]; then
     cat $filename.src \
-        | python3 $SD/predose.py --log-file $base_name.log --resolve-bin $2_Packages \
-        | python3 $SD/predose.py --log-file $base_name.log $2_Packages ${base_name}_Packages > ${base_name}_Packages.tmp && \
+        | python3 $SD/predose.py --log-file $base_name.log --resolve-bin -c $2_Packages \
+        | python3 $SD/predose.py --log-file $base_name.log -c $2_Packages ${base_name}_Packages > ${base_name}_Packages.tmp && \
         mv -f ${base_name}_Packages.tmp ${base_name}_Packages
     fi
 
     if [ "$OPT_BINONLY" = false ]; then
     # src implantation
     cat $filename.src \
-        | python3 $SD/predose.py --log-file $base_name.log $2_Sources ${base_name}_Sources > ${base_name}_Sources.tmp && \
+        | python3 $SD/predose.py --log-file $base_name.log -c $2_Sources ${base_name}_Sources > ${base_name}_Sources.tmp && \
         mv -f ${base_name}_Sources.tmp ${base_name}_Sources
     fi
 
