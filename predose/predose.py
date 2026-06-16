@@ -121,6 +121,8 @@ class Metadata:
             pkg_key = (pkg_name, version)
             src_key = (source, source_version)
 
+            if self.is_bin: self.prov_dict[pkg_name] = pkg_name
+
             if pkg_key in self.packages:
                 logging.warning(f'Duplicate package detected: {pkg_key}')
                 continue
@@ -154,36 +156,6 @@ class Metadata:
                 self.latest_src[source] = src_key
 
         logging.debug(f'Parsed {len(self.packages)} packages from {filepath}')
-
-    def resolve_pkg_name(self, pkg_name: str) -> Optional[PkgKey]:
-        found = self.latest_index.get(pkg_name)
-        if found is not None:
-            return found
-        if pkg_name in self.src_dict:
-            return self.latest_index.get(self.src_dict[pkg_name])
-        if pkg_name in self.prov_dict:
-            provider = self.prov_dict[pkg_name]
-            if provider in self.src_dict:
-                return self.latest_index.get(self.src_dict[provider])
-            found = self.latest_index.get(provider)
-            if found is not None:
-                return found
-            logging.error(f'Cannot resolve provided package: {pkg_name}')
-            return None
-        logging.warning(f'Package not found: {pkg_name}')
-        return None
-
-    def _resolve_key(self, pkg_key: PkgKey) -> Optional[PkgKey]:
-        name, version = pkg_key
-        if version:
-            if pkg_key in self.packages:
-                return pkg_key
-            logging.error(f'Package not found: {pkg_key}')
-            return None
-        found = self.latest_index.get(name)
-        if found is not None:
-            return found
-        return pkg_key
 
     def leave_latest(self):
         latest_set = set(self.latest_index.values())
@@ -229,10 +201,10 @@ class Metadata:
             for i in range(depth):
                 before = len(depends_set)
                 for p in dict(depends_set).keys():
-                    ps = self.resolve_pkg_name(p[0])
+                    ps = self.latest_index[self.prov_dict[p[0]]]
                     if ps and ps in self.packages:
                         for pd in self.packages[ps].depends:
-                            pds = self.resolve_pkg_name(pd)
+                            pds = self.prov_dict.get(pd)
                             if pds:
                                 depends_set[pds] = None
                 if before == len(depends_set):
@@ -251,7 +223,8 @@ class Metadata:
         return '\n'.join(out)
 
     def remove(self, pkg_key: Optional[PkgKey]) -> bool:
-        if pkg_key[1] == "":
+        key = pkg_key
+        if key[1] == "":
             key = self.latest_index.get(pkg_key[0], "")
         if key is not None:
             if key in self.packages:
