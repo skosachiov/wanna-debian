@@ -195,25 +195,26 @@ class Metadata:
         logging.error(f'Package not found: {line_left_side}')
         return ''
 
-    def depends(self, pkg_key: Optional[PkgKey], depth: int, depends_set: Dict) -> Tuple[Dict, str]:
-        if pkg_key is not None:
-            depends_set[pkg_key] = None
-            for i in range(depth):
-                before = len(depends_set)
-                for p in dict(depends_set).keys():
-                    ps = self.latest_index[self.prov_dict[p[0]]]
-                    if ps and ps in self.packages:
-                        for pd in self.packages[ps].depends:
-                            pds = self.prov_dict.get(pd)
-                            if pds:
-                                depends_set[pds] = None
-                if before == len(depends_set):
-                    logging.info(f'Dependency search done at iteration {i + 1}')
-                    break
-            else:
-                logging.warning(f'Dependency search did not reach leaves: {depth}')
-        out = '\n'.join(_format_key(k, False) for k in depends_set.keys())
-        return depends_set, out
+    def depends(self, pkg_key: str, depth: int):
+        depends_set = set()
+        if pkg_key[1] == "": pkg_key = self.latest_index.get(pkg_key[0])
+        if not pkg_key: return None
+        for i in range(depth):
+            before = len(depends_set)
+            for p in dict(depends_set).keys():
+                ps = self.latest_index.get(self.prov_dict.get(p[0]))
+                if ps and ps in self.packages:
+                    for pd in self.packages[ps].depends:
+                        pds = self.prov_dict.get(pd)
+                        if pds:
+                            depends_set[pds] = None
+            if before == len(depends_set):
+                logging.info(f'Dependency search done at iteration {i + 1}')
+                break
+        else:
+            logging.warning(f'Dependency search did not reach leaves: {depth}')
+    out = '\n'.join(_format_key(k, False) for k in depends_set.keys())
+    return depends_set, out
 
     def rdepends(self, name: str) -> str:
         out: List[str] = []
