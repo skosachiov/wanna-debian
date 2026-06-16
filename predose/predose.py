@@ -132,7 +132,7 @@ class Metadata:
                 self.bin_dict[src_key] = bin_pkgs
             else:
                 self.bin_dict[src_key].extend(bin_pkgs)
-            
+
             for p in bin_pkgs:
                 self.src_dict[p] = src_key
 
@@ -199,7 +199,7 @@ class Metadata:
     def resolve_bin(self, pkg_key: Optional[PkgKey], add_version: bool = False) -> str:
         if pkg_key[1] == "":
             pkg_key = self.latest_src.get(pkg_key[0])
-        out = '\n'.join(_format_key(k, add_version) for k in self.bin_dict.get(pkg_key, []))     
+        out = '\n'.join(_format_key(k, add_version) for k in self.bin_dict.get(pkg_key, []))
         return out
 
     def resolve_group(self, pkg_key: Optional[PkgKey], add_version: bool = False) -> str:
@@ -250,16 +250,17 @@ class Metadata:
                 out.append(_format_key(p, False))
         return '\n'.join(out)
 
-    def remove(self, pkg_key: Optional[PkgKey]) -> str:
+    def remove(self, pkg_key: Optional[PkgKey]) -> bool:
         if pkg_key[1] == "":
-            pkg_key = self.latest_index.get(pkg_key[0], "")
-        if pkg_key is not None:
-            if pkg_key in self.packages:
-                del self.packages[pkg_key]
-                logging.info(f'Removed: {pkg_key}')
+            key = self.latest_index.get(pkg_key[0], "")
+        if key is not None:
+            if key in self.packages:
+                del self.packages[key]
+                logging.info(f'Removed: {key}')
+                return True
             else:
                 logging.error(f'Not present: {pkg_key}')
-        return ''
+        return False
 
     def backport(self, pkg_key: Optional[PkgKey], target: 'Metadata') -> bool:
         if pkg_key[1] == "":
@@ -440,12 +441,12 @@ class PreDoseApp:
         self.origin_meta = Metadata.from_file(path)
         if only_one:
             if self.args.latest:
-                self.origin_meta.leave_latest()                
+                self.origin_meta.leave_latest()
         else:
             self.target_meta = Metadata.from_file(self.args.target_repo)
             if self.args.latest:
                 self.target_meta.leave_latest()
-            
+
         if self.args.provide:
             provide_meta = Metadata.from_file(self.args.provide)
             for k in provide_meta.prov_dict:
