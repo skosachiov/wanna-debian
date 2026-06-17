@@ -3,9 +3,7 @@ Binary: vim-common, vim-gui-common, vim-runtime, vim-doc, vim-tiny, vim, vim-gtk
 Version: 2:9.2.0461-1
 Maintainer: Debian Vim Maintainers <team+vim@tracker.debian.org>
 Uploaders: James McCoy <jamessan@debian.org>
-Build-Depends: autoconf, cscope <!nocheck>, debhelper-compat (= 13), libacl1-dev, libcanberra-dev, libgpm-dev [linux-any], libgtk-3-dev, liblua5.1-dev, libmotif-dev, libperl-dev, libselinux-dev [linux-any
-], libsodium-dev, libncurses-dev, libwayland-dev [!hurd-any], libtool-bin <!nocheck>, locales-all <!nocheck>, lua5.1, ncurses-term <!nocheck>, procps <!nocheck>, python3-dev, ruby [!alpha !ia64] <!pkg.vim
-.noruby>, ruby-dev [!alpha !ia64] <!pkg.vim.noruby>, tcl-dev
+Build-Depends: autoconf, cscope <!nocheck>, debhelper-compat (= 13), libacl1-dev, libcanberra-dev, libgpm-dev [linux-any], libgtk-3-dev, liblua5.1-dev, libmotif-dev, libperl-dev, libselinux-dev [linux-any], libsodium-dev, libncurses-dev, libwayland-dev [!hurd-any], libtool-bin <!nocheck>, locales-all <!nocheck>, lua5.1, ncurses-term <!nocheck>, procps <!nocheck>, python3-dev, ruby [!alpha !ia64] <!pkg.vim.noruby>, ruby-dev [!alpha !ia64] <!pkg.vim.noruby>, tcl-dev
 Build-Depends-Indep: docbook-utils, docbook-xml, ghostscript, lynx, pdf2svg
 Build-Conflicts: autoconf2.13
 Architecture: any all

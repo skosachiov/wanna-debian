@@ -169,19 +169,19 @@ class Metadata:
 
     def resolve_src(self, pkg_key: Optional[PkgKey], add_version: bool = False) -> str:
         if self.is_bin:
-            if pkg_key.version == "":
-                pkg_key = self.latest_index.get(pkg_key.package, "")
+            if not pkg_key.version:
+                pkg_key = self.latest_index.get(self.prov_dict.get(pkg_key.package))
         return _format_key(self.src_dict.get(pkg_key, ""), add_version)
 
     def resolve_bin(self, pkg_key: Optional[PkgKey], add_version: bool = False) -> str:
-        if pkg_key.version == "":
+        if not pkg_key.version:
             pkg_key = self.latest_src.get(pkg_key.package)
         out = '\n'.join(_format_key(k, add_version) for k in self.bin_dict.get(pkg_key, []))
         return out
 
     def resolve_group(self, pkg_key: Optional[PkgKey], add_version: bool = False) -> str:
         if self.is_bin:
-            if pkg_key.version == "":
+            if not pkg_key.version:
                 pkg_key = self.latest_index.get(pkg_key.package, "")
         for bin_pkgs in self.bin_dict.values():
             if pkg_key in bin_pkgs:
@@ -398,18 +398,23 @@ class PreDoseApp:
         self.configure_logging()
         logging.info(f'Pre-dose started with args: {self.args}')
 
-        only_one = any((
+        one_repo_options = any((
             self.args.remove, self.args.resolve_bin, self.args.resolve_src,
             self.args.resolve_group, self.args.depends, self.args.rdepends,
             self.args.topo_sort,
         ))
+        non_modifying_options = any((
+            self.args.add_version, self.args.depends, self.args.resolve_src,
+            self.args.resolve_bin, self.args.rdepends, self.args.resolve_group,
+            self.args.topo_sort,
+        ))
 
-        if only_one and self.args.origin_repo is not None:
+        if one_repo_options and self.args.origin_repo is not None:
             argparse.ArgumentParser().error("option does not require ORIGIN_REPO")
 
-        path = self.args.origin_repo if not only_one else self.args.target_repo
+        path = self.args.origin_repo if not one_repo_options else self.args.target_repo
         self.origin_meta = Metadata.from_file(path)
-        if only_one:
+        if one_repo_options:
             if self.args.latest:
                 self.origin_meta.leave_latest()
         else:
@@ -419,8 +424,7 @@ class PreDoseApp:
 
         if self.args.provide:
             provide_meta = Metadata.from_file(self.args.provide)
-            for k in provide_meta.prov_dict:
-                self.origin_meta.prov_dict[k] = provide_meta.prov_dict[k]
+            self.origin_meta.prov_dict = provide_meta.prov_dict
 
         packages_set: Set[PkgKey] = set()
         input_lines: List[List[str]] = []
@@ -458,7 +462,7 @@ class PreDoseApp:
             elif self.args.add_version:
                 result = self.origin_meta.add_version(parts[0])
             elif pkg_key is not None:
-                tgt = self.target_meta if not only_one else self.origin_meta
+                tgt = self.target_meta if not one_repo_options else self.origin_meta
                 self.origin_meta.backport(pkg_key, tgt)
             else:
                 logging.error(f'Unresolved package: {line.strip()}')
@@ -467,20 +471,16 @@ class PreDoseApp:
                 print(result)
 
         if self.args.topo_sort:
-            tgt = self.target_meta if not only_one else self.origin_meta
+            tgt = self.target_meta if not one_repo_options else self.origin_meta
             result = tgt.toposort(packages_set, self.args.dot)
             if result:
                 print(result)
 
-        if not any((
-            self.args.add_version, self.args.depends, self.args.resolve_src,
-            self.args.resolve_bin, self.args.rdepends, self.args.resolve_group,
-            self.args.topo_sort,
-        )):
+        if not non_modifying_options:
             if self.args.remove:
                 self.origin_meta.output_blocks()
             else:
-                src = self.origin_meta if self._only_one() else self.target_meta
+                src = self.origin_meta if one_repo_options else self.target_meta
                 if src:
                     if self.args.latest:
                         src.leave_latest()

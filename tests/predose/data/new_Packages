@@ -83,10 +83,7 @@ Version: 0.28.0-3+b2
 Installed-Size: 30502
 Maintainer: Debian Games Team <pkg-games-devel@lists.alioth.debian.org>
 Architecture: amd64
-Depends: 0ad-data (>= 0.28.0), 0ad-data (<= 0.28.0-3), 0ad-data-common (>= 0.28.0), 0ad-data-common (<= 0.28.0-3), libc6 (>= 2.38), libcurl3t64-gnutls (>= 7.16.2), libenet7 (>= 1.3), libfmt10 (>= 10.1.1+d
-s1), libfreetype6 (>= 2.2.1), libgcc-s1 (>= 4.2), libgloox18 (>= 1.0.28), libicu78 (>= 78.1-1~), libminiupnpc21 (>= 2.3.3), libopenal1 (>= 1.14), libpng16-16t64 (>= 1.6.46), libsdl2-2.0-0 (>= 2.0.12), lib
-sodium26 (>= 1.0.14), libstdc++6 (>= 14), libvorbis0a (>= 1.2.3), libvorbisfile3 (>= 1.1.2), libwxbase3.2-1t64 (>= 3.2.9+dfsg), libwxgtk-gl3.2-1t64 (>= 3.2.9+dfsg), libwxgtk3.2-1t64 (>= 3.2.9+dfsg), libx1
-1-6, libxml2-16 (>= 2.14.1), zlib1g (>= 1:1.2.0)
+Depends: 0ad-data (>= 0.28.0), 0ad-data (<= 0.28.0-3), 0ad-data-common (>= 0.28.0), 0ad-data-common (<= 0.28.0-3), libc6 (>= 2.38), libcurl3t64-gnutls (>= 7.16.2), libenet7 (>= 1.3), libfmt10 (>= 10.1.1+ds1), libfreetype6 (>= 2.2.1), libgcc-s1 (>= 4.2), libgloox18 (>= 1.0.28), libicu78 (>= 78.1-1~), libminiupnpc21 (>= 2.3.3), libopenal1 (>= 1.14), libpng16-16t64 (>= 1.6.46), libsdl2-2.0-0 (>= 2.0.12), libsodium26 (>= 1.0.14), libstdc++6 (>= 14), libvorbis0a (>= 1.2.3), libvorbisfile3 (>= 1.1.2), libwxbase3.2-1t64 (>= 3.2.9+dfsg), libwxgtk-gl3.2-1t64 (>= 3.2.9+dfsg), libwxgtk3.2-1t64 (>= 3.2.9+dfsg), libx11-6, libxml2-16 (>= 2.14.1), zlib1g (>= 1:1.2.0)
 Pre-Depends: dpkg (>= 1.15.6~)
 Description: Real-time strategy game of ancient warfare
 Homepage: https://play0ad.com/
