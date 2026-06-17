@@ -412,3 +412,92 @@ def test_data_files_exist():
 def test_script_found():
     assert PREDOSE_SCRIPT is not None, "predose.py not found"
     assert Path(PREDOSE_SCRIPT).exists()
+
+
+# ============================================================
+# TEST 5: Implantation of ALL packages from new_* to sample_*
+# (all versions)
+# ============================================================
+
+ALL_NEW_PACKAGES = """\
+vim=2:9.2.0461-1
+vim-common=2:9.2.0461-1
+0xffff=0.9-1+b1
+2048=1.0.3-1
+0ad=0.28.0-3+b2
+0ad-data=0.27.0-1
+0ad-data=0.28.0-1
+"""
+
+ALL_NEW_SOURCES = """\
+vim=2:9.2.0461-1
+vim-addon-manager=0.5.11
+vim-addon-mw-utils=0.2-6
+"""
+
+
+def test_backport_all_new_packages_all_versions(temp_new_packages, temp_sample_packages):
+    """Implant ALL packages from new_Packages into sample_Packages (all versions).
+    Expected: sample (891) + 4 new (vim, vim-common, 0ad new version, 0ad-data new version) = 895."""
+    output = _get_backport_output(temp_new_packages, temp_sample_packages, ALL_NEW_PACKAGES)
+    count = count_packages_in_output(output)
+    assert count == 895, (
+        f"Expected 895 packages after adding all new_Packages, got {count}"
+    )
+    remaining_names = get_package_names_in_output(output)
+    for name in ["vim", "vim-common", "0ad", "0ad-data", "0xffff", "2048"]:
+        assert name in remaining_names, f"Package '{name}' should be present"
+
+
+def test_backport_all_new_sources_all_versions(temp_new_sources, temp_sample_sources):
+    """Implant ALL packages from new_Sources into sample_Sources (all versions).
+    Expected: sample (600) + 3 new (vim, vim-addon-manager, vim-addon-mw-utils) = 603."""
+    output = _get_backport_output(temp_new_sources, temp_sample_sources, ALL_NEW_SOURCES)
+    count = count_packages_in_output(output)
+    assert count == 603, (
+        f"Expected 603 packages after adding all new_Sources, got {count}"
+    )
+    remaining_names = get_package_names_in_output(output)
+    for name in ["vim", "vim-addon-manager", "vim-addon-mw-utils"]:
+        assert name in remaining_names, f"Source '{name}' should be present"
+
+
+# ============================================================
+# TEST 6: Implantation of ALL packages from new_* to sample_*
+# with --latest (-c) option
+# ============================================================
+
+
+def test_backport_all_new_packages_latest_only(temp_new_packages, temp_sample_packages):
+    """Implant ALL packages from new_Packages into sample_Packages, keep only latest (-c).
+    Expected: sample unique count (888) + 2 new names (vim, vim-common) = 890."""
+    result = run_predose([temp_new_packages, temp_sample_packages], ["--latest"], input_data=ALL_NEW_PACKAGES)
+    assert result.returncode == 0, f"Error: {result.stderr}"
+    count = count_packages_in_output(result.stdout)
+    assert count == 890, (
+        f"Expected 890 packages with --latest, got {count}"
+    )
+    remaining_names = get_package_names_in_output(result.stdout)
+    assert "vim" in remaining_names
+    assert "vim-common" in remaining_names
+    # No duplicates should appear
+    for name in ["0ad", "0ad-data", "0xffff", "2048"]:
+        pattern = re.compile(rf'^Package: {re.escape(name)}$', re.MULTILINE)
+        assert len(pattern.findall(result.stdout)) == 1, (
+            f"Package '{name}' appears as duplicate with --latest"
+        )
+
+
+def test_backport_all_new_sources_latest_only(temp_new_sources, temp_sample_sources):
+    """Implant ALL packages from new_Sources into sample_Sources, keep only latest (-c).
+    Expected: sample unique count (596) + 3 new (vim, vim-addon-manager, vim-addon-mw-utils) = 599."""
+    result = run_predose([temp_new_sources, temp_sample_sources], ["--latest"], input_data=ALL_NEW_SOURCES)
+    assert result.returncode == 0, f"Error: {result.stderr}"
+    count = count_packages_in_output(result.stdout)
+    assert count == 599, (
+        f"Expected 599 packages with --latest, got {count}"
+    )
+    remaining_names = get_package_names_in_output(result.stdout)
+    for name in ["vim", "vim-addon-manager", "vim-addon-mw-utils"]:
+        assert name in remaining_names, f"Source '{name}' should be present"
+

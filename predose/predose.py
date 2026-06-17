@@ -435,10 +435,10 @@ class PreDoseApp:
                 continue
 
             parts = stripped.split('=')
-            name = parts[0]
+            package = parts[0]
             version = parts[1] if len(parts) > 1 else ''
 
-            pkg_key = PkgKey(name, version)
+            pkg_key = PkgKey(package, version)
 
             packages_set.add(pkg_key)
             input_lines.append(parts)
@@ -454,7 +454,7 @@ class PreDoseApp:
             elif self.args.depends:
                 result = self.origin_meta.depends(pkg_key, self.args.depends)
             elif self.args.rdepends:
-                result = self.origin_meta.rdepends(name)
+                result = self.origin_meta.rdepends(package)
             elif self.args.topo_sort:
                 pass
             elif self.args.remove:
