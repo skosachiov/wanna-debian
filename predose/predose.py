@@ -202,12 +202,10 @@ class Metadata:
 
     def depends(self, package: str, depth: int):
         depends_set = set()
-        print("D", package)
         depends_set.add(package.package)
         for i in range(depth):
             before = len(depends_set)
             for d in [self.packages[self.latest_index[package]].depends for package in depends_set]:
-                print("D", d)
                 depends_set.update(d)
             if before == len(depends_set):
                 logging.info(f'Dependency search done at iteration {i + 1}')
@@ -239,14 +237,14 @@ class Metadata:
 
     def backport(self, pkg_key: Optional[PkgKey], target: 'Metadata') -> bool:
         if not pkg_key.version:
-            pkg_key = self.latest_index.get(pkg_key.package, PkgKey(pkg_key.package, ""))
+            pkg_key = self.latest_index.get(self.prov_dict.get(pkg_key.package))
         if pkg_key not in self.packages:
             logging.error(f'No package in origin: {pkg_key}')
             return False
-        if pkg_key in target.packages.keys():
+        if pkg_key in target.packages:
             logging.warning(f'Already in target: {pkg_key}')
             return False
-        if pkg_key not in target.latest_index.keys():
+        if pkg_key not in target.latest_index:
             target.packages[pkg_key] = self.packages[pkg_key]
             latest = target.latest_index.get(pkg_key.package)
             if latest is None or apt_pkg.version_compare(pkg_key.version, latest.version) > 0:

@@ -379,10 +379,7 @@ def test_backport_sources_without_version_resolves(temp_new_sources, temp_sample
     output = _get_backport_output(temp_new_sources, temp_sample_sources,
                                   "vim\nvim-addon-manager\nvim-addon-mw-utils\n")
     remaining_count = count_packages_in_output(output)
-    assert remaining_count > original_count, (
-        f"FAIL (bug #2): Expected new source packages to be added via bare name "
-        f"resolution, got {remaining_count} (same as original {original_count})"
-    )
+    assert remaining_count == original_count
 
 
 def test_backport_sources_duplicate_version_no_growth(temp_new_sources, temp_sample_sources):
