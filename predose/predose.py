@@ -64,7 +64,7 @@ class Metadata:
             if not block.strip():
                 continue
 
-            pkg_name = version = source = source_version = None
+            package = version = source = source_version = None
             depends: List[str] = []
             bin_pkgs: List[str] = []
             block_list: List[str] = []
@@ -83,7 +83,7 @@ class Metadata:
                 value = value.strip()
 
                 if key == 'Package':
-                    pkg_name = value
+                    package = value
                 elif key == 'Binary':
                     self.is_bin = False
                     bin_pkgs = [PkgKey(p.strip(), '') for p in value.split(',')]
@@ -95,7 +95,7 @@ class Metadata:
                 elif key == 'Provides':
                     prov_pkgs = [p.strip().split()[0] for p in value.split(',')]
                     for p in prov_pkgs:
-                        self.prov_dict[p] = pkg_name
+                        self.prov_dict[p] = package
                 elif key == 'Version':
                     version = value
                 elif key in ('Build-Depends', 'Build-Depends-Indep', 'Build-Depends-Arch',
@@ -103,27 +103,27 @@ class Metadata:
                     deps_pkgs = [p.strip() for p in value.split(',') if p.strip()]
                     for p in deps_pkgs:
                         dep_name = p.split()[0].split(":")[0]
-                        if dep_name == pkg_name:
+                        if dep_name == package:
                             logging.debug(
-                                f'Package depends on itself, excluded: {pkg_name}'
+                                f'Package depends on itself, excluded: {package}'
                             )
                             continue
                         if any(profile in p for profile in ("<!nocheck>", "<!nodoc>")):
                             logging.debug(
-                                f'Dependency with profiles, excluded: {pkg_name}: {p}'
+                                f'Dependency with profiles, excluded: {package}: {p}'
                             )
                             continue
                         depends.append(dep_name)
 
-            if pkg_name is None:
+            if package is None:
                 continue
 
-            if source is None: source = pkg_name
+            if source is None: source = package
             if source_version is None: source_version = version
-            pkg_key = PkgKey(pkg_name, version)
+            pkg_key = PkgKey(package, version)
             src_key = PkgKey(source, source_version)
 
-            if self.is_bin: self.prov_dict[pkg_name] = pkg_name
+            if self.is_bin: self.prov_dict[package] = package
 
             if pkg_key in self.packages:
                 logging.warning(f'Duplicate package detected: {pkg_key}')
@@ -141,7 +141,7 @@ class Metadata:
                 self.src_dict[p] = src_key
 
             self.packages[pkg_key] = PackageEntry(
-                package=pkg_name,
+                package=package,
                 version=version,
                 block=block,
                 depends=depends,
@@ -149,9 +149,9 @@ class Metadata:
                 source_version=source_version,
             )
 
-            latest = self.latest_index.get(pkg_name)
+            latest = self.latest_index.get(package)
             if latest is None or apt_pkg.version_compare(version, latest.version) > 0:
-                self.latest_index[pkg_name] = pkg_key
+                self.latest_index[package] = pkg_key
 
             latest = self.latest_src.get(source)
             if latest is None or apt_pkg.version_compare(source_version, latest.version) > 0:
@@ -267,11 +267,11 @@ class Metadata:
         for p in packages_set:
             if p.package not in graph: graph[p.package] = set()
             for d in self.packages[self.latest_index.get(p.package)].depends:
-                pkg_name = self.src_dict.get(PkgKey(d, ''))
-                if pkg_name is None: continue
-                if PkgKey(pkg_name.package, '') in packages_set:
-                    graph[p.package].add(pkg_name.package)
-                    if pkg_name.package not in graph: graph[pkg_name.package] = set()
+                package = self.src_dict.get(PkgKey(d, ''))
+                if package is None: continue
+                if PkgKey(package.package, '') in packages_set:
+                    graph[p.package].add(package.package)
+                    if package.package not in graph: graph[package.package] = set()
         # Save graph to dot file
         if dot_file:
             with open(dot_file, 'w') as f:
