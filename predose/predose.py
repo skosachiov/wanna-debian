@@ -5,7 +5,7 @@ import argparse
 import sys
 import logging
 from dataclasses import dataclass
-from typing import Dict, List, Optional, Tuple, Set, Any
+from typing import Dict, List, Optional, Tuple, Set, Any, NamedTuple
 
 import apt_pkg
 from toposort import Node, StableTopoSort
@@ -23,15 +23,17 @@ class PackageEntry:
     source_version: str
 
 
-PkgKey = Tuple[str, str]
+class PkgKey(NamedTuple):
+    package: str
+    version: str
 
 
 def _format_key(key: PkgKey, add_version: bool = True) -> str:
-    if len(key) < 2: return ""
+    if not isinstance(key, PkgKey): return ""
     if add_version:
-        return f'{key[0]}{"=" if key[1] != "" else ""}{key[1]}'
+        return f'{key.package}{"=" if key.version != "" else ""}{key.version}'
     else:
-        return key[0]
+        return key.package
 
 
 class Metadata:
@@ -84,7 +86,7 @@ class Metadata:
                     pkg_name = value
                 elif key == 'Binary':
                     self.is_bin = False
-                    bin_pkgs = [(p.strip(), '') for p in value.split(',')]
+                    bin_pkgs = [PkgKey(p.strip(), '') for p in value.split(',')]
                 elif key == 'Source':
                     source_line = value.strip().split()
                     if len(source_line) > 0:
@@ -118,8 +120,8 @@ class Metadata:
 
             if source is None: source = pkg_name
             if source_version is None: source_version = version
-            pkg_key = (pkg_name, version)
-            src_key = (source, source_version)
+            pkg_key = PkgKey(pkg_name, version)
+            src_key = PkgKey(source, source_version)
 
             if self.is_bin: self.prov_dict[pkg_name] = pkg_name
 
@@ -148,11 +150,11 @@ class Metadata:
             )
 
             latest = self.latest_index.get(pkg_name)
-            if latest is None or apt_pkg.version_compare(version, latest[1]) > 0:
+            if latest is None or apt_pkg.version_compare(version, latest.version) > 0:
                 self.latest_index[pkg_name] = pkg_key
 
             latest = self.latest_src.get(source)
-            if latest is None or apt_pkg.version_compare(source_version, latest[1]) > 0:
+            if latest is None or apt_pkg.version_compare(source_version, latest.version) > 0:
                 self.latest_src[source] = src_key
 
         logging.debug(f'Parsed {len(self.packages)} packages from {filepath}')
@@ -164,20 +166,20 @@ class Metadata:
 
     def resolve_src(self, pkg_key: Optional[PkgKey], add_version: bool = False) -> str:
         if self.is_bin:
-            if pkg_key[1] == "":
-                pkg_key = self.latest_index.get(pkg_key[0], "")
+            if pkg_key.version == "":
+                pkg_key = self.latest_index.get(pkg_key.package, "")
         return _format_key(self.src_dict.get(pkg_key, ""), add_version)
 
     def resolve_bin(self, pkg_key: Optional[PkgKey], add_version: bool = False) -> str:
-        if pkg_key[1] == "":
-            pkg_key = self.latest_src.get(pkg_key[0])
+        if pkg_key.version == "":
+            pkg_key = self.latest_src.get(pkg_key.package)
         out = '\n'.join(_format_key(k, add_version) for k in self.bin_dict.get(pkg_key, []))
         return out
 
     def resolve_group(self, pkg_key: Optional[PkgKey], add_version: bool = False) -> str:
         if self.is_bin:
-            if pkg_key[1] == "":
-                pkg_key = self.latest_index.get(pkg_key[0], "")
+            if pkg_key.version == "":
+                pkg_key = self.latest_index.get(pkg_key.package, "")
         for bin_pkgs in self.bin_dict.values():
             if pkg_key in bin_pkgs:
                 return '\n'.join(_format_key(k, add_version) for k in bin_pkgs)
@@ -188,21 +190,21 @@ class Metadata:
         name = parts[0]
         ver = parts[1] if len(parts) > 1 else ''
         for k, entry in self.packages.items():
-            if k[0] == name:
-                if ver and k[1] != ver:
+            if k.package == name:
+                if ver and k.version != ver:
                     continue
-                return f'{k[0]}={entry.version}'
+                return f'{k.package}={entry.version}'
         logging.error(f'Package not found: {line_left_side}')
         return ''
 
     def depends(self, pkg_key: str, depth: int):
         depends_set = set()
-        if pkg_key[1] == "": pkg_key = self.latest_index.get(pkg_key[0])
+        if pkg_key.version == "": pkg_key = self.latest_index.get(pkg_key.package)
         if not pkg_key: return None
         for i in range(depth):
             before = len(depends_set)
             for p in dict(depends_set).keys():
-                ps = self.latest_index.get(self.prov_dict.get(p[0]))
+                ps = self.latest_index.get(self.prov_dict.get(p.package))
                 if ps and ps in self.packages:
                     for pd in self.packages[ps].depends:
                         pds = self.prov_dict.get(pd)
@@ -213,8 +215,8 @@ class Metadata:
                 break
         else:
             logging.warning(f'Dependency search did not reach leaves: {depth}')
-    out = '\n'.join(_format_key(k, False) for k in depends_set.keys())
-    return depends_set, out
+        out = '\n'.join(_format_key(k, False) for k in depends_set)
+        return depends_set, out
 
     def rdepends(self, name: str) -> str:
         out: List[str] = []
@@ -225,8 +227,8 @@ class Metadata:
 
     def remove(self, pkg_key: Optional[PkgKey]) -> bool:
         key = pkg_key
-        if key[1] == "":
-            key = self.latest_index.get(pkg_key[0], "")
+        if key.version == "":
+            key = self.latest_index.get(pkg_key.package, "")
         if key is not None:
             if key in self.packages:
                 del self.packages[key]
@@ -237,8 +239,8 @@ class Metadata:
         return False
 
     def backport(self, pkg_key: Optional[PkgKey], target: 'Metadata') -> bool:
-        if pkg_key[1] == "":
-            pkg_key = self.latest_index.get(pkg_key[0], (pkg_key[0], ""))
+        if pkg_key.version == "":
+            pkg_key = self.latest_index.get(pkg_key.package, PkgKey(pkg_key.package, ""))
         if pkg_key not in self.packages:
             logging.error(f'No package in origin: {pkg_key}')
             return False
@@ -247,9 +249,9 @@ class Metadata:
             return False
         if pkg_key not in target.latest_index.keys():
             target.packages[pkg_key] = self.packages[pkg_key]
-            latest = target.latest_index.get(pkg_key[0])
-            if latest is None or apt_pkg.version_compare(pkg_key[1], latest[1]) > 0:
-                target.latest_index[pkg_key[0]] = pkg_key
+            latest = target.latest_index.get(pkg_key.package)
+            if latest is None or apt_pkg.version_compare(pkg_key.version, latest.version) > 0:
+                target.latest_index[pkg_key.package] = pkg_key
             logging.info(f'Add to target: {pkg_key}')
             return True
         return False
@@ -263,13 +265,13 @@ class Metadata:
         graph: Dict = {}
         # Build dependency graph
         for p in packages_set:
-            if p[0] not in graph: graph[p[0]] = set()
-            for d in self.packages[self.latest_index.get(p[0])].depends:
-                pkg_name = self.src_dict.get((d, ''))
+            if p.package not in graph: graph[p.package] = set()
+            for d in self.packages[self.latest_index.get(p.package)].depends:
+                pkg_name = self.src_dict.get(PkgKey(d, ''))
                 if pkg_name is None: continue
-                if (pkg_name[0], '') in packages_set:
-                    graph[p[0]].add(pkg_name[0])
-                    if pkg_name[0] not in graph: graph[pkg_name[0]] = set()
+                if PkgKey(pkg_name.package, '') in packages_set:
+                    graph[p.package].add(pkg_name.package)
+                    if pkg_name.package not in graph: graph[pkg_name.package] = set()
         # Save graph to dot file
         if dot_file:
             with open(dot_file, 'w') as f:
@@ -395,7 +397,7 @@ class PreDoseApp:
         name = parts[0]
         version = parts[1] if len(parts) > 1 else ''
         if version:
-            return (name, version), parts
+            return PkgKey(name, version), parts
         resolved = self._resolve_name(name)
         if resolved is None:
             return None, parts
@@ -427,7 +429,6 @@ class PreDoseApp:
                 self.origin_meta.prov_dict[k] = provide_meta.prov_dict[k]
 
         packages_set: Set[PkgKey] = set()
-        depends_set: Dict = {}
         input_lines: List[List[str]] = []
 
         for line in sys.stdin:
@@ -439,7 +440,7 @@ class PreDoseApp:
             name = parts[0]
             version = parts[1] if len(parts) > 1 else ''
 
-            pkg_key = (name, version)
+            pkg_key = PkgKey(name, version)
 
             packages_set.add(pkg_key)
             input_lines.append(parts)
@@ -453,9 +454,7 @@ class PreDoseApp:
             elif self.args.resolve_group:
                 result = self.origin_meta.resolve_group(pkg_key, self.args.add_version)
             elif self.args.depends:
-                depends_set, result = self.origin_meta.depends(
-                    pkg_key, self.args.depends, depends_set,
-                )
+                depends_set, result = self.origin_meta.depends(pkg_key, self.args.depends)
             elif self.args.rdepends:
                 result = self.origin_meta.rdepends(name)
             elif self.args.topo_sort:

@@ -91,7 +91,8 @@ def setup_target_metadata(sample_binary_file):
 
 
 def make_pkg_key(name, version=""):
-    return (name, version) if version else (name, "")
+    from predose.predose import PkgKey
+    return PkgKey(name, version)
 
 
 def test_resolve_group_on_source_metadata(setup_origin_metadata):
