@@ -372,13 +372,6 @@ class PreDoseApp:
         self.args = parser.parse_args(argv)
         return self.args
 
-    def _only_one(self) -> bool:
-        return any((
-            self.args.remove, self.args.resolve_bin, self.args.resolve_src,
-            self.args.resolve_group, self.args.depends, self.args.rdepends,
-            self.args.topo_sort,
-        ))
-
     def _resolve_name(self, name: str) -> Optional[PkgKey]:
         if self.origin_meta:
             found = self.origin_meta.latest_index.get(name)
@@ -405,7 +398,11 @@ class PreDoseApp:
         self.configure_logging()
         logging.info(f'Pre-dose started with args: {self.args}')
 
-        only_one = self._only_one()
+        only_one = any((
+            self.args.remove, self.args.resolve_bin, self.args.resolve_src,
+            self.args.resolve_group, self.args.depends, self.args.rdepends,
+            self.args.topo_sort,
+        ))
 
         if only_one and self.args.origin_repo is not None:
             argparse.ArgumentParser().error("option does not require ORIGIN_REPO")
