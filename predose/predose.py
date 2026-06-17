@@ -27,6 +27,9 @@ class PkgKey(NamedTuple):
     package: str
     version: str
 
+    def __str__(self):
+        return f'{self.package}{"=" if self.version != "" else ""}{self.version}'
+
 
 def _format_key(key: PkgKey, add_version: bool = True) -> str:
     if not isinstance(key, PkgKey): return ""
@@ -197,26 +200,22 @@ class Metadata:
         logging.error(f'Package not found: {line_left_side}')
         return ''
 
-    def depends(self, pkg_key: str, depth: int):
+    def depends(self, package: str, depth: int):
         depends_set = set()
-        if pkg_key.version == "": pkg_key = self.latest_index.get(pkg_key.package)
-        if not pkg_key: return None
+        print("D", package)
+        depends_set.add(package.package)
         for i in range(depth):
             before = len(depends_set)
-            for p in dict(depends_set).keys():
-                ps = self.latest_index.get(self.prov_dict.get(p.package))
-                if ps and ps in self.packages:
-                    for pd in self.packages[ps].depends:
-                        pds = self.prov_dict.get(pd)
-                        if pds:
-                            depends_set[pds] = None
+            for d in [self.packages[self.latest_index[package]].depends for package in depends_set]:
+                print("D", d)
+                depends_set.update(d)
             if before == len(depends_set):
                 logging.info(f'Dependency search done at iteration {i + 1}')
                 break
         else:
             logging.warning(f'Dependency search did not reach leaves: {depth}')
-        out = '\n'.join(_format_key(k, False) for k in depends_set)
-        return depends_set, out
+
+        return '\n'.join(depends_set)
 
     def rdepends(self, name: str) -> str:
         out: List[str] = []
@@ -227,7 +226,7 @@ class Metadata:
 
     def remove(self, pkg_key: Optional[PkgKey]) -> bool:
         key = pkg_key
-        if key.version == "":
+        if not key.version:
             key = self.latest_index.get(pkg_key.package, "")
         if key is not None:
             if key in self.packages:
@@ -239,7 +238,7 @@ class Metadata:
         return False
 
     def backport(self, pkg_key: Optional[PkgKey], target: 'Metadata') -> bool:
-        if pkg_key.version == "":
+        if not pkg_key.version:
             pkg_key = self.latest_index.get(pkg_key.package, PkgKey(pkg_key.package, ""))
         if pkg_key not in self.packages:
             logging.error(f'No package in origin: {pkg_key}')
@@ -454,7 +453,7 @@ class PreDoseApp:
             elif self.args.resolve_group:
                 result = self.origin_meta.resolve_group(pkg_key, self.args.add_version)
             elif self.args.depends:
-                depends_set, result = self.origin_meta.depends(pkg_key, self.args.depends)
+                result = self.origin_meta.depends(pkg_key, self.args.depends)
             elif self.args.rdepends:
                 result = self.origin_meta.rdepends(name)
             elif self.args.topo_sort:
