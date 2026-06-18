@@ -232,7 +232,7 @@ class Metadata:
                 logging.info(f'Removed: {key}')
                 return True
             else:
-                logging.error(f'Not present: {pkg_key}')
+                logging.warning(f'Can not delete, package not found: {pkg_key}')
         return False
 
     def backport(self, pkg_key: Optional[PkgKey], target: 'Metadata') -> bool:
