@@ -182,7 +182,7 @@ class Metadata:
     def resolve_group(self, pkg_key: Optional[PkgKey], add_version: bool = False) -> str:
         if self.is_bin:
             if not pkg_key.version:
-                pkg_key = self.latest_index.get(pkg_key.package, "")
+                pkg_key = self.latest_index.get(pkg_key.package)
         for bin_pkgs in self.bin_dict.values():
             if pkg_key in bin_pkgs:
                 return '\n'.join(_format_key(k, add_version) for k in bin_pkgs)
@@ -225,7 +225,7 @@ class Metadata:
     def remove(self, pkg_key: Optional[PkgKey]) -> bool:
         key = pkg_key
         if not key.version:
-            key = self.latest_index.get(pkg_key.package, "")
+            key = self.latest_index.get(pkg_key.package)
         if key is not None:
             if key in self.packages:
                 del self.packages[key]
@@ -264,7 +264,7 @@ class Metadata:
         for p in packages_set:
             if p.package not in graph: graph[p.package] = set()
             for d in self.packages[self.latest_index.get(p.package)].depends:
-                package = self.src_dict.get(PkgKey(d, ''))
+                package = self.src_dict.get(PkgKey(d, ""))
                 if package is None: continue
                 if PkgKey(package.package, '') in packages_set:
                     graph[p.package].add(package.package)
