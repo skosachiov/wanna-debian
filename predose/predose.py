@@ -451,12 +451,12 @@ class PreDoseApp:
                 result = self.target_meta.depends(pkg_key, self.args.depends)
             elif self.args.rdepends:
                 result = self.target_meta.rdepends(package)
-            elif self.args.topo_sort:
-                pass
             elif self.args.remove:
                 self.target_meta.remove(pkg_key)
             elif self.args.add_version:
                 result = self.target_meta.add_version(parts[0])
+            elif self.args.topo_sort:
+                pass
             elif pkg_key is not None:
                 self.origin_meta.backport(pkg_key, self.target_meta)
             else:
