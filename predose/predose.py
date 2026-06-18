@@ -25,7 +25,7 @@ class PackageEntry:
 
 class PkgKey(NamedTuple):
     package: str
-    version: str
+    version: str | None
 
     def __str__(self):
         return f'{self.package}{"=" if self.version != "" else ""}{self.version}'
@@ -46,9 +46,9 @@ class Metadata:
         self.filepath: str = ""
         self.is_bin: bool = True
         self.packages: Dict[PkgKey, PackageEntry] = {}
-        self.src_dict: Dict[str, str] = {}
-        self.bin_dict: Dict[PkgKey, List[str]] = {}
-        self.prov_dict: Dict[str, str] = {}
+        self.src_dict: Dict[str, PkgKey] = {}
+        self.bin_dict: Dict[PkgKey, List[PkgKey]] = {}
+        self.prov_dict: Dict[str, str | None] = {}
         self.latest_index: Dict[str, PkgKey] = {}
         self.latest_src: Dict[str, PkgKey] = {}
 
@@ -71,7 +71,7 @@ class Metadata:
 
             package = version = source = source_version = None
             depends: List[str] = []
-            bin_pkgs: List[str] = []
+            bin_pkgs: List[PkgKey] = []
             block_list: List[str] = []
 
             for line in block.splitlines():
@@ -398,16 +398,12 @@ class PreDoseApp:
         self.configure_logging()
         logging.info(f'Pre-dose started with args: {self.args}')
 
-        one_repo_options = any((
-            self.args.remove, self.args.resolve_bin, self.args.resolve_src,
-            self.args.resolve_group, self.args.depends, self.args.rdepends,
-            self.args.topo_sort,
-        ))
         non_modifying_options = any((
             self.args.add_version, self.args.depends, self.args.resolve_src,
             self.args.resolve_bin, self.args.rdepends, self.args.resolve_group,
-            self.args.topo_sort,
+            self.args.topo_sort
         ))
+        one_repo_options = any((non_modifying_options, self.args.remove))
 
         if one_repo_options:
             if self.args.origin_repo is not None:
@@ -470,7 +466,7 @@ class PreDoseApp:
                 print(result)
 
         if self.args.topo_sort:
-            result = target.toposort(packages_set, self.args.dot)
+            result = self.target_meta.toposort(packages_set, self.args.dot)
             if result:
                 print(result)
 
