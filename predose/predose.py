@@ -43,6 +43,7 @@ class Metadata:
     """Parsed Debian repository metadata (Sources or Packages)."""
 
     def __init__(self) -> None:
+        self.filepath: str = ""
         self.is_bin: bool = True
         self.packages: Dict[PkgKey, PackageEntry] = {}
         self.src_dict: Dict[str, str] = {}
@@ -62,6 +63,7 @@ class Metadata:
         with open(filepath, 'rt', encoding='utf-8') as f:
             content = f.read()
             blocks = re.split(r'\n\n+', content.strip())
+            self.filepath = filepath
 
         for block in blocks:
             if not block.strip():
@@ -126,7 +128,7 @@ class Metadata:
             pkg_key = PkgKey(package, version)
             src_key = PkgKey(source, source_version)
 
-            if self.is_bin: self.prov_dict[package] = package
+            self.prov_dict[package] = package
 
             if pkg_key in self.packages:
                 logging.warning(f'Duplicate package detected: {pkg_key}')
@@ -409,22 +411,22 @@ class PreDoseApp:
             self.args.topo_sort,
         ))
 
-        if one_repo_options and self.args.origin_repo is not None:
-            argparse.ArgumentParser().error("option does not require ORIGIN_REPO")
-
-        path = self.args.origin_repo if not one_repo_options else self.args.target_repo
-        self.origin_meta = Metadata.from_file(path)
         if one_repo_options:
-            if self.args.latest:
-                self.origin_meta.leave_latest()
-        else:
+            if self.args.origin_repo is not None:
+                argparse.ArgumentParser().error("option does not require ORIGIN_REPO")
             self.target_meta = Metadata.from_file(self.args.target_repo)
-            if self.args.latest:
-                self.target_meta.leave_latest()
+        else:
+            if not (self.args.origin_repo and self.args.target_repo):
+                argparse.ArgumentParser().error("option requires ORIGIN_REPO and TARGET_REPO")
+            self.origin_meta = Metadata.from_file(self.args.origin_repo)
+            self.target_meta = Metadata.from_file(self.args.target_repo)
+
+        if self.args.latest:
+            self.target_meta.leave_latest()
 
         if self.args.provide:
             provide_meta = Metadata.from_file(self.args.provide)
-            self.origin_meta.prov_dict = provide_meta.prov_dict
+            self.target_meta.prov_dict = provide_meta.prov_dict
 
         packages_set: Set[PkgKey] = set()
         input_lines: List[List[str]] = []
@@ -446,24 +448,23 @@ class PreDoseApp:
             result = None
 
             if self.args.resolve_src:
-                result = self.origin_meta.resolve_src(pkg_key, self.args.add_version)
+                result = self.target_meta.resolve_src(pkg_key, self.args.add_version)
             elif self.args.resolve_bin:
-                result = self.origin_meta.resolve_bin(pkg_key, self.args.add_version)
+                result = self.target_meta.resolve_bin(pkg_key, self.args.add_version)
             elif self.args.resolve_group:
-                result = self.origin_meta.resolve_group(pkg_key, self.args.add_version)
+                result = self.target_meta.resolve_group(pkg_key, self.args.add_version)
             elif self.args.depends:
-                result = self.origin_meta.depends(pkg_key, self.args.depends)
+                result = self.target_meta.depends(pkg_key, self.args.depends)
             elif self.args.rdepends:
-                result = self.origin_meta.rdepends(package)
+                result = self.target_meta.rdepends(package)
             elif self.args.topo_sort:
                 pass
             elif self.args.remove:
-                self.origin_meta.remove(pkg_key)
+                self.target_meta.remove(pkg_key)
             elif self.args.add_version:
-                result = self.origin_meta.add_version(parts[0])
+                result = self.target_meta.add_version(parts[0])
             elif pkg_key is not None:
-                tgt = self.target_meta if not one_repo_options else self.origin_meta
-                self.origin_meta.backport(pkg_key, tgt)
+                self.origin_meta.backport(pkg_key, self.target_meta)
             else:
                 logging.error(f'Unresolved package: {line.strip()}')
 
@@ -471,20 +472,14 @@ class PreDoseApp:
                 print(result)
 
         if self.args.topo_sort:
-            tgt = self.target_meta if not one_repo_options else self.origin_meta
-            result = tgt.toposort(packages_set, self.args.dot)
+            result = target.toposort(packages_set, self.args.dot)
             if result:
                 print(result)
 
         if not non_modifying_options:
-            if self.args.remove:
-                self.origin_meta.output_blocks()
-            else:
-                src = self.origin_meta if one_repo_options else self.target_meta
-                if src:
-                    if self.args.latest:
-                        src.leave_latest()
-                    src.output_blocks()
+            if self.args.latest:
+                self.target_meta.leave_latest()
+            self.target_meta.output_blocks()
 
         logging.debug(f'Pre-dose finished, input lines: {input_lines}')
 
