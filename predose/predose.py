@@ -25,7 +25,7 @@ class PackageEntry:
 
 class PkgKey(NamedTuple):
     package: str
-    version: str | None
+    version: str
 
     def __str__(self):
         return f'{self.package}{"=" if self.version != "" else ""}{self.version}'
@@ -69,7 +69,7 @@ class Metadata:
             if not block.strip():
                 continue
 
-            package = version = source = source_version = None
+            package = version = source = source_version = ""
             depends: List[str] = []
             bin_pkgs: List[PkgKey] = []
             block_list: List[str] = []
@@ -120,11 +120,11 @@ class Metadata:
                             continue
                         depends.append(dep_name)
 
-            if package is None:
+            if not package:
                 continue
 
-            if source is None: source = package
-            if source_version is None: source_version = version
+            if not source: source = package
+            if not source_version: source_version = version
             pkg_key = PkgKey(package, version)
             src_key = PkgKey(source, source_version)
 
@@ -167,22 +167,22 @@ class Metadata:
         # Keep only packages whose key is in the latest_set
         self.packages = {k: v for k, v in self.packages.items() if k in latest_set}
 
-    def resolve_src(self, pkg_key: Optional[PkgKey], add_version: bool = False) -> str:
+    def resolve_src(self, pkg_key: PkgKey, add_version: bool = False) -> str:
         if self.is_bin:
             if not pkg_key.version:
-                pkg_key = self.latest_index.get(pkg_key.package, self.latest_index.get(self.prov_dict.get(pkg_key.package)))
+                pkg_key = self.latest_index.get(pkg_key.package, self.latest_index.get(self.prov_dict.get(pkg_key.package), pkg_key))
         return _format_key(self.src_dict.get(pkg_key, ""), add_version)
 
-    def resolve_bin(self, pkg_key: Optional[PkgKey], add_version: bool = False) -> str:
+    def resolve_bin(self, pkg_key: PkgKey, add_version: bool = False) -> str:
         if not pkg_key.version:
-            pkg_key = self.latest_src.get(pkg_key.package)
+            pkg_key = self.latest_src.get(pkg_key.package, pkg_key)
         out = '\n'.join(_format_key(k, add_version) for k in self.bin_dict.get(pkg_key, []))
         return out
 
-    def resolve_group(self, pkg_key: Optional[PkgKey], add_version: bool = False) -> str:
+    def resolve_group(self, pkg_key: PkgKey, add_version: bool = False) -> str:
         if self.is_bin:
             if not pkg_key.version:
-                pkg_key = self.latest_index.get(pkg_key.package)
+                pkg_key = self.latest_index.get(pkg_key.package, pkg_key)
         for bin_pkgs in self.bin_dict.values():
             if pkg_key in bin_pkgs:
                 return '\n'.join(_format_key(k, add_version) for k in bin_pkgs)
@@ -200,7 +200,7 @@ class Metadata:
         logging.error(f'Package not found: {line_left_side}')
         return ''
 
-    def depends(self, package: str, depth: int):
+    def depends(self, package: PkgKey, depth: int):
         depends_set = set()
         depends_set.add(package.package)
         for i in range(depth):
@@ -215,14 +215,14 @@ class Metadata:
 
         return '\n'.join(depends_set)
 
-    def rdepends(self, name: str) -> str:
+    def rdepends(self, package: str) -> str:
         out: List[str] = []
         for p in self.packages:
-            if name in self.packages[p].depends:
+            if package in self.packages[p].depends:
                 out.append(_format_key(p, False))
         return '\n'.join(out)
 
-    def remove(self, pkg_key: Optional[PkgKey]) -> bool:
+    def remove(self, pkg_key: PkgKey) -> bool:
         key = pkg_key
         if not key.version:
             key = self.latest_index.get(pkg_key.package)
@@ -235,7 +235,7 @@ class Metadata:
                 logging.warning(f'Can not delete, package not found: {pkg_key}')
         return False
 
-    def backport(self, pkg_key: Optional[PkgKey], target: 'Metadata') -> bool:
+    def backport(self, pkg_key: PkgKey, target: 'Metadata') -> bool:
         if not pkg_key.version:
             pkg_key = self.latest_index.get(pkg_key.package, self.latest_index.get(self.prov_dict.get(pkg_key.package)))
         if pkg_key not in self.packages:
@@ -481,7 +481,6 @@ class PreDoseApp:
 def main() -> None:
     app = PreDoseApp()
     app.run()
-
 
 if __name__ == '__main__':
     main()
