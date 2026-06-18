@@ -170,7 +170,7 @@ class Metadata:
     def resolve_src(self, pkg_key: Optional[PkgKey], add_version: bool = False) -> str:
         if self.is_bin:
             if not pkg_key.version:
-                pkg_key = self.latest_index.get(pkg_key.package, self.prov_dict.get(pkg_key.package))
+                pkg_key = self.latest_index.get(pkg_key.package, self.latest_index.get(self.prov_dict.get(pkg_key.package)))
         return _format_key(self.src_dict.get(pkg_key, ""), add_version)
 
     def resolve_bin(self, pkg_key: Optional[PkgKey], add_version: bool = False) -> str:
@@ -237,7 +237,7 @@ class Metadata:
 
     def backport(self, pkg_key: Optional[PkgKey], target: 'Metadata') -> bool:
         if not pkg_key.version:
-            pkg_key = self.latest_index.get(pkg_key.package, self.prov_dict.get(pkg_key.package))
+            pkg_key = self.latest_index.get(pkg_key.package, self.latest_index.get(self.prov_dict.get(pkg_key.package)))
         if pkg_key not in self.packages:
             logging.error(f'No package in origin: {pkg_key}')
             return False
