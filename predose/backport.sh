@@ -7,7 +7,8 @@ SD="$(dirname "${BASH_SOURCE[0]}")"
 
 # print help
 if [ -z "$1" ] || [ "$1" = "--help" ] || [ "$1" = "-h" ]; then
-    echo "Usage: cat <pkgslist> | backport [--checkonly] [--binonly] [--removeonly] [--onlyunsat] [--nosrcfix] <basename> <newerprefix> <olderprefix>"
+    echo "Usage: cat <pkgslist> | backport [--checkonly] [--binonly] [--removeonly] [--onlyunsat] [--nosrcfix] [--oneshot] \
+<basename> <newerprefix> <olderprefix>"
     echo ""
     echo "The script backport expects to find the following metadata files in the current directory:"
     echo "newerprefix_Packages, newerprefix_Sources, olderprefix_Packages, olderprefix_Sources"
@@ -22,6 +23,7 @@ OPT_BINONLY=false
 OPT_REMOVEONLY=false
 OPT_ONLYUNSAT=false
 OPT_NOSRCFIX=false
+OPT_ONESHOT=false
 EXTRA_PARAMS=()
 # Process options
 while [[ $# -gt 0 ]]; do
@@ -44,6 +46,10 @@ while [[ $# -gt 0 ]]; do
             ;;
         --nosrcfix)
             OPT_NOSRCFIX=true
+            shift
+            ;;
+        --oneshot)
+            OPT_ONESHOT=true
             shift
             ;;
         *)
@@ -245,6 +251,11 @@ while true; do
 
     cp -f ${base_name}_Sources ${base_name}_Sources.prev
     cp -f ${base_name}_Packages ${base_name}_Packages.prev
+
+    if [ "$OPT_ONESHOT" = true ]; then
+        echo "Only one iteration requested"
+        exit 0
+    fi
 
     if cmp -s "$filename.bin" "$next_filename.bin" && cmp -s "$filename.src" "$next_filename.src"; then
         echo "Stopping: '$next_filename' has identical content to '$filename'"
