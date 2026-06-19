@@ -236,10 +236,11 @@ class Metadata:
         return False
 
     def backport(self, pkg_key: PkgKey, target: 'Metadata') -> bool:
+        key = pkg_key
         if not pkg_key.version:
             pkg_key = self.latest_index.get(pkg_key.package, self.latest_index.get(self.prov_dict.get(pkg_key.package)))
         if pkg_key not in self.packages:
-            logging.error(f'No package in origin: {pkg_key}')
+            logging.error(f'No package in origin: {key}')
             return False
         if pkg_key in target.packages:
             logging.warning(f'Package version is already present in the target: {pkg_key}')

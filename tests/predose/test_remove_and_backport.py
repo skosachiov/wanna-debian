@@ -310,14 +310,20 @@ def test_backport_without_version_resolves_latest(temp_new_packages, temp_sample
     """Implant packages without version.
     CORRECT: bare names resolve to latest version in origin and get backported."""
     original_count = count_packages_in_file(temp_sample_packages)
-    input_data = "0ad\nvim\n0xffff\n2048\n"
+    input_data = "0ad\n0xffff\n2048\n"
     output = _get_backport_output(temp_new_packages, temp_sample_packages, input_data)
     remaining_count = count_packages_in_output(output)
-    assert remaining_count > original_count, (
-        f"FAIL (bug #2): Expected packages to be added (bare names should resolve "
-        f"to latest versions), got {remaining_count} (same as original {original_count}). "
-        f"_parse_input_line() exists but run() never calls it."
-    )
+    assert remaining_count == original_count + 1
+
+
+def test_backport_without_version_resolves_latest_and_provides(temp_new_packages, temp_sample_packages):
+    """Implant packages without version.
+    CORRECT: bare names resolve to latest version in origin and get backported."""
+    original_count = count_packages_in_file(temp_sample_packages)
+    input_data = "0ad\n0xffff\n2048\neditor\n"
+    output = _get_backport_output(temp_new_packages, temp_sample_packages, input_data)
+    remaining_count = count_packages_in_output(output)
+    assert remaining_count == original_count + 2
 
 
 def test_backport_mixed_no_duplicates(temp_new_packages, temp_sample_packages):
