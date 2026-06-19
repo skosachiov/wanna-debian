@@ -1,0 +1,91 @@
+Package: vim
+Binary: vim-common, vim-gui-common, vim-runtime, vim-doc, vim-tiny, vim, vim-gtk3, vim-nox, vim-motif, xxd
+Version: 2:9.2.0461-1
+Maintainer: Debian Vim Maintainers <team+vim@tracker.debian.org>
+Uploaders: James McCoy <jamessan@debian.org>
+Build-Depends: autoconf, cscope <!nocheck>, debhelper-compat (= 13), libacl1-dev, libcanberra-dev, libgpm-dev [linux-any], libgtk-3-dev, liblua5.1-dev, libmotif-dev, libperl-dev, libselinux-dev [linux-any], libsodium-dev, libncurses-dev, libwayland-dev [!hurd-any], libtool-bin <!nocheck>, locales-all <!nocheck>, lua5.1, ncurses-term <!nocheck>, procps <!nocheck>, python3-dev, ruby [!alpha !ia64] <!pkg.vim.noruby>, ruby-dev [!alpha !ia64] <!pkg.vim.noruby>, tcl-dev
+Build-Depends-Indep: docbook-utils, docbook-xml, ghostscript, lynx, pdf2svg
+Build-Conflicts: autoconf2.13
+Architecture: any all
+Standards-Version: 4.7.4
+Format: 3.0 (quilt)
+Files:
+ cf88b784597508ded0a522214d073ae5 3194 vim_9.2.0461-1.dsc
+ 386df5edc2fe6b1e179f8839228c0aeb 13465284 vim_9.2.0461.orig.tar.xz
+ b58061e3c116aa5e8b46721642ca8444 162588 vim_9.2.0461-1.debian.tar.xz
+Vcs-Browser: https://salsa.debian.org/vim-team/vim
+Vcs-Git: https://salsa.debian.org/vim-team/vim.git
+Checksums-Sha256:
+ 042b08b2293be7d226fabb8eeb7af8e838838dd9647324a214fd33253687ed25 3194 vim_9.2.0461-1.dsc
+ 03e8d8238f54a3724c811dfdfdba5de2794905b0e13c4ca95b6a7ff68919c778 13465284 vim_9.2.0461.orig.tar.xz
+ ff3b8ffa6ffa6cd762b1dbb2901c52cf7f66dc083a6c5d1f114ba8cd846a13a0 162588 vim_9.2.0461-1.debian.tar.xz
+Homepage: https://www.vim.org/
+Dgit: 212b02c2cfffc2da91d862f2784c9d63090bdb2e debian archive/debian/2%9.2.0461-1 https://git.dgit.debian.org/vim
+Git-Tag-Info: tag=c58ff58a0d037b4fb090ace2a4430c77d0127d21 fp=91bfbf4d6956bd5df7b72d23dfe691ae331ba3db
+Git-Tag-Tagger: James McCoy <jamessan@debian.org>
+Package-List: 
+ vim deb editors optional arch=any
+ vim-common deb editors important arch=all
+ vim-doc deb doc optional arch=all
+ vim-gtk3 deb editors optional arch=any
+ vim-gui-common deb editors optional arch=all
+ vim-motif deb editors optional arch=any
+ vim-nox deb editors optional arch=any
+ vim-runtime deb editors optional arch=all
+ vim-tiny deb editors important arch=any
+ xxd deb editors optional arch=any
+Testsuite: autopkgtest
+Testsuite-Triggers: lua5.1, perl, python3, ruby
+Directory: pool/main/v/vim
+Priority: optional
+Section: editors
+
+Package: vim-addon-manager
+Binary: vim-addon-manager
+Version: 0.5.11
+Maintainer: Debian Vim Maintainers <team+vim@tracker.debian.org>
+Uploaders: Antonio Terceiro <terceiro@debian.org>, James McCoy <jamessan@debian.org>
+Build-Depends: cucumber, debhelper-compat (= 13), gem2deb, rake, rdtool, ruby-rspec, vim-common
+Architecture: all
+Standards-Version: 4.6.2
+Format: 3.0 (native)
+Files:
+ a38de42112eb120cec6ab5c005cafa8c 1932 vim-addon-manager_0.5.11.dsc
+ a1df91e416ee4a1434f95b79226d0710 25504 vim-addon-manager_0.5.11.tar.xz
+Vcs-Browser: https://salsa.debian.org/vim-team/vim-addon-manager
+Vcs-Git: https://salsa.debian.org/vim-team/vim-addon-manager.git
+Checksums-Sha256:
+ e12aee35e47f94b7a1e30d04f48d7e71946183383ad68b0dbbf5821d92b4bdfc 1932 vim-addon-manager_0.5.11.dsc
+ 85778c0dd58d8c51e25e3ab00bef121d15e17b3333dea74d6dfa7ddec3249713 25504 vim-addon-manager_0.5.11.tar.xz
+Package-List: 
+ vim-addon-manager deb editors optional arch=all
+Ruby-Versions: all
+Testsuite: autopkgtest-pkg-ruby
+Directory: pool/main/v/vim-addon-manager
+Priority: optional
+Section: editors
+
+Package: vim-addon-mw-utils
+Binary: vim-addon-mw-utils
+Version: 0.2-6
+Maintainer: Andrea Capriotti <capriott@debian.org>
+Build-Depends: debhelper-compat (= 13), dh-sequence-vim-addon
+Architecture: all
+Standards-Version: 4.6.1
+Format: 3.0 (quilt)
+Files:
+ 45f109c32c4e62622765640574750901 1958 vim-addon-mw-utils_0.2-6.dsc
+ d33fa720c5d92ce9dfe0308ad5f9276c 11492 vim-addon-mw-utils_0.2.orig.tar.gz
+ 7ec47026f578bc34e4350cab57794576 2172 vim-addon-mw-utils_0.2-6.debian.tar.xz
+Vcs-Browser: https://salsa.debian.org/debian/vim-addon-mw-utils
+Vcs-Git: https://salsa.debian.org/debian/vim-addon-mw-utils.git
+Checksums-Sha256:
+ 501a7dff3e3ae402fa6642b7a4b7d6ecc455df1839bf63a9d200a96abd60c729 1958 vim-addon-mw-utils_0.2-6.dsc
+ da56650a81009d094c4fae8565c95c9d4cc577f8474ac39f1016310138523b6e 11492 vim-addon-mw-utils_0.2.orig.tar.gz
+ 368b0a7a6e8b800f85462aa4fe41e3d58007c8a931494146b4d5ece39d4644dc 2172 vim-addon-mw-utils_0.2-6.debian.tar.xz
+Homepage: https://github.com/MarcWeber/vim-addon-mw-utils
+Package-List: 
+ vim-addon-mw-utils deb editors optional arch=all
+Directory: pool/main/v/vim-addon-mw-utils
+Priority: optional
+Section: misc

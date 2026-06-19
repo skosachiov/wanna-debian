@@ -1,10 +1,10 @@
 __version__ = "0.1.6"
 
-# Import and export the functions your tests are looking for
-from .predose import parse_metadata, resolve_pkg_name, reverse_graph
+from .predose import Metadata, PackageEntry, reverse_graph, dict_to_dot
 
 __all__ = [
-    'parse_metadata',
-    'resolve_pkg_name',
+    'Metadata',
+    'PackageEntry',
     'reverse_graph',
+    'dict_to_dot',
 ]

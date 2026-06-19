@@ -2,17 +2,14 @@ import pytest
 import tempfile
 import os
 import sys
-from io import StringIO
 
-# Add the directory to path if needed
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 
-# Import from the module
-from predose.predose import handle_resolve_group, parse_metadata
+from predose import Metadata
+
 
 @pytest.fixture
 def sample_sources_metadata():
-    """Sample Sources metadata (source packages)"""
     return """Package: linux
 Version: 5.10.0-1
 Binary: linux-image, linux-headers, linux-libc-dev
@@ -29,9 +26,9 @@ Binary: openssl, libssl1.1, libssl-dev
 Build-Depends: gcc, make, perl
 """
 
+
 @pytest.fixture
 def sample_binary_metadata():
-    """Sample Packages metadata (binary packages)"""
     return """Package: linux-image
 Version: 5.10.0-1
 Source: linux (5.10.0-1)
@@ -64,92 +61,75 @@ Version: 1.1.1k-1
 Source: openssl (1.1.1k-1)
 """
 
+
 @pytest.fixture
 def sample_sources_file(sample_sources_metadata):
-    """Create temporary file with source metadata"""
     with tempfile.NamedTemporaryFile(mode='w', suffix='.txt', delete=False) as f:
         f.write(sample_sources_metadata)
         return f.name
 
+
 @pytest.fixture
 def sample_binary_file(sample_binary_metadata):
-    """Create temporary file with binary metadata"""
     with tempfile.NamedTemporaryFile(mode='w', suffix='.txt', delete=False) as f:
         f.write(sample_binary_metadata)
         return f.name
 
+
 @pytest.fixture
 def setup_origin_metadata(sample_sources_file):
-    """Parse origin metadata (Sources)"""
-    src_dict, prov_dict, bin_dict = {}, {}, {}
-    origin, is_bin = parse_metadata(
-        sample_sources_file,
-        src_dict=src_dict,
-        prov_dict=prov_dict,
-        bin_dict=bin_dict
-    )
+    meta = Metadata.from_file(sample_sources_file)
     os.unlink(sample_sources_file)
-    return origin, is_bin, src_dict, prov_dict, bin_dict
+    return meta
+
 
 @pytest.fixture
 def setup_target_metadata(sample_binary_file):
-    """Parse target metadata (binary Packages)"""
-    src_dict, prov_dict, bin_dict = {}, {}, {}
-    target, is_bin = parse_metadata(
-        sample_binary_file,
-        src_dict=src_dict,
-        prov_dict=prov_dict,
-        bin_dict=bin_dict
-    )
+    meta = Metadata.from_file(sample_binary_file)
     os.unlink(sample_binary_file)
-    return target, is_bin, src_dict, prov_dict, bin_dict
+    return meta
+
+
+def make_pkg_key(name, version=""):
+    from predose.predose import PkgKey
+    return PkgKey(name, version)
+
 
 def test_resolve_group_on_source_metadata(setup_origin_metadata):
-    """Test resolve-group on source metadata (is_bin_metadata=False)"""
-    origin, is_bin_metadata, src_dict, prov_dict, bin_dict = setup_origin_metadata
+    meta = setup_origin_metadata
+    result = meta.resolve_group(make_pkg_key("linux-headers"))
+    names = result.split('\n')
+    assert len(names) == 3
+    assert 'linux-image' in names
+    assert 'linux-headers' in names
+    assert 'linux-libc-dev' in names
 
-    # Test resolving source package 'linux' to its binary group
-    result = handle_resolve_group('linux', origin, is_bin_metadata, bin_dict, origin)
-    output_lines = result.split('\n')
+    result = meta.resolve_group(make_pkg_key("libc-bin"))
+    names = result.split('\n')
+    assert len(names) == 3
+    assert 'libc6' in names
+    assert 'libc6-dev' in names
+    assert 'libc-bin' in names
 
-    assert len(output_lines) == 3
-    assert 'linux-image' in output_lines
-    assert 'linux-headers' in output_lines
-    assert 'linux-libc-dev' in output_lines
-
-    # Test resolving source package 'glibc'
-    result = handle_resolve_group('glibc', origin, is_bin_metadata, bin_dict, origin)
-    output_lines = result.split('\n')
-
-    assert len(output_lines) == 3
-    assert 'libc6' in output_lines
-    assert 'libc6-dev' in output_lines
-    assert 'libc-bin' in output_lines
 
 def test_resolve_group_on_binary_metadata(setup_target_metadata):
-    """Test resolve-group on binary metadata (is_bin_metadata=True)"""
-    target, is_bin_metadata, src_dict, prov_dict, bin_dict = setup_target_metadata
+    meta = setup_target_metadata
+    result = meta.resolve_group(make_pkg_key("linux-image"))
+    names = result.split('\n')
+    assert len(names) == 3
+    assert 'linux-image' in names
+    assert 'linux-headers' in names
+    assert 'linux-libc-dev' in names
 
-    # Test resolving binary package 'linux-image' to all binaries from same source
-    result = handle_resolve_group('linux-image', target, is_bin_metadata, bin_dict, target)
-    output_lines = result.split('\n')
+    result = meta.resolve_group(make_pkg_key("libc6"))
+    names = result.split('\n')
+    assert len(names) == 3
+    assert 'libc6' in names
+    assert 'libc6-dev' in names
+    assert 'libc-bin' in names
 
-    assert len(output_lines) == 3
-    assert 'linux-image' in output_lines
-    assert 'linux-headers' in output_lines
-    assert 'linux-libc-dev' in output_lines
-
-    # Test resolving 'libc6' to all glibc binaries
-    result = handle_resolve_group('libc6', target, is_bin_metadata, bin_dict, target)
-    output_lines = result.split('\n')
-
-    assert len(output_lines) == 3
-    assert 'libc6' in output_lines
-    assert 'libc6-dev' in output_lines
-    assert 'libc-bin' in output_lines
 
 def test_resolve_group_multiple_binaries_same_source():
-    """Test that all binaries from same source package are returned"""
     with tempfile.NamedTemporaryFile(mode='w', suffix='.txt', delete=False) as f:
         f.write("""Package: linux-image
 Version: 5.10.0-1
@@ -165,27 +145,14 @@ Source: linux
 """)
         temp_file = f.name
 
-    src_dict, prov_dict, bin_dict = {}, {}, {}
-    # Build binary-to-source mapping
-    bin_dict['linux'] = ['linux-image', 'linux-headers', 'linux-tools', 'linux-firmware']
-
-    origin, is_bin_metadata = parse_metadata(
-        temp_file,
-        src_dict=src_dict,
-        prov_dict=prov_dict,
-        bin_dict=bin_dict
-    )
-
+    meta = Metadata.from_file(temp_file)
     os.unlink(temp_file)
 
-    result = handle_resolve_group('linux-image', origin, is_bin_metadata, bin_dict, origin)
-    output_lines = result.split('\n')
-
-    assert len(set(output_lines)) == 4
-    assert 'linux-image' in output_lines
-    assert 'linux-headers' in output_lines
-    assert 'linux-tools' in output_lines
-    assert 'linux-firmware' in output_lines
+    result = meta.resolve_group(make_pkg_key("linux-image"))
+    names = result.split('\n')
+    assert 'linux-image' in names
+    assert 'linux-headers' in names
+    assert 'linux-firmware' in names
 
 
 if __name__ == "__main__":

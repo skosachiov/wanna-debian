@@ -16097,31 +16097,6 @@ Directory: pool/main/c/ceph
 Priority: optional
 Section: admin
 
-Package: ceph-iscsi
-Binary: ceph-iscsi
-Version: 3.9-1
-Maintainer: Debian QA Group <packages@qa.debian.org>
-Build-Depends: debhelper-compat (= 13), dh-sequence-python3, pkgconf, python3-setuptools, python3-all, python3-configshell-fb, python3-cryptography, python3-flask, python3-netifaces, python3-openssl, python3-pytest, python3-rados, python3-rbd, python3-requests, python3-rtslib-fb, systemd-dev
-Architecture: all
-Standards-Version: 4.6.2
-Format: 3.0 (quilt)
-Files:
- 58ea66133f8621b39d748d7adcb78b47 2117 ceph-iscsi_3.9-1.dsc
- 857a826e130e0198c9172f33b90ba897 132969 ceph-iscsi_3.9.orig.tar.gz
- c481309278ef762ada3e18116539fbfb 3668 ceph-iscsi_3.9-1.debian.tar.xz
-Vcs-Browser: https://salsa.debian.org/debian/ceph-iscsi
-Vcs-Git: https://salsa.debian.org/debian/ceph-iscsi.git
-Checksums-Sha256:
- d4923539619a7a2d8abc787d6a3185d4298f0e0310322216325b16ef2ec7a063 2117 ceph-iscsi_3.9-1.dsc
- abd56980036d45b62e41901bd87f4696a26bd0c3a8159546466544c0bdb63a73 132969 ceph-iscsi_3.9.orig.tar.gz
- b0e9b1755ce646038851b17f1a57d55bb020dde42adcab95b30bc732b58a768f 3668 ceph-iscsi_3.9-1.debian.tar.xz
-Homepage: https://github.com/ceph/ceph-iscsi
-Package-List:
- ceph-iscsi deb python optional arch=all
-Directory: pool/main/c/ceph-iscsi
-Priority: extra
-Section: misc
-
 Package: ceph
 Binary: ceph, ceph-base, ceph-base-dbg, ceph-common, ceph-common-dbg, ceph-fuse, ceph-fuse-dbg, ceph-grafana-dashboards, ceph-immutable-object-cache, ceph-immutable-object-cache-dbg, ceph-mds, ceph-mds-dbg, ceph-mgr, ceph-mgr-cephadm, ceph-mgr-dashboard, ceph-mgr-dbg, ceph-mgr-k8sevents, ceph-mgr-modules-core, ceph-mgr-rook, ceph-mon, ceph-mon-dbg, ceph-osd, ceph-osd-dbg, ceph-prometheus-alerts, ceph-resource-agents, ceph-test, ceph-test-dbg, ceph-volume, cephadm, cephfs-mirror, cephfs-mirror-dbg, cephfs-shell, cephfs-top, libcephfs-dev, libcephfs-java, libcephfs-jni, libcephfs2, libcephfs2-dbg, librados-dev, librados2, librados2-dbg, libradospp-dev, libradosstriper-dev, libradosstriper1, libradosstriper1-dbg, librbd-dev, librbd1, librbd1-dbg, librgw-dev, librgw2, librgw2-dbg, libsqlite3-mod-ceph, libsqlite3-mod-ceph-dbg, libsqlite3-mod-ceph-dev, python3-ceph, python3-ceph-argparse, python3-ceph-common, python3-cephfs, python3-rados, python3-rbd, python3-rgw,
  rados-objclass-dev, radosgw, radosgw-dbg, rbd-fuse, rbd-fuse-dbg, rbd-mirror, rbd-mirror-dbg, rbd-nbd,
