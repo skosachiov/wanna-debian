@@ -242,14 +242,19 @@ class Metadata:
             logging.error(f'No package in origin: {pkg_key}')
             return False
         if pkg_key in target.packages:
-            logging.warning(f'Already in target: {pkg_key}')
+            logging.warning(f'Package version is already present in the target: {pkg_key}')
             return False
         if pkg_key not in target.latest_index:
             target.packages[pkg_key] = self.packages[pkg_key]
             latest = target.latest_index.get(pkg_key.package)
-            if latest is None or apt_pkg.version_compare(pkg_key.version, latest.version) > 0:
+            if latest is None:
                 target.latest_index[pkg_key.package] = pkg_key
-            logging.info(f'Add to target: {pkg_key}')
+                logging.info(f'New package has been added to the target: {pkg_key}')
+            elif apt_pkg.version_compare(pkg_key.version, latest.version) > 0:
+                target.latest_index[pkg_key.package] = pkg_key
+                logging.info(f'New version of the package has been added to the target: {pkg_key}')
+            else:
+                logging.warning(f'Outdated version of the package has been added to the target: {pkg_key}')
             return True
         return False
 
