@@ -611,7 +611,7 @@ def main():
         need_update = original_metadata_is_newer(config["base_url"], config["local_dir"][0], session, hashes)
         if need_update or not os.path.exists(config_file) or args.force:
             logging.info("Starting metadata update...")
-            update_metadata(config["base_url"], config["local_dir"][0], config["dist"], config["comp"], config["builds"], session, hashes)
+            update_metadata(config["base_url"], config["local_dir"][0], args.dist, config["comp"], config["builds"], session, hashes)
             logging.info("Metadata update completed!")
             with open(config["local_dir"][0] + "/" + config["config_file"], "w") as f:
                 json.dump(config, f, indent=4)
