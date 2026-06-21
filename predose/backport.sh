@@ -123,6 +123,24 @@ if [ -n "$METADATA" ]; then
     done
 fi
 
+countgrepunsat() {
+    grep -P -A 5 "^\s{5}pkg1?:" | grep -P "^\s{6}(unsat-|package:)" | paste - - | sort | uniq -c | sort -nr
+}
+
+if [ "$OPT_ONESHOT" = true ]; then
+    echo "Only one iteration requested"
+    echo ""
+    echo "Baseline dose-debcheck:"
+    dose-debcheck "${EXTRA_PARAMS[@]}" --latest 1 \
+        --deb-native-arch=amd64 -e -f $3_Packages | countgrepunsat
+    echo ""
+    echo "Baseline dose-builddebcheck:"
+    dose-builddebcheck "${EXTRA_PARAMS[@]}" --latest 1 \
+        --deb-native-arch=amd64 -e -f $3_Packages $3_Sources | countgrepunsat
+    echo ""
+fi
+
+
 base_name="$1"
 counter=0
 
@@ -308,11 +326,11 @@ while true; do
     if [ "$OPT_ONESHOT" = true ]; then
         echo "Only one iteration requested"
         echo ""
-        echo "debcheck:"
-        cat ${base_name}.debcheck.log.tmp | grep -P -A 5 "^\s{5}pkg1?:" | grep -P "^\s{6}(unsat-|package:)" | paste - - | sort | uniq -c
+        echo "Regression dose-debcheck:"
+        cat ${base_name}.debcheck.log.tmp | countgrepunsat
         echo ""
-        echo "builddebcheck:"
-        cat ${base_name}.builddebcheck.log.tmp | grep -P -A 5 "^\s{5}pkg1?:" | grep -P "^\s{6}(unsat-|package:)" | paste - - | sort | uniq -c
+        echo "Regression dose-builddebcheck:"
+        cat ${base_name}.builddebcheck.log.tmp | countgrepunsat
         exit 0
     fi
 
