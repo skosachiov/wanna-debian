@@ -128,7 +128,6 @@ countgrepunsat() {
 }
 
 if [ "$OPT_ONESHOT" = true ]; then
-    echo "Only one iteration requested"
     echo ""
     echo "Baseline dose-debcheck:"
     dose-debcheck "${EXTRA_PARAMS[@]}" --latest 1 \
@@ -324,13 +323,14 @@ while true; do
     cp -f ${base_name}_Packages ${base_name}_Packages.prev
 
     if [ "$OPT_ONESHOT" = true ]; then
-        echo "Only one iteration requested"
         echo ""
         echo "Regression dose-debcheck:"
         cat ${base_name}.debcheck.log.tmp | countgrepunsat || true
         echo ""
         echo "Regression dose-builddebcheck:"
         cat ${base_name}.builddebcheck.log.tmp | countgrepunsat || true
+        echo ""
+        echo "Only one iteration requested, exit"
         exit 0
     fi
 
