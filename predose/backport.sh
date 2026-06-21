@@ -132,11 +132,11 @@ if [ "$OPT_ONESHOT" = true ]; then
     echo ""
     echo "Baseline dose-debcheck:"
     dose-debcheck "${EXTRA_PARAMS[@]}" --latest 1 \
-        --deb-native-arch=amd64 -e -f $3_Packages | countgrepunsat
+        --deb-native-arch=amd64 -e -f $3_Packages | countgrepunsat || true
     echo ""
     echo "Baseline dose-builddebcheck:"
     dose-builddebcheck "${EXTRA_PARAMS[@]}" --latest 1 \
-        --deb-native-arch=amd64 -e -f $3_Packages $3_Sources | countgrepunsat
+        --deb-native-arch=amd64 -e -f $3_Packages $3_Sources | countgrepunsat || true
     echo ""
 fi
 
@@ -327,10 +327,10 @@ while true; do
         echo "Only one iteration requested"
         echo ""
         echo "Regression dose-debcheck:"
-        cat ${base_name}.debcheck.log.tmp | countgrepunsat
+        cat ${base_name}.debcheck.log.tmp | countgrepunsat || true
         echo ""
         echo "Regression dose-builddebcheck:"
-        cat ${base_name}.builddebcheck.log.tmp | countgrepunsat
+        cat ${base_name}.builddebcheck.log.tmp | countgrepunsat || true
         exit 0
     fi
 
