@@ -116,6 +116,8 @@ if [ -n "$METADATA" ]; then
     fi
 
     # $2 = newer prefix, $3 = older prefix
+    distrotracker --local-dir "$METADATA" --dist "$2" "$3"
+
     for suite in "$2" "$3"; do
         generate_metadata_for_suite "$suite" || exit 1
     done
@@ -305,6 +307,12 @@ while true; do
 
     if [ "$OPT_ONESHOT" = true ]; then
         echo "Only one iteration requested"
+        echo ""
+        echo "debcheck:"
+        cat ${base_name}.debcheck.log.tmp | grep -P -A 5 "^\s{5}pkg1?:" | grep -P "^\s{6}(unsat-|package:)" | paste - - | sort | uniq -c
+        echo ""
+        echo "builddebcheck:"
+        cat ${base_name}.builddebcheck.log.tmp | grep -P -A 5 "^\s{5}pkg1?:" | grep -P "^\s{6}(unsat-|package:)" | paste - - | sort | uniq -c
         exit 0
     fi
 
