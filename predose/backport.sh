@@ -131,7 +131,15 @@ showhead() {
     local n="${1:-10}"
     awk -v n="$n" '
         NR <= n {print}
-        END {print "Displaying first " n " of " NR " total lines"}
+        END {
+            if (NR == 0) {
+                print "No lines to display"
+            } else if (NR <= n) {
+                print "Displaying all " NR " lines"
+            } else {
+                print "Displaying first " n " of " NR " total lines"
+            }
+        }
     '
 }
 
