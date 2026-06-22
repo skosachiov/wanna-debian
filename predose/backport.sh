@@ -89,7 +89,6 @@ generate_metadata_for_suite() {
 
     if [ ! -d "$suite_dir" ]; then
         echo "Error: Suite directory '$suite_dir' not found in metadata folder"
-        return 1
     fi
 
     # Packages (binary-amd64)
