@@ -127,15 +127,23 @@ countgrepunsat() {
     grep -P -A 5 "^\s{5}pkg1?:" | grep -P "^\s{6}(unsat-|package:)" | paste - - | sort | uniq -c | sort -nr
 }
 
+showhead() {
+    local n="${1:-10}"
+    awk -v n="$n" '
+        NR <= n {print}
+        END {print "Displaying first " n " of " NR " total lines"}
+    '
+}
+
 if [ "$OPT_ONESHOT" = true ]; then
     echo ""
     echo "Baseline dose-debcheck:"
     dose-debcheck "${EXTRA_PARAMS[@]}" --latest 1 \
-        --deb-native-arch=amd64 -e -f $3_Packages | countgrepunsat || true
+        --deb-native-arch=amd64 -e -f $3_Packages | countgrepunsat | showhead || true
     echo ""
     echo "Baseline dose-builddebcheck:"
     dose-builddebcheck "${EXTRA_PARAMS[@]}" --latest 1 \
-        --deb-native-arch=amd64 -e -f $3_Packages $3_Sources | countgrepunsat || true
+        --deb-native-arch=amd64 -e -f $3_Packages $3_Sources | countgrepunsat | showhead || true
     echo ""
 fi
 
@@ -325,10 +333,10 @@ while true; do
     if [ "$OPT_ONESHOT" = true ]; then
         echo ""
         echo "Regression dose-debcheck:"
-        cat ${base_name}.debcheck.log.tmp | countgrepunsat || true
+        cat ${base_name}.debcheck.log.tmp | countgrepunsat | showhead || true
         echo ""
         echo "Regression dose-builddebcheck:"
-        cat ${base_name}.builddebcheck.log.tmp | countgrepunsat || true
+        cat ${base_name}.builddebcheck.log.tmp | countgrepunsat | showhead || true
         echo ""
         echo "Only one iteration requested, exit"
         exit 0
