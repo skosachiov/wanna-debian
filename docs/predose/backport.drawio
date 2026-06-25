@@ -1,6 +1,6 @@
 <mxfile host="Electron">
   <diagram id="C5RBs43oDa-KdzZeNtuy" name="Page-1">
-    <mxGraphModel dx="1088" dy="649" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" background="light-dark(#000000,#000000)" math="0" shadow="0">
+    <mxGraphModel dx="524" dy="313" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" background="light-dark(#000000,#000000)" math="0" shadow="0">
       <root>
         <mxCell id="WIyWlLk6GJQsqaUBKTNV-0" />
         <mxCell id="WIyWlLk6GJQsqaUBKTNV-1" parent="WIyWlLk6GJQsqaUBKTNV-0" />
@@ -17,6 +17,9 @@
         </mxCell>
         <mxCell id="BYnsBLyXqSKAvp99Cp04-3" parent="WIyWlLk6GJQsqaUBKTNV-1" style="shape=document;whiteSpace=wrap;html=1;boundedLbl=1;labelBackgroundColor=none;" value="Backport packets from Testing&lt;br&gt;(sources)" vertex="1">
           <mxGeometry height="80" width="120" x="566" y="140" as="geometry" />
+        </mxCell>
+        <mxCell id="OmmvOoN20TxA4eYAvgfG-0" edge="1" parent="WIyWlLk6GJQsqaUBKTNV-1" source="jdkO46tf3qpjO2ybV3Zm-0" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.25;entryDx=0;entryDy=0;curved=1;" target="jdkO46tf3qpjO2ybV3Zm-1">
+          <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="jdkO46tf3qpjO2ybV3Zm-0" parent="WIyWlLk6GJQsqaUBKTNV-1" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;labelBackgroundColor=none;" value="Actor" vertex="1">
           <mxGeometry height="60" width="30" x="50" y="60" as="geometry" />
@@ -39,10 +42,11 @@
         <mxCell id="K2joIcQUg46PM5A2mCq8-2" edge="1" parent="WIyWlLk6GJQsqaUBKTNV-1" source="jdkO46tf3qpjO2ybV3Zm-2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=1;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;dashed=1;labelBackgroundColor=none;fontColor=default;" target="K2joIcQUg46PM5A2mCq8-0">
           <mxGeometry relative="1" as="geometry">
             <Array as="points">
-              <mxPoint x="520" y="210" />
+              <mxPoint x="484" y="230" />
+              <mxPoint x="520" y="230" />
               <mxPoint x="520" y="285" />
               <mxPoint x="523" y="285" />
-              <mxPoint x="523" y="370" />
+              <mxPoint x="523" y="390" />
             </Array>
           </mxGeometry>
         </mxCell>
@@ -70,18 +74,22 @@
         <mxCell id="jdkO46tf3qpjO2ybV3Zm-9" parent="WIyWlLk6GJQsqaUBKTNV-1" style="shape=process;whiteSpace=wrap;html=1;backgroundOutline=1;labelBackgroundColor=none;" value="Remove old from current BIN" vertex="1">
           <mxGeometry height="60" width="120" x="220" y="290" as="geometry" />
         </mxCell>
-        <mxCell id="jdkO46tf3qpjO2ybV3Zm-49" edge="1" parent="WIyWlLk6GJQsqaUBKTNV-1" source="jdkO46tf3qpjO2ybV3Zm-11" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.575;entryY=-0.027;entryDx=0;entryDy=0;entryPerimeter=0;labelBackgroundColor=none;fontColor=default;" target="jdkO46tf3qpjO2ybV3Zm-28">
+        <mxCell id="jdkO46tf3qpjO2ybV3Zm-49" edge="1" parent="WIyWlLk6GJQsqaUBKTNV-1" source="jdkO46tf3qpjO2ybV3Zm-11" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;labelBackgroundColor=none;fontColor=default;">
           <mxGeometry relative="1" as="geometry">
-            <mxPoint x="579" y="580" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="579" y="575" />
+              <mxPoint x="410" y="575" />
+            </Array>
+            <mxPoint x="410" y="600" as="targetPoint" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="jdkO46tf3qpjO2ybV3Zm-11" parent="WIyWlLk6GJQsqaUBKTNV-1" style="shape=step;perimeter=stepPerimeter;whiteSpace=wrap;html=1;fixedSize=1;labelBackgroundColor=none;" value="Check current SRC,&lt;br&gt;checkonly (cat ...)" vertex="1">
+        <mxCell id="jdkO46tf3qpjO2ybV3Zm-11" parent="WIyWlLk6GJQsqaUBKTNV-1" style="shape=step;perimeter=stepPerimeter;whiteSpace=wrap;html=1;fixedSize=1;labelBackgroundColor=none;" value="Check current SRC,&lt;br&gt;checkonly (cat *.src)" vertex="1">
           <mxGeometry height="80" width="160" x="499" y="470" as="geometry" />
         </mxCell>
         <mxCell id="jdkO46tf3qpjO2ybV3Zm-36" edge="1" parent="WIyWlLk6GJQsqaUBKTNV-1" source="jdkO46tf3qpjO2ybV3Zm-12" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.25;entryY=0;entryDx=0;entryDy=0;labelBackgroundColor=none;fontColor=default;" target="jdkO46tf3qpjO2ybV3Zm-28">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="jdkO46tf3qpjO2ybV3Zm-12" parent="WIyWlLk6GJQsqaUBKTNV-1" style="shape=step;perimeter=stepPerimeter;whiteSpace=wrap;html=1;fixedSize=1;labelBackgroundColor=none;" value="Check current BIN,&lt;br&gt;checkonly (cat ...)" vertex="1">
+        <mxCell id="jdkO46tf3qpjO2ybV3Zm-12" parent="WIyWlLk6GJQsqaUBKTNV-1" style="shape=step;perimeter=stepPerimeter;whiteSpace=wrap;html=1;fixedSize=1;labelBackgroundColor=none;" value="Check current BIN,&lt;br&gt;checkonly (cat *.bin)" vertex="1">
           <mxGeometry height="80" width="160" x="159" y="480" as="geometry" />
         </mxCell>
         <mxCell id="jdkO46tf3qpjO2ybV3Zm-19" edge="1" parent="WIyWlLk6GJQsqaUBKTNV-1" source="jdkO46tf3qpjO2ybV3Zm-13" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;labelBackgroundColor=none;fontColor=default;" target="jdkO46tf3qpjO2ybV3Zm-12">
@@ -134,8 +142,8 @@
         <mxCell id="jdkO46tf3qpjO2ybV3Zm-35" parent="WIyWlLk6GJQsqaUBKTNV-1" style="shape=document;whiteSpace=wrap;html=1;boundedLbl=1;labelBackgroundColor=none;" value="Unsat bin +&lt;br&gt;Bin pkg of missing unsat" vertex="1">
           <mxGeometry height="110" width="160" x="270" y="995" as="geometry" />
         </mxCell>
-        <mxCell id="jdkO46tf3qpjO2ybV3Zm-37" parent="WIyWlLk6GJQsqaUBKTNV-1" style="text;html=1;whiteSpace=wrap;overflow=hidden;rounded=0;labelBackgroundColor=none;" value="&lt;h1 style=&quot;margin-top: 0px;&quot;&gt;Testing to Stable backport process&lt;/h1&gt;&lt;p&gt;Pre-dose (wanna-debian) is a small set of Python and Bash scripts designed for analyzing and backporting Debian packages from&amp;nbsp;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;newer releases (e.g., Sid) to older stable versions (e.g., Trixie or Bookworm).&lt;/span&gt;&lt;/p&gt;" vertex="1">
-          <mxGeometry height="120" width="500" x="174" y="30" as="geometry" />
+        <mxCell id="jdkO46tf3qpjO2ybV3Zm-37" parent="WIyWlLk6GJQsqaUBKTNV-1" style="text;html=1;whiteSpace=wrap;overflow=hidden;rounded=0;labelBackgroundColor=none;" value="&lt;h1 style=&quot;margin-top: 0px;&quot;&gt;Testing to Stable backport process&lt;/h1&gt;&lt;p&gt;The diagram shows the iterative dependency resolution process during backporting. For simplicity, we assume that backporting occurs from Testing to Stable. The script receives a list of binary packages as input, since the verification tool produces a list of binary packages as output.&lt;/p&gt;" vertex="1">
+          <mxGeometry height="120" width="500" x="164" y="10" as="geometry" />
         </mxCell>
         <mxCell id="jdkO46tf3qpjO2ybV3Zm-44" edge="1" parent="WIyWlLk6GJQsqaUBKTNV-1" source="jdkO46tf3qpjO2ybV3Zm-30" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;labelBackgroundColor=none;fontColor=default;" target="4IcmTThSWF4IWx9KLtXi-3">
           <mxGeometry relative="1" as="geometry">
@@ -171,7 +179,7 @@
           </mxGeometry>
         </mxCell>
         <mxCell id="K2joIcQUg46PM5A2mCq8-0" parent="WIyWlLk6GJQsqaUBKTNV-1" style="rounded=0;whiteSpace=wrap;html=1;labelBackgroundColor=none;" value="Resolve src to bins on Testing" vertex="1">
-          <mxGeometry height="60" width="120" x="385.49" y="360" as="geometry" />
+          <mxGeometry height="60" width="120" x="390" y="360" as="geometry" />
         </mxCell>
         <mxCell id="cQBACjruvvWsz2pfgvWL-0" edge="1" parent="WIyWlLk6GJQsqaUBKTNV-1" source="jdkO46tf3qpjO2ybV3Zm-1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.667;entryDx=0;entryDy=0;entryPerimeter=0;labelBackgroundColor=none;fontColor=default;" target="jdkO46tf3qpjO2ybV3Zm-9">
           <mxGeometry relative="1" as="geometry">
