@@ -487,6 +487,8 @@ class PreDoseApp:
         if not non_modifying_options:
             if self.args.latest:
                 self.target_meta.keep_latest()
+            if self.args.latest_src:
+                self.target_meta.keep_latest_src()
             self.target_meta.output_blocks()
 
         logging.debug(f'Pre-dose finished, input lines: {input_lines}')
