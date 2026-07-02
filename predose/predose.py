@@ -249,7 +249,10 @@ class Metadata:
             logging.warning(f'Package version is already present in the target: {pkg_key}')
             return False
         if pkg_key not in target.latest_index:
-            target.packages[pkg_key] = self.packages[pkg_key]
+            entry = self.packages[pkg_key]
+            target.packages[pkg_key] = entry
+            src_key = PkgKey(entry.source, entry.source_version)
+
             latest = target.latest_index.get(pkg_key.package)
             if latest is None:
                 target.latest_index[pkg_key.package] = pkg_key
@@ -259,6 +262,17 @@ class Metadata:
                 logging.info(f'New version of the package has been added to the target: {pkg_key}')
             else:
                 logging.warning(f'Outdated version of the package has been added to the target: {pkg_key}')
+                   
+            latest = target.latest_src.get(entry.source)
+            if latest is None:
+                target.latest_src[entry.source] = src_key
+                logging.debug(f'New latest source key added to target: {src_key}')
+            elif apt_pkg.version_compare(entry.source_version, latest.version) > 0:
+                target.latest_src[entry.source] = src_key
+                logging.debug(f'Updated latest source key in target: {src_key}')
+            else:
+                logging.debug(f'Latest source key {src_key} is not newer than existing {latest}')
+            
             return True
         return False
 
