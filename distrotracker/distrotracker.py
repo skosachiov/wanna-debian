@@ -582,10 +582,12 @@ def main():
             else:
                 if args.base_url: config["base_url"] = args.base_url
                 if args.no_check_certificate: config["ssl_verify"] = False
-                if args.local_dir: config["local_dir"] = args.local_dir
                 if args.dist: config["dist"] = args.dist
                 if args.comp: config["comp"] = args.comp
                 if args.arch: config["arch"] = args.arch
+
+    if args.local_dir:
+        config["local_dir"] = args.local_dir
 
     if not args.dist:
         args.dist = None
