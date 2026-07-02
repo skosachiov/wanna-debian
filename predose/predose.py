@@ -162,10 +162,13 @@ class Metadata:
 
         logging.debug(f'Parsed {len(self.packages)} packages from {filepath}')
 
-    def leave_latest(self):
+    def keep_latest(self):
         latest_set = set(self.latest_index.values())
-        # Keep only packages whose key is in the latest_set
         self.packages = {k: v for k, v in self.packages.items() if k in latest_set}
+
+    def keep_latest_src(self):
+        latest_set = set(self.latest_src.values())
+        self.packages = {k: v for k, v in self.packages.items() if (v.source, v.source_version) in latest_set}
 
     def resolve_src(self, pkg_key: PkgKey, add_version: bool = False) -> str:
         if self.is_bin:
@@ -365,7 +368,9 @@ class PreDoseApp:
         parser.add_argument('-t', '--topo-sort', action='store_true',
                             help='perform topological sort and exit')
         parser.add_argument('-c', '--latest', action='store_true',
-                            help='leave only the latest versions of packages')
+                            help='keep only the latest versions of packages')
+        parser.add_argument('-C', '--latest-src', action='store_true',
+                            help='keep only the latest versions of packages depending on the source code version')
         parser.add_argument('-g', '--dot', type=str,
                             help='save toposort graph to dot file')
         parser.add_argument('-a', '--add-version', action='store_true',
@@ -422,7 +427,10 @@ class PreDoseApp:
             self.target_meta = Metadata.from_file(self.args.target_repo)
 
         if self.args.latest:
-            self.target_meta.leave_latest()
+            self.target_meta.keep_latest()
+
+        if self.args.latest_src:
+            self.target_meta.keep_latest_src()
 
         if self.args.provide:
             provide_meta = Metadata.from_file(self.args.provide)
@@ -478,7 +486,7 @@ class PreDoseApp:
 
         if not non_modifying_options:
             if self.args.latest:
-                self.target_meta.leave_latest()
+                self.target_meta.keep_latest()
             self.target_meta.output_blocks()
 
         logging.debug(f'Pre-dose finished, input lines: {input_lines}')

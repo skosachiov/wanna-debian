@@ -15,7 +15,7 @@ config = {
     "sysarch": "amd64",
     "builds": ['binary-amd64', 'source'],
     "dist": [],
-    "comp": ['main', 'contrib', 'non-free', 'non-free-firmware'],
+    "comp": ['main', 'main/debian-installer', 'contrib', 'non-free', 'non-free-firmware'],
     "loglevel": 'INFO',
     "min_version": "0~~",
     "briefly_keys": ['package', 'version', 'dist', 'build', 'source'],
