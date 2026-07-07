@@ -262,7 +262,7 @@ class Metadata:
                 logging.info(f'New version of the package has been added to the target: {pkg_key}')
             else:
                 logging.warning(f'Outdated version of the package has been added to the target: {pkg_key}')
-                   
+
             latest = target.latest_src.get(entry.source)
             if latest is None:
                 target.latest_src[entry.source] = src_key
@@ -272,7 +272,7 @@ class Metadata:
                 logging.debug(f'Updated latest source key in target: {src_key}')
             else:
                 logging.debug(f'Latest source key {src_key} is not newer than existing {latest}')
-            
+
             return True
         return False
 
@@ -286,6 +286,9 @@ class Metadata:
         # Build dependency graph
         for p in packages_set:
             if p.package not in graph: graph[p.package] = set()
+            if self.latest_index.get(p.package) not in self.packages:
+                logging.warning(f'Package was not found in the latest versions index: {p.package}')
+                continue
             for d in self.packages[self.latest_index.get(p.package)].depends:
                 package = self.src_dict.get(PkgKey(d, ""))
                 if package is None: continue
