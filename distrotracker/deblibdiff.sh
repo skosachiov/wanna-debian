@@ -2,8 +2,14 @@
 set -euo pipefail
 
 debug=0
+tmpfiles=()
 
-usage() { echo "Usage: $(basename "$0") [--debug] <pkg_a.deb> <pkg_b.deb>"; exit 1; }
+cleanup() {
+    [[ ${#tmpfiles[@]} -gt 0 ]] && rm -f "${tmpfiles[@]}"
+}
+trap cleanup EXIT
+
+usage() { echo "Usage: $(basename "$0") [--debug] <pkg_a.deb|url> <pkg_b.deb|url>"; exit 1; }
 
 [[ $# -ge 2 ]] || usage
 if [[ "$1" == "--debug" ]]; then
@@ -11,8 +17,27 @@ if [[ "$1" == "--debug" ]]; then
     shift
 fi
 [[ $# -eq 2 ]] || usage
-pkg_a=$(realpath "$1")
-pkg_b=$(realpath "$2")
+
+resolve_pkg() {
+    local arg="$1"
+    if [[ "$arg" == http://* || "$arg" == https://* ]]; then
+        local name=$(basename "$arg")
+        local path="/tmp/$name"
+        # echo "Downloading $name ..." >&2
+        if command -v wget &>/dev/null; then
+            wget -qO "$path" "$arg"
+        else
+            curl -sLo "$path" "$arg"
+        fi
+        tmpfiles+=("$path")
+        echo "$path"
+    else
+        realpath "$arg"
+    fi
+}
+
+pkg_a=$(resolve_pkg "$1")
+pkg_b=$(resolve_pkg "$2")
 [[ -f "$pkg_a" ]] || { echo "ERROR: not a file: $pkg_a"; exit 1; }
 [[ -f "$pkg_b" ]] || { echo "ERROR: not a file: $pkg_b"; exit 1; }
 
