@@ -1,8 +1,15 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-usage() { echo "Usage: $(basename "$0") <pkg_a.deb> <pkg_b.deb>"; exit 1; }
+debug=0
 
+usage() { echo "Usage: $(basename "$0") [--debug] <pkg_a.deb> <pkg_b.deb>"; exit 1; }
+
+[[ $# -ge 2 ]] || usage
+if [[ "$1" == "--debug" ]]; then
+    debug=1
+    shift
+fi
 [[ $# -eq 2 ]] || usage
 pkg_a=$(realpath "$1")
 pkg_b=$(realpath "$2")
@@ -42,7 +49,8 @@ needed_a=$(grep NEEDED <<< "$info_a" || true)
 needed_b=$(grep NEEDED <<< "$info_b" || true)
 
 need_diff=""
-if ! diff <(echo "$needed_a") <(echo "$needed_b") >/dev/null 2>&1; then
+need_diff_out=""
+if ! need_diff_out=$(diff <(echo "$needed_a") <(echo "$needed_b") 2>&1); then
     need_diff="NEEDED-LIBS:DIFFER"
 fi
 
@@ -50,7 +58,8 @@ fi
 syms_a=$(grep -v NEEDED <<< "$info_a" | grep . || true)
 syms_b=$(grep -v NEEDED <<< "$info_b" | grep . || true)
 abi_diff=""
-if ! diff <(echo "$syms_a") <(echo "$syms_b") >/dev/null 2>&1; then
+abi_diff_out=""
+if ! abi_diff_out=$(diff <(echo "$syms_a") <(echo "$syms_b") 2>&1); then
     abi_diff="ABI:DIFFER"
 fi
 
@@ -64,4 +73,8 @@ if [[ ${#diffs[@]} -eq 0 ]]; then
 else
     joined=$(IFS=' '; echo "${diffs[*]}")
     echo "$n_a $n_b $joined"
+    if (( debug )); then
+        [[ -n "$need_diff" ]] && echo "--- NEEDED-LIBS diff ---"$'\n'"$need_diff_out"
+        [[ -n "$abi_diff" ]] && echo "--- ABI-SYMBOLS diff ---"$'\n'"$abi_diff_out"
+    fi
 fi
