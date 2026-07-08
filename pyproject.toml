@@ -40,7 +40,7 @@ Repository = "https://github.com/skosachiov/wanna-debian"
 backport = "predose.backport:main"
 pre-dose = "predose.predose:main"
 distrotracker = "distrotracker.distrotracker:main"
-chkabilibs = "distrotracker.chkabilibs:main"
+deblibdiff = "distrotracker.deblibdiff:main"
 simplebuilder = "simplebuilder.simplebuilder:main"
 
 [tool.setuptools]

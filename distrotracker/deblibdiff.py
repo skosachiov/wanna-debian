@@ -6,11 +6,11 @@ import sys
 from pathlib import Path
 
 def main():
-    """Execute the chkabilibs.sh script."""
-    script_path = Path(__file__).parent / "chkabilibs.sh"
+    """Execute the deblibdiff.sh script."""
+    script_path = Path(__file__).parent / "deblibdiff.sh"
 
     if not script_path.exists():
-        print(f"Error: chkabilibs.sh not found at {script_path}")
+        print(f"Error: deblibdiff.sh not found at {script_path}")
         sys.exit(1)
 
     # Make sure the script is executable
