@@ -12,38 +12,46 @@ pkg_b=$(realpath "$2")
 n_a=$(basename "$pkg_a")
 n_b=$(basename "$pkg_b")
 
-# ABI check
-abi_diff=""
-if command -v abipkgdiff &>/dev/null; then
-    abi_out=$(abipkgdiff --no-default-suppression "$pkg_a" "$pkg_b" 2>&1 || true)
-    summary=$(echo "$abi_out" | grep -iE '^(  )?(Functions|Variables) changes summary' || true)
-    if [[ -z "$summary" ]]; then
-        abi_diff="ABI:DIFFER"
-    else
-        total=$(echo "$summary" | grep -oP '\d+(?= (Removed|Changed|Added))' | awk '{s+=$1} END {print s+0}')
-        [[ "$total" -gt 0 ]] && abi_diff="ABI:DIFFER"
-    fi
-fi
-
-# Needed libraries comparison
-extract_needed() {
+# Extract needed libraries and ABI symbols from a .deb
+extract_info() {
     local deb="$1" tmpdir
     tmpdir=$(mktemp -d)
     dpkg-deb -x "$deb" "$tmpdir" >/dev/null 2>&1
     find "$tmpdir" -type f -exec file {} + 2>/dev/null \
         | awk -F: '/ELF/ {print $1}' \
         | sort -u \
-        | while read -r elf; do readelf -d "$elf" 2>/dev/null | grep NEEDED || true; done \
+        | while read -r elf; do
+            readelf -d "$elf" 2>/dev/null | grep NEEDED || true
+            if [[ "$elf" == *.so* ]]; then
+                nm -D "$elf" 2>/dev/null | awk '{
+                    if ($1 ~ /^[0-9a-fA-F]+$/) { $1="" }
+                    gsub(/^ +/, "")
+                    print
+                }' || true
+            fi
+          done \
         | sort -u
     rm -rf "$tmpdir"
 }
 
-needed_a=$(extract_needed "$pkg_a")
-needed_b=$(extract_needed "$pkg_b")
+info_a=$(extract_info "$pkg_a")
+info_b=$(extract_info "$pkg_b")
+
+# Needed libraries comparison
+needed_a=$(grep NEEDED <<< "$info_a" || true)
+needed_b=$(grep NEEDED <<< "$info_b" || true)
 
 need_diff=""
 if ! diff <(echo "$needed_a") <(echo "$needed_b") >/dev/null 2>&1; then
     need_diff="NEEDED-LIBS:DIFFER"
+fi
+
+# ABI symbols comparison (nm -D on .so files, first column removed)
+syms_a=$(grep -v NEEDED <<< "$info_a" | grep . || true)
+syms_b=$(grep -v NEEDED <<< "$info_b" | grep . || true)
+abi_diff=""
+if ! diff <(echo "$syms_a") <(echo "$syms_b") >/dev/null 2>&1; then
+    abi_diff="ABI:DIFFER"
 fi
 
 # Result
