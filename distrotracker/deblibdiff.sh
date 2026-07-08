@@ -54,8 +54,9 @@ extract_info() {
         | sort -u \
         | while read -r elf; do
             readelf -d "$elf" 2>/dev/null | grep NEEDED || true
+            readelf -V "$elf" 2>/dev/null | awk '/File:/{f=$5} /  Name:/&&f{print "VERSION-R: " f " " $3}' || true
             if [[ "$elf" == *.so* ]]; then
-                nm -D "$elf" 2>/dev/null | awk '{
+                nm -D --with-symbol-versions "$elf" 2>/dev/null | awk '{
                     if ($1 ~ /^[0-9a-fA-F]+$/) { $1="" }
                     gsub(/^ +/, "")
                     print
