@@ -170,7 +170,7 @@ def check_version(version, required_op, required_version):
     else:
         return False
 
-def find_versions(fin, filenames, dist = None, build = None, arch = None, briefly = None, index_key = 'package', selection = None):
+def find_versions(fin, filenames, dist = None, comp = None, build = None, arch = None, briefly = None, index_key = 'package', selection = None):
 
     version_key = "source_version" if index_key == "source" else "version"
 
@@ -183,8 +183,9 @@ def find_versions(fin, filenames, dist = None, build = None, arch = None, briefl
             with open(filename, 'r', encoding='utf-8') as f:
                 data_list = json.load(f)
             for e in data_list:
-                if build and e['build'] not in build: continue
                 if dist and e['dist'] not in dist: continue
+                if comp and e['comp'] not in comp: continue
+                if build and e['build'] not in build: continue
                 if arch and e['arch'] not in arch: continue
                 if e[index_key] not in data_dict:
                     data_dict[e[index_key]] = [e]
@@ -626,7 +627,7 @@ def main():
     if args.find:
         find_versions(None if args.all else sys.stdin, \
             [d + "/" + config["index_file"] for d in args.local_dir], \
-            args.dist, args.build, args.arch, args.briefly, \
+            args.dist, args.comp, args.build, args.arch, args.briefly, \
             "package" if not args.source else "source", selection)
 
 
