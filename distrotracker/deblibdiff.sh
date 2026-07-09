@@ -49,21 +49,26 @@ extract_info() {
     local deb="$1" tmpdir
     tmpdir=$(mktemp -d)
     dpkg-deb -x "$deb" "$tmpdir" >/dev/null 2>&1
+    # Find ELF files and process
     find "$tmpdir" -type f -exec file {} + 2>/dev/null \
         | awk -F: '/ELF/ {print $1}' \
-        | sort -u \
         | while read -r elf; do
-            readelf -d "$elf" 2>/dev/null | grep NEEDED || true
-            readelf -V "$elf" 2>/dev/null | awk '/File:/{f=$5} /  Name:/&&f{print "VERSION-R: " f " " $3}' || true
-            if [[ "$elf" == *.so* ]]; then
-                nm -D --with-symbol-versions "$elf" 2>/dev/null | awk '{
+            # Create a relative path for the output (e.g., usr/bin/ls)
+            # This is critical so 'diff' doesn't fail on different /tmp/ paths
+            local rel_path="${elf#$tmpdir/}"
+            readelf -d "$elf" 2>/dev/null | awk -v p="$rel_path" '/SONAME/ {print p, "SONAME:", $NF}'
+            readelf -d "$elf" 2>/dev/null | awk -v p="$rel_path" '/NEEDED/ {print p, "NEEDED:", $NF}'
+            readelf -V "$elf" 2>/dev/null | awk -v p="$rel_path" '/File:/{f=$5} /  Name:/&&f{print p, "VERSION-R:", f, $3}' || true
+            # We check for .so extension OR if the ELF header identifies it as DYN (Shared Object)
+            if [[ "$elf" == *.so* ]] || readelf -h "$elf" 2>/dev/null | grep -q "DYN"; then
+                nm -D --with-symbol-versions --defined-only --extern-only "$elf" 2>/dev/null | awk -v p="$rel_path" '{
                     if ($1 ~ /^[0-9a-fA-F]+$/) { $1="" }
                     gsub(/^ +/, "")
-                    print
+                    if ($0 != "") print p, "SYMBOL:", $0
                 }' || true
             fi
-          done \
-        | sort -u
+        done | sort -u
+
     rm -rf "$tmpdir"
 }
 
