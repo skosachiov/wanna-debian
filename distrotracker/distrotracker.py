@@ -529,27 +529,27 @@ def main():
     parser = argparse.ArgumentParser(description="Update and query Debian repository metadata files, \
         read stdin and find a minimum version index packages that satisfies the conditions, \
         example: libpython3.13 (>= 3.13.0~rc3)")
-    parser.add_argument("--base-url", help="Base URL for Debian metadata (example: https://ftp.debian.org/debian/)")
-    parser.add_argument("--no-check-certificate", action="store_true", \
+    parser.add_argument("-B", "--base-url", help="Base URL for Debian metadata (example: https://ftp.debian.org/debian/)")
+    parser.add_argument("-x", "--no-check-certificate", action="store_true", \
         help="Do not check the server certificate against the available CA")
-    parser.add_argument("--local-dir", default=[config["local_dir"][0]], nargs='+', help="Local directory to store metadata files (default: %(default)s)")
-    parser.add_argument("--sysarch", default=config["sysarch"], help='Distribution architecture amd64, arm64, etc. (default: %(default)s)')
-    parser.add_argument("--dist", default=[], nargs='+', help="Distributions (default: all)")
-    parser.add_argument("--comp", default=config["comp"], nargs='+', \
+    parser.add_argument("-D", "--local-dir", default=[config["local_dir"][0]], nargs='+', help="Local directory to store metadata files (default: %(default)s)")
+    parser.add_argument("-S", "--sysarch", default=config["sysarch"], help='Distribution architecture amd64, arm64, etc. (default: %(default)s)')
+    parser.add_argument("-d", "--dist", default=[], nargs='+', help="Distributions (default: all)")
+    parser.add_argument("-c", "--comp", default=config["comp"], nargs='+', \
         help=f"Components main, universe, contrib, non-free, non-free-firmware etc. (default: {" ".join(config["comp"])})")
-    parser.add_argument("--build", default=config["builds"], nargs='+', \
+    parser.add_argument("-b", "--build", default=config["builds"], nargs='+', \
         help=f"Build binary-amd64, binary-arm64, source etc. (default: {" ".join(config["builds"])})")
-    parser.add_argument("--arch", default=[], nargs='+', help='Binary packet architecture all, amd64, etc. (default: %(default)s)')
-    parser.add_argument("--force", action="store_true", help="Force update even if remote files are older")
-    parser.add_argument("--hold", action="store_true", help="Do not attempt to update metadata")
-    parser.add_argument("--update-only", action="store_true", help="Update metadata only, do not read stdin")
-    parser.add_argument("--find", action="store_true", default=True, help=argparse.SUPPRESS)
-    parser.add_argument("--earliest", action="store_true", help="Display the oldest version that matches the criteria")
-    parser.add_argument("--latest", action="store_true", help="Display the newest version that matches the criteria")
-    parser.add_argument("--source", action="store_true", help="Use the Source field for searching, not the Package field")
-    parser.add_argument("--briefly", action="store_true", help="Display only basic fields")
-    parser.add_argument("--all", action="store_true", help="Process all records instead of reading conditions from stdin")
-    parser.add_argument("--log-level", default=config["loglevel"], choices=['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'], \
+    parser.add_argument("-A", "--arch", default=[], nargs='+', help='Binary packet architecture all, amd64, etc. (default: %(default)s)')
+    parser.add_argument("-f", "--force", action="store_true", help="Force update even if remote files are older")
+    parser.add_argument("-k", "--hold", action="store_true", help="Do not attempt to update metadata")
+    parser.add_argument("-u", "--update-only", action="store_true", help="Update metadata only, do not read stdin")
+    parser.add_argument("-F", "--find", action="store_true", default=True, help=argparse.SUPPRESS)
+    parser.add_argument("-E", "--earliest", action="store_true", help="Display the oldest version that matches the criteria")
+    parser.add_argument("-L", "--latest", action="store_true", help="Display the newest version that matches the criteria")
+    parser.add_argument("-s", "--source", action="store_true", help="Use the Source field for searching, not the Package field")
+    parser.add_argument("-y", "--briefly", action="store_true", help="Display only basic fields")
+    parser.add_argument("-a", "--all", action="store_true", help="Process all records instead of reading conditions from stdin")
+    parser.add_argument("-l", "--log-level", default=config["loglevel"], choices=['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'], \
         help='Set the logging level (default: %(default)s)')
 
     args = parser.parse_args()
