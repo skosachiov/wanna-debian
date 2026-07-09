@@ -526,7 +526,9 @@ def update_metadata(base_url, local_base_dir, dists, components, builds, session
 def main():
     """Main entry point"""
 
-    parser = argparse.ArgumentParser(description="Update and query Debian repository metadata files")
+    parser = argparse.ArgumentParser(description="Update and query Debian repository metadata files, \
+        read stdin and find a minimum version index packages that satisfies the conditions, \
+        example: libpython3.13 (>= 3.13.0~rc3)")
     parser.add_argument("--base-url", help="Base URL for Debian metadata (example: https://ftp.debian.org/debian/)")
     parser.add_argument("--no-check-certificate", action="store_true", \
         help="Do not check the server certificate against the available CA")
@@ -540,9 +542,8 @@ def main():
     parser.add_argument("--arch", default=[], nargs='+', help='Binary packet architecture all, amd64, etc. (default: %(default)s)')
     parser.add_argument("--force", action="store_true", help="Force update even if remote files are older")
     parser.add_argument("--hold", action="store_true", help="Do not attempt to update metadata")
-    parser.add_argument("--find", action="store_true", \
-        help="Read stdin and find a minimum version index packages that satisfies the conditions, \
-        example: libpython3.13 (>= 3.13.0~rc3)")
+    parser.add_argument("--update-only", action="store_true", help="Update metadata only, do not read stdin")
+    parser.add_argument("--find", action="store_true", default=True, help=argparse.SUPPRESS)
     parser.add_argument("--earliest", action="store_true", help="Display the oldest version that matches the criteria")
     parser.add_argument("--latest", action="store_true", help="Display the newest version that matches the criteria")
     parser.add_argument("--source", action="store_true", help="Use the Source field for searching, not the Package field")
@@ -554,6 +555,9 @@ def main():
     args = parser.parse_args()
 
     logging.basicConfig(level=getattr(logging, args.log_level), format='%(asctime)s %(levelname)s %(message)s')
+
+    if args.update_only:
+        args.find = False
 
     if len(args.local_dir) > 1 and (args.base_url or not args.find or not args.hold):
         logging.error("Multiple local dirs can be specified for the find operation with hold option")
