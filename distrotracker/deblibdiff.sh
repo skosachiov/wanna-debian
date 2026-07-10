@@ -73,6 +73,8 @@ extract_info() {
                     name = $2
                     # Strip version suffix
                     gsub(/@.*$/, "", name)
+                    # Skip C++ mangled symbols (start with _Z)
+                    if (name ~ /^_Z/) next
                     # Use only basename of the library
                     lib = p
                     gsub(/^.*\//, "", lib)
