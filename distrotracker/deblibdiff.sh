@@ -6,7 +6,13 @@ compare_versions=0
 tmpfiles=()
 
 cleanup() {
-    [[ ${#tmpfiles[@]} -gt 0 ]] && rm -fr "${tmpfiles[@]}"
+    for item in "${tmpfiles[@]}"; do
+        if [[ -d "$item" ]]; then
+            rm -rf "$item"
+        elif [[ -f "$item" ]]; then
+            rm -f "$item"
+        fi
+    done
 }
 trap cleanup EXIT INT TERM HUP
 
