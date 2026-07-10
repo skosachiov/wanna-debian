@@ -52,7 +52,7 @@ resolve_pkg() {
     local arg="$1"
     if [[ "$arg" == http://* || "$arg" == https://* ]]; then
         local name=$(basename "$arg")
-        local path="/tmp/${name}.$$.${RANDOM}"
+        local path="/tmp/${name}"
         (( debug )) && echo "Downloading $arg to $path" >&2
         if command -v wget &>/dev/null; then
             wget -qO "$path" "$arg"
