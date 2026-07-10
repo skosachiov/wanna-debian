@@ -60,7 +60,7 @@ extract_info() {
             # Version definitions (keep as is – these are rarely used for ABI checks)
             readelf -V "$elf" 2>/dev/null | awk -v p="$rel_path" '/File:/{f=$5} /  Name:/&&f{print "VERSION-R:", f, $3}' || true
 
-            # ABI symbols – now less sensitive
+            # ABI symbols
             if [[ "$elf" == *.so* ]] || readelf -h "$elf" 2>/dev/null | grep -q "DYN"; then
                 nm -D --with-symbol-versions --defined-only --extern-only "$elf" 2>/dev/null | \
                 awk -v p="$rel_path" '
