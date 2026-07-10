@@ -94,8 +94,8 @@ extract_info() {
             local rel_path="${elf#$tmpdir/}"
             
             # NEEDED and SONAME
-            readelf -d "$elf" 2>/dev/null | awk -v p="$rel_path" '/SONAME/ {print p, "SONAME:", $NF}'
-            readelf -d "$elf" 2>/dev/null | awk -v p="$rel_path" '/NEEDED/ {print p, "NEEDED:", $NF}'
+            readelf -d "$elf" 2>/dev/null | awk -v p="$rel_path" '/SONAME/ {gsub(/^\[|\]$/,"",$NF); print p, "SONAME:", $NF}'
+            readelf -d "$elf" 2>/dev/null | awk -v p="$rel_path" '/NEEDED/ {gsub(/^\[|\]$/,"",$NF); print p, "NEEDED:", $NF}'
             readelf -V "$elf" 2>/dev/null | awk -v p="$rel_path" '/File:/{f=$5} /  Name:/&&f{print p, "VERSION-R:", f, $3}' || true
             
             if [[ "$elf" == *.so* ]] || readelf -h "$elf" 2>/dev/null | grep -q "DYN"; then
@@ -120,8 +120,15 @@ extract_info() {
         done | sort -u
 }
 
-info_a=$(extract_info "$pkg_a")
-info_b=$(extract_info "$pkg_b")
+info_a_file=$(mktemp)
+tmpfiles+=("$info_a_file")
+extract_info "$pkg_a" > "$info_a_file"
+info_a=$(< "$info_a_file")
+
+info_b_file=$(mktemp)
+tmpfiles+=("$info_b_file")
+extract_info "$pkg_b" > "$info_b_file"
+info_b=$(< "$info_b_file")
 
 # Compare NEEDED libraries
 needed_a=$(grep NEEDED <<< "$info_a" || true)
