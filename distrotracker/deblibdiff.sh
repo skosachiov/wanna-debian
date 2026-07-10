@@ -79,6 +79,8 @@ extract_info() {
     local deb="$1" tmpdir
     tmpdir=$(mktemp -d)
     tmpfiles+=("$tmpdir")
+
+    trap 'rm -rf "$tmpdir"' EXIT INT TERM HUP
     
     dpkg-deb -x "$deb" "$tmpdir" >/dev/null 2>&1
     
