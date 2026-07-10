@@ -6,7 +6,7 @@ compare_versions=0
 tmpfiles=()
 
 cleanup() {
-    [[ ${#tmpfiles[@]} -gt 0 ]] && rm -f "${tmpfiles[@]}"
+    [[ ${#tmpfiles[@]} -gt 0 ]] && rm -fr "${tmpfiles[@]}"
 }
 trap cleanup EXIT INT TERM HUP
 
@@ -80,8 +80,6 @@ extract_info() {
     tmpdir=$(mktemp -d)
     tmpfiles+=("$tmpdir")
 
-    trap 'rm -rf "$tmpdir"' EXIT INT TERM HUP
-    
     dpkg-deb -x "$deb" "$tmpdir" >/dev/null 2>&1
     
     find "$tmpdir" -type f -exec file {} + 2>/dev/null \
