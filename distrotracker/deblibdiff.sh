@@ -102,19 +102,14 @@ extract_info() {
                 nm -D --with-symbol-versions --defined-only --extern-only "$elf" 2>/dev/null | \
                 awk -v p="$rel_path" '
                 {
-                    if ($1 ~ /^[0-9a-fA-F]+$/) { $1="" }
-                    gsub(/^ +/, "")
-                    if ($0 == "") next
-                    type = $1
+                    if ($1 ~ /^[0-9a-fA-F]+$/) { $1=""; gsub(/^ +/, "") }
+                    if ($0 == "" || NF < 2) next
+                    type = ($1 == "I" || $1 == "i") ? "T" : $1
                     name = $2
                     gsub(/@.*$/, "", name)
-                    
-                    # Skip C++ mangled symbols (start with _Z)
                     if (name ~ /^_Z/) next
-                    
-                    lib = p
-                    gsub(/^.*\//, "", lib)
-                    print "SYMBOL:", lib, name
+                    lib = p; gsub(/^.*\//, "", lib)
+                    print "SYMBOL:", lib, name, type
                 }' || true
             fi
         done | sort -u
