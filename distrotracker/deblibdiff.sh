@@ -98,7 +98,7 @@ extract_info() {
             readelf -d "$elf" 2>/dev/null | awk -v p="$rel_path" '/NEEDED/ {gsub(/^\[|\]$/,"",$NF); print p, "NEEDED:", $NF}'
             readelf -V "$elf" 2>/dev/null | awk -v p="$rel_path" '/File:/{f=$5} /  Name:/&&f{print p, "VERSION-R:", f, $3}' || true
             
-            if [[ "$elf" == *.so* ]] || readelf -h "$elf" 2>/dev/null | grep -q "DYN"; then
+            if [[ "$elf" == *.so* ]] || readelf -h "$elf" 2>/dev/null | grep -qE "Type:[[:space:]]*(DYN|EXEC)"; then
                 nm -D --with-symbol-versions --defined-only --extern-only "$elf" 2>/dev/null | \
                 awk -v p="$rel_path" '
                 {
