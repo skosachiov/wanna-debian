@@ -293,8 +293,8 @@ def original_metadata_is_newer(base_url, local_base_dir, session, hashes):
 
             # Check if file exists locally
             if os.path.exists(local_path):
-                local_mtime = os.path.getmtime(local_path)
-
+                # local_mtime = os.path.getmtime(local_path)
+                local_mtime = config["timestamp"]
                 # Get remote file headers to check last-modified
                 head_response = session.head(url)
                 head_response.raise_for_status()
@@ -526,6 +526,9 @@ def update_metadata(base_url, local_base_dir, dists, components, builds, session
                 local_z_path = os.path.join(dist_dir, file_path)
 
     write_metadata_index(local_base_dir + "/" + config["index_file"], data_list)
+
+    if not dists:
+        config["timestamp"] = str(time.time())
 
     config["consistency"] = True
 
