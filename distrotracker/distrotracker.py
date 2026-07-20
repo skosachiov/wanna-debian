@@ -361,7 +361,8 @@ def get_distributions(base_url, session):
                 start = line.find('href="') + 6
                 end = line.find('"', start)
                 dist = line[start:end].rstrip('/')
-                if dist and not dist.startswith(('.', '?')):
+                if href.endswith('/') and not href.startswith(('.', '?')):
+                    dist = href.rstrip('/')
                     distributions.append(dist)
 
         return distributions
