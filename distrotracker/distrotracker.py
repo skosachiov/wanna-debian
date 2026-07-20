@@ -468,8 +468,6 @@ def update_metadata(base_url, local_base_dir, dists, components, builds, session
             metadata_files.append(build + "/Packages")
 
     for dist in distributions:
-        if dists and dist not in dists:
-            continue
         logging.info(f"Processing distribution: {dist}")
         dist_url = urljoin(base_url, "dists/" + dist + "/")
         dist_dir = os.path.join(local_base_dir, "dists/" + dist)
@@ -482,6 +480,10 @@ def update_metadata(base_url, local_base_dir, dists, components, builds, session
                     file_path = component + "/" + metadata_file + extension
                     remote_url = urljoin(dist_url, file_path)
                     local_z_path = os.path.join(dist_dir, file_path)
+                    # Dist not in dists
+                    if dists and dist not in dists:
+                        download_status = False
+                        break
                     # The hash has not changed
                     if os.path.exists(hash_file_path):
                         with open(hash_file_path, 'r') as f:
@@ -519,8 +521,7 @@ def update_metadata(base_url, local_base_dir, dists, components, builds, session
                 remote_url = urljoin(dist_url, file_path)
                 local_z_path = os.path.join(dist_dir, file_path)
 
-    if not dists or set(dists) == set(config["dist"]):
-        write_metadata_index(local_base_dir + "/" + config["index_file"], data_list)
+    write_metadata_index(local_base_dir + "/" + config["index_file"], data_list)
 
     config["consistency"] = True
 
