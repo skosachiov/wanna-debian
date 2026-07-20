@@ -353,14 +353,13 @@ def get_distributions(base_url, session):
         response = session.get(base_url)
         response.raise_for_status()
 
-        # Parse distributions from the directory listing
         distributions = []
         for line in response.text.split('\n'):
             if 'href="' in line and 'Parent Directory' not in line:
-                # Extract distribution name from href
                 start = line.find('href="') + 6
                 end = line.find('"', start)
-                dist = line[start:end].rstrip('/')
+                href = line[start:end]
+                # Only directories have a trailing slash
                 if href.endswith('/') and not href.startswith(('.', '?')):
                     dist = href.rstrip('/')
                     distributions.append(dist)
