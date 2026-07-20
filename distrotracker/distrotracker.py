@@ -62,7 +62,7 @@ def update_metadata_index(packagefile, data_list, dist, comp, build, dry_run = F
         return data_list.extend(packages)
 
     if not os.path.exists(packagefile):
-        logging.error(f"Packagefile does not exist: {packagefile}")
+        logging.debug(f"Packagefile does not exist: {packagefile}")
         return data_list
 
     with open(packagefile, 'rt', encoding='utf-8') as f:
@@ -518,7 +518,7 @@ def update_metadata(base_url, local_base_dir, dists, components, builds, session
                 if download_status is not None:
                     update_metadata_index(output_path, data_list, dist, component, metadata_file.split("/")[0], download_status == False)
                 else:
-                    logging.warning(f"Can not download: {urljoin(dist_url, file_path)[:-2]}[gz|xz])")
+                    logging.debug(f"Can not download: {urljoin(dist_url, file_path)[:-2]}[gz|xz])")
 
                 file_path = component + "/" + metadata_file
                 # Download file
