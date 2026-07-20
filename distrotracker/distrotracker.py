@@ -124,7 +124,7 @@ def update_metadata_index(packagefile, data_list, dist, comp, build, dry_run = F
                     logging.error(f'Invalid metadata detected: {block}')
     logging.debug(f'In the file {packagefile} processed packets: {len(packages)}')
 
-    logging.info(f'Save component index: {packagefile_index}')
+    logging.debug(f'Save component index: {packagefile_index}')
     with open(packagefile_index, "w") as f:
         json.dump(packages, f)
 
@@ -435,7 +435,7 @@ def extract_compressed_file(compressed_path, extract_path, remote_time=None):
                 # Set same modification time for extracted file
                 if remote_time is not None:  # Fixed: "is not" instead of "in not"
                     os.utime(extract_path, (remote_time, remote_time))
-                logging.info(f"Extracted to: {extract_path}")
+                logging.debug(f"Extracted to: {extract_path}")
                 return True
             except Exception as e:
                 logging.error(f"Error extracting {compressed_path}: {e}")
@@ -513,7 +513,7 @@ def update_metadata(base_url, local_base_dir, dists, components, builds, session
                             digest = hashlib.file_digest(f, 'sha256').hexdigest()
                             with open(hash_file_path, 'w') as f_hash:
                                 f_hash.write(digest)
-                                logging.info(f"Hash of the new data is saved in the file: {hash_file_path}")
+                                logging.debug(f"Hash of the new data is saved in the file: {hash_file_path}")
 
                 if download_status is not None:
                     update_metadata_index(output_path, data_list, dist, component, metadata_file.split("/")[0], download_status == False)
