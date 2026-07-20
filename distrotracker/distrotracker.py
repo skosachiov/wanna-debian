@@ -294,7 +294,7 @@ def original_metadata_is_newer(base_url, local_base_dir, session, hashes):
             # Check if file exists locally
             if os.path.exists(local_path):
                 # local_mtime = os.path.getmtime(local_path)
-                local_mtime = config["timestamp"]
+                local_mtime = float(config["timestamp"])
                 # Get remote file headers to check last-modified
                 head_response = session.head(url)
                 head_response.raise_for_status()
