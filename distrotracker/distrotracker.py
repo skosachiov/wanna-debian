@@ -61,6 +61,10 @@ def update_metadata_index(packagefile, data_list, dist, comp, build, dry_run = F
             packages = json.load(f)
         return data_list.extend(packages)
 
+    if not os.path.exists(packagefile):
+        logging.error(f"Packagefile does not exist: {packagefile}")
+        return data_list
+
     with open(packagefile, 'rt', encoding='utf-8') as f:
         content = f.read()
         # Split into individual package blocks
