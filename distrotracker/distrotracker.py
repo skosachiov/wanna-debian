@@ -639,12 +639,21 @@ def main():
                 json.dump(config, f, indent=4)
 
     if args.find:
-        # Collect all per-component JSON files instead of using a single index.json
         json_files = []
+        dist_filter = set(args.dist) if args.dist else None
+        
         for d in args.local_dir:
             if not os.path.isdir(d):
                 continue
             for root, _, files in os.walk(d):
+                # Filter by distribution if specified
+                if dist_filter:
+                    parts = root.split(os.sep)
+                    if 'dists' in parts:
+                        idx = parts.index('dists')
+                        if len(parts) <= idx + 1 or parts[idx + 1] not in dist_filter:
+                            continue
+                
                 for f in files:
                     if f.endswith('.json') and f not in (config["config_file"], config["index_file"]):
                         json_files.append(os.path.join(root, f))
@@ -653,9 +662,7 @@ def main():
             logging.error("No JSON metadata files found")
             return
 
-        # Grep implies processing all records
         fin = None if (args.all or args.grep) else sys.stdin
-
         find_versions(fin, json_files,
             args.dist, args.comp, args.build, args.arch, args.briefly,
             "package" if not args.source else "source", selection,
