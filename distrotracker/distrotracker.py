@@ -174,7 +174,7 @@ def check_version(version, required_op, required_version):
     else:
         return False
 
-def find_versions(fin, filenames, dist = None, comp = None, build = None, arch = None, briefly = None, index_key = 'package', selection = None):
+def find_versions(fin, filenames, dist = None, comp = None, build = None, arch = None, briefly = None, index_key = 'package', selection = None, grep_pattern = None):
 
     version_key = "source_version" if index_key == "source" else "version"
 
@@ -235,6 +235,10 @@ def find_versions(fin, filenames, dist = None, comp = None, build = None, arch =
             item_str = json.dumps({k: v for k, v in p.items() if k in briefly_keys} if briefly else p)
             s_items.append(f'  {item_str}')
         items.extend(s_items)
+
+    if grep_pattern:
+        grep_regex = re.compile(grep_pattern)
+        items = [item for item in items if grep_regex.search(item)]
 
     print("[")
     print(',\n'.join(items))
@@ -525,7 +529,8 @@ def update_metadata(base_url, local_base_dir, dists, components, builds, session
                 remote_url = urljoin(dist_url, file_path)
                 local_z_path = os.path.join(dist_dir, file_path)
 
-    write_metadata_index(local_base_dir + "/" + config["index_file"], data_list)
+    # No longer creating a common index.json; per-component .json files are used instead
+    # write_metadata_index(local_base_dir + "/" + config["index_file"], data_list)
 
     if not dists:
         config["timestamp"] = str(time.time())
@@ -558,6 +563,7 @@ def main():
     parser.add_argument("-s", "--source", action="store_true", help="Use the Source field for searching, not the Package field")
     parser.add_argument("-y", "--briefly", action="store_true", help="Display only basic fields")
     parser.add_argument("-a", "--all", action="store_true", help="Process all records instead of reading conditions from stdin")
+    parser.add_argument("-g", "--grep", help="Grep pattern to filter JSON entries (searches raw JSON strings)")
     parser.add_argument("-l", "--log-level", default=config["loglevel"], choices=['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'], \
         help='Set the logging level (default: %(default)s)')
 
@@ -633,10 +639,27 @@ def main():
                 json.dump(config, f, indent=4)
 
     if args.find:
-        find_versions(None if args.all else sys.stdin, \
-            [d + "/" + config["index_file"] for d in args.local_dir], \
-            args.dist, args.comp, args.build, args.arch, args.briefly, \
-            "package" if not args.source else "source", selection)
+        # Collect all per-component JSON files instead of using a single index.json
+        json_files = []
+        for d in args.local_dir:
+            if not os.path.isdir(d):
+                continue
+            for root, _, files in os.walk(d):
+                for f in files:
+                    if f.endswith('.json') and f not in (config["config_file"], config["index_file"]):
+                        json_files.append(os.path.join(root, f))
+
+        if not json_files:
+            logging.error("No JSON metadata files found")
+            return
+
+        # Grep implies processing all records
+        fin = None if (args.all or args.grep) else sys.stdin
+
+        find_versions(fin, json_files,
+            args.dist, args.comp, args.build, args.arch, args.briefly,
+            "package" if not args.source else "source", selection,
+            args.grep)
 
 
 if __name__ == "__main__":
