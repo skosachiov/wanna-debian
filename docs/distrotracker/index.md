@@ -50,7 +50,7 @@ echo 'libpython3.13' | distrotracker | jq -c -r '.[] | "Package: \(.package), Ve
 ## find packages with only one of the two architectures built
 
 ```
-export DIST="rc-buggy"; distrotracker --all --dsit $DIST --build binary-amd64 |  jq -c -r '.[] | "\(.source) (= \(.source_version))"' | sort -u | distrotracker --hold --source --dist $DIST | jq -c -r '.[] | select(.dist == env.DIST and .build == "source") | select(.arch | contains("all") and (contains("any") or contains("linux-any") or contains("amd64"))) | "\(.source) (= \(.source_version))"' | distrotracker --hold --source --dist $DIST --build binary-amd64 | jq -c -r '.[] | select(.dist == env.DIST) | "\(.source) \(.arch)"' | sort -u | cut -f 1 -d ' ' | uniq -c | sort -r
+export DIST="rc-buggy"; distrotracker --all --dist $DIST --build binary-amd64 |  jq -c -r '.[] | "\(.source) (= \(.source_version))"' | sort -u | distrotracker --hold --source --dist $DIST | jq -c -r '.[] | select(.dist == env.DIST and .build == "source") | select(.arch | contains("all") and (contains("any") or contains("linux-any") or contains("amd64"))) | "\(.source) (= \(.source_version))"' | distrotracker --hold --source --dist $DIST --build binary-amd64 | jq -c -r '.[] | select(.dist == env.DIST) | "\(.source) \(.arch)"' | sort -u | cut -f 1 -d ' ' | uniq -c | sort -r
 ```
 
 ## j2 transformation
