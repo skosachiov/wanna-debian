@@ -198,7 +198,7 @@ def find_versions(fin, filenames, dist = None, comp = None, build = None, arch =
         except (IOError, json.JSONDecodeError) as e:
             logging.error(f"Error reading file: {e}")
             return {}
-    logging.info(f"Dictionary successfully read from: {filenames}")
+    logging.debug(f"Dictionary successfully read from: {filenames}")
     for key in data_dict:
         data_dict[key].sort(key=cmp_to_key(lambda a, b: apt_pkg.version_compare(a[version_key], b[version_key])))
 
@@ -258,7 +258,7 @@ def extract_hashes(filename, hashes):
         text = data.decode('utf-8', errors='ignore')
         for h in re.findall(pattern, text):
             hashes_dict[h] = hashes_dict.get(h, 0) + 1
-        logging.info(f"Hashes read from the index: {len(hashes_dict)}")
+        logging.info(f"Hashes that were read from the index: {len(hashes_dict)}")
 
     hashes_dict = {k: v for k, v in hashes_dict.items() if v == 1}
     hashes = set(hashes_dict.keys())
