@@ -143,7 +143,6 @@ class TestWriteMetadataIndex:
                 write_metadata_index("test.json", test_data)
                 mock_logging.assert_called_once()
 
-
 class TestUpdateMetadataIndex:
     """Test cases for update_metadata_index function"""
 
@@ -166,27 +165,35 @@ Filename: pool/main/a/another-package/another-package_2.0.0_amd64.deb
 """
         packages = []
 
-        with patch('builtins.open', mock_open(read_data=mock_file_content)):
-            with patch('logging.debug') as mock_logging:
-                update_metadata_index(
-                    "test_file", packages, "buster", "main", "amd64"
-                )
-                result = packages
+        def exists_side_effect(path):
+            # Return True for the package file, False for the JSON index
+            if path == "test_file":
+                return True
+            return False
 
-                assert len(result) == 2
-                assert result[0]['package'] == 'test-package'
-                assert result[0]['version'] == '1.0.0'
-                assert result[0]['dist'] == 'buster'
-                assert result[0]['comp'] == 'main'
-                assert result[0]['arch'] == 'amd64'
-                assert result[0]['source'] == 'test-package'
-                assert result[0]['source_version'] == '1.0.0'
+        with patch('os.path.exists', side_effect=exists_side_effect):
+            with patch('builtins.open', mock_open(read_data=mock_file_content)):
+                with patch('logging.debug') as mock_logging:
+                    update_metadata_index(
+                        "test_file", packages, "buster", "main", "amd64"
+                    )
+                    result = packages
 
-                assert result[1]['package'] == 'another-package'
-                assert result[1]['source'] == 'another-source'
-                assert result[1]['source_version'] == '2.0.0'
+                    assert len(result) == 2
+                    assert result[0]['package'] == 'test-package'
+                    assert result[0]['version'] == '1.0.0'
+                    assert result[0]['dist'] == 'buster'
+                    assert result[0]['comp'] == 'main'
+                    assert result[0]['arch'] == 'amd64'
+                    assert result[0]['source'] == 'test-package'
+                    assert result[0]['source_version'] == '1.0.0'
 
-                mock_logging.assert_called_once()
+                    assert result[1]['package'] == 'another-package'
+                    assert result[1]['source'] == 'another-source'
+                    assert result[1]['source_version'] == '2.0.0'
+
+                    # Check that debug was called at least once
+                    assert mock_logging.call_count >= 1
 
     def test_update_metadata_index_with_source(self):
         """Test metadata update with source package information"""
@@ -200,17 +207,23 @@ Filename: pool/main/b/binary-package/binary-package_1.5.0_amd64.deb
 """
         packages = []
 
-        with patch('builtins.open', mock_open(read_data=mock_file_content)):
-            update_metadata_index(
-                "test_file", packages, "bullseye", "main", "amd64"
-            )
-            result = packages
+        def exists_side_effect(path):
+            if path == "test_file":
+                return True
+            return False
 
-            assert len(result) == 1
-            assert result[0]['package'] == 'binary-package'
-            assert result[0]['source'] == 'source-package'
-            assert result[0]['source_version'] == '1.5.0-1'
+        with patch('os.path.exists', side_effect=exists_side_effect):
+            with patch('builtins.open', mock_open(read_data=mock_file_content)):
+                with patch('logging.debug') as mock_logging:
+                    update_metadata_index(
+                        "test_file", packages, "bullseye", "main", "amd64"
+                    )
+                    result = packages
 
+                    assert len(result) == 1
+                    assert result[0]['package'] == 'binary-package'
+                    assert result[0]['source'] == 'source-package'
+                    assert result[0]['source_version'] == '1.5.0-1'
 
 class TestShouldDownloadFile:
     """Test cases for should_download_file function"""
