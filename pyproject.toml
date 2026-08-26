@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "wanna-debian"
-version = "0.2.76"
+version = "0.2.77"
 description = "Debian package management utilities"
 readme = "README.md"
 license = {text = "GPL-3.0-only OR BSD-3-Clause"}
@@ -14,7 +14,6 @@ authors = [
 requires-python = ">=3.8"
 dependencies = [
     "requests>=2.25.0",
-    "python-apt>=2.0.0",
 ]
 classifiers = [
     "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
