@@ -51,3 +51,11 @@ source ~/.bashrc
 ## uninstall
 
 `pip uninstall -y --break-system-packages wanna-debian`
+
+## python venv install
+
+```
+python3 -m venv --system-site-packages .venv
+source .venv/bin/activate
+pip install git+https://github.com/skosachiov/wanna-debian.git
+```
