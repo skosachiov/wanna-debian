@@ -125,8 +125,10 @@ def update_metadata_index(packagefile, data_list, dist, comp, build, dry_run = F
     logging.debug(f'In the file {packagefile} processed packets: {len(packages)}')
 
     logging.debug(f'Save component index: {packagefile_index}')
+    json_rows = ",\n  ".join(map(json.dumps, packages))
+    final_json = f"[\n  {json_rows}\n]"
     with open(packagefile_index, "w") as f:
-        json.dump(packages, f)
+        f.write(final_json)
 
     return data_list.extend(packages)
 
