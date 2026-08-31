@@ -88,3 +88,14 @@ echo vim | distrotracker --hold --local-dir metadata-debian --dist trixie --sour
 | xargs -I {} sh -c 'url="{}"; echo "$(basename "$url" | sed "s/_.*//") \
 $(curl -sI "$url" | grep -i last-modified | sed "s/^last-modified: //I" | date -f - +%Y-%m-%dT%H:%M:%S%z)"'
 ```
+
+## git diff
+
+metadata/.gitignore
+```
+*
+!*/
+!*.json
+```
+
+git -C metadata -am no-message
