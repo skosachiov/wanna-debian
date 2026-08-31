@@ -149,12 +149,18 @@ def parse_requirement_line(line):
         version = match.group(3).strip()
         if operator in ('>=', '<=', '>>', '<<', '='):
             return (package_part, operator, version)
+    elif '=' in line:
+        package_part = line.split('=')[0]
+        operator = '='
+        version = line.split('=')[1]
+        return (package_part, operator, version)
     else:
         package_part = line
         operator = '>='
         version = config["min_version"]
         return (package_part, operator, version)
 
+        
     return None
 
 def check_version(version, required_op, required_version):
