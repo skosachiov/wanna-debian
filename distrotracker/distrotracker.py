@@ -316,8 +316,7 @@ def original_metadata_is_newer(base_url, local_base_dir, session, hashes):
                     remote_time = datetime.strptime(remote_time_str, '%a, %d %b %Y %H:%M:%S %Z').timestamp()
 
                     if remote_time > local_mtime:
-                        logging.info(f"Updating (remote is newer): {url_path} {datetime.utcfromtimestamp(remote_time).strftime('%Y-%m-%d %H:%M:%S')} UTC, " \
-                            f"timestamp {datetime.utcfromtimestamp(local_mtime).strftime('%Y-%m-%d %H:%M:%S')} UTC")
+                        logging.info(f"Updating (remote is newer): {url_path}")
                         # Download the updated file
                         file_response = session.get(url)
                         file_response.raise_for_status()
@@ -331,9 +330,11 @@ def original_metadata_is_newer(base_url, local_base_dir, session, hashes):
                         extract_compressed_file(local_path, local_path[:-3], remote_time)
 
                     else:
-                        logging.info(f"Url is up to date: {url_path} {datetime.utcfromtimestamp(remote_time).strftime('%Y-%m-%d %H:%M:%S')} UTC, " \
-                            f"timestamp {datetime.utcfromtimestamp(local_mtime).strftime('%Y-%m-%d %H:%M:%S')} UTC")
+                        logging.info(f"Url is up to date: {url_path}")
                         updated = False
+                        
+                    logging.info(f"Timestamp remote, local: {datetime.utcfromtimestamp(remote_time).strftime('%Y-%m-%d %H:%M:%S')} UTC, " \
+                        f"{datetime.utcfromtimestamp(local_mtime).strftime('%Y-%m-%d %H:%M:%S')} UTC")                        
                 else:
                     logging.warning(f"No last-modified header for: {url}")
             else:
