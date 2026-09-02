@@ -160,7 +160,7 @@ def parse_requirement_line(line):
         version = config["min_version"]
         return (package_part, operator, version)
 
-        
+
     return None
 
 def check_version(version, required_op, required_version):
@@ -631,6 +631,11 @@ def main():
     apt_pkg.init()
 
     session = requests.Session()
+    session.headers.update({
+        'Cache-Control': 'no-cache',
+        'Pragma': 'no-cache',
+        'Expires': '0'
+    })
     if not config["ssl_verify"]: session.verify = False
 
     hashes = set()
