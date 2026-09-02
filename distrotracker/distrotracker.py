@@ -330,7 +330,8 @@ def original_metadata_is_newer(base_url, local_base_dir, session, hashes):
                         extract_compressed_file(local_path, local_path[:-3], remote_time)
 
                     else:
-                        logging.info(f"Url is up to date: {url_path}")
+                        logging.info(f"Url is up to date: {url_path} {datetime.utcfromtimestamp(remote_time).strftime('%Y-%m-%d %H:%M:%S')} UTC, " \
+                            f"timestamp {datetime.utcfromtimestamp(local_mtime).strftime('%Y-%m-%d %H:%M:%S')} UTC")
                         updated = False
                 else:
                     logging.warning(f"No last-modified header for: {url}")
@@ -631,11 +632,7 @@ def main():
     apt_pkg.init()
 
     session = requests.Session()
-    session.headers.update({
-        'Cache-Control': 'no-cache',
-        'Pragma': 'no-cache',
-        'Expires': '0'
-    })
+    session.headers.update({'Cache-Control': 'no-cache', 'Pragma': 'no-cache', 'Expires': '0'})
     if not config["ssl_verify"]: session.verify = False
 
     hashes = set()
