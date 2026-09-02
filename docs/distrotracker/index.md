@@ -92,10 +92,15 @@ $(curl -sI "$url" | grep -i last-modified | sed "s/^last-modified: //I" | date -
 ## git diff
 
 metadata/.gitignore
+
 ```
 *
 !*/
 !*.json
 ```
 
-git -C metadata -am no-message
+`where true; do git -C metadata add --all; git -C metadata commit -m auto; distrotracker -u; sleep 1h; done`
+
+`git -C metadata diff`
+
+`git -C metadata diff --unified=0 | grep '^\+  {' | sed 's/^\+  //;s/,$//' | jq -r -c -n '[inputs] | .[] | "\(.dist)\t\(.package)=\(.version)\t\(.build)"'`
