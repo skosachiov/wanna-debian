@@ -316,7 +316,8 @@ def original_metadata_is_newer(base_url, local_base_dir, session, hashes):
                     remote_time = datetime.strptime(remote_time_str, '%a, %d %b %Y %H:%M:%S %Z').timestamp()
 
                     if remote_time > local_mtime:
-                        logging.info(f"Updating (remote is newer): {url_path}")
+                        logging.info(f"Updating (remote is newer): {url_path} {datetime.utcfromtimestamp(remote_time).strftime('%Y-%m-%d %H:%M:%S')} UTC, " \
+                            f"timestamp {datetime.utcfromtimestamp(local_mtime).strftime('%Y-%m-%d %H:%M:%S')} UTC")
                         # Download the updated file
                         file_response = session.get(url)
                         file_response.raise_for_status()
