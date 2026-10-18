@@ -1,25 +1,32 @@
 # distrotracker
 
-Distribution package tracking and dependency resolution tool for Debian. `distrotracker` helps track packages across Debian distributions and find minimum versions that satisfy dependencies. It's particularly useful for backporting and dependency resolution.
+Distribution package tracking and dependency resolution tool for Debian. `distrotracker` helps track packages across Debian distributions and find the minimum versions that satisfy dependencies. It is particularly useful for backporting and dependency resolution.
 
 ## update metadata
 
-`distrotracker --base-url http://deb.debian.org/debian/`
+The default metadata local directory is `metadata`, and the default components are `main`, `main/debian-installer`, `contrib`, `non-free`, `non-free-firmware`.
 
-or
+`distrotracker --update-only --base-url http://deb.debian.org/debian/ --local-dir metadata-debian`
 
-`distrotracker --base-url http://ru.archive.ubuntu.com/ubuntu/ --local-dir metadata-ubuntu --comp main universe`
+For Debian derivatives such as Ubuntu, you must use an explicit list of components, for example `main`, `main/debian-installer`, `multiverse`, `restricted`, `universe`:
 
+`distrotracker --update-only --base-url http://us.archive.ubuntu.com/ubuntu/ --local-dir metadata-ubuntu --dist resolute noble --comp main main/debian-installer multiverse restricted universe`
 
-## search for the minimum version that satisfies dependencies
+## simple 'grep-like' search
 
-`echo 'libpython3.13 (>= 3.13.0~rc3)' | distrotracker`
+`distrotracker --all --grep 'nvidia[^,]*?570'--dist trixie --build binary-amd64`
 
-or
+## search for versions that satisfy dependencies
+
+### read one package from stdin
+
+`echo 'openssh-server (>= 1:10.5p1-1ubuntu3)' | distrotracker --hold --local-dir metadata-ubuntu`
+
+### read a list from stdin
 
 `cat dose-unsat.list | distrotracker`
 
-or dose-unsat.list example:
+dose-unsat.list example:
 ```
 libx509-ocaml-dev (>= 1.0.0)
 libduration-ocaml-dev
@@ -34,7 +41,7 @@ cat dose-unsat.list | distrotracker --build source
 cat dose-unsat.list | distrotracker --build binary-amd64 binary-arm64 --dist trixie sid
 ```
 
-or backport.list example:
+Or a backport.list example:
 ```
 libx509-ocaml-dev=1.0.0
 librust-gix-fs-0.12+default-dev=0.12.1
@@ -47,7 +54,7 @@ librandomconv-ocaml-dev=0.2
 echo 'libpython3.13' | distrotracker | jq -c -r '.[] | "Package: \(.package), Version: \(.version)"'
 ```
 
-## find packages with only one of the two architectures built
+## find packages built for only one of the two architectures
 
 ```
 export DIST="rc-buggy"; distrotracker --all --dist $DIST --build binary-amd64 |  jq -c -r '.[] | "\(.source) (= \(.source_version))"' | sort -u | distrotracker --hold --source --dist $DIST | jq -c -r '.[] | select(.dist == env.DIST and .build == "source") | select(.arch | contains("all") and (contains("any") or contains("linux-any") or contains("amd64"))) | "\(.source) (= \(.source_version))"' | distrotracker --hold --source --dist $DIST --build binary-amd64 | jq -c -r '.[] | select(.dist == env.DIST) | "\(.source) \(.arch)"' | sort -u | cut -f 1 -d ' ' | uniq -c | sort -r
@@ -55,7 +62,7 @@ export DIST="rc-buggy"; distrotracker --all --dist $DIST --build binary-amd64 | 
 
 ## j2 transformation
 
-file convert.j2:
+File convert.j2:
 ```
 {% for item in input_list %}
 EXAMPLE,{{ item.source }}={{ item.source_version}},{{ item.filename }},{{ item.dist }},EXAMPLE
@@ -64,7 +71,7 @@ EXAMPLE,{{ item.source }}={{ item.source_version}},{{ item.filename }},{{ item.d
 
 `echo vim | distrotracker --hold | jq ''{"input_list": .} | j2 -f json convert.j2 -`
 
-file groupby.j2:
+File groupby.j2:
 ```
 {% for dist, items in input_list|groupby('dist') %}
 EXAMPLE,{{ dist }}, {% for item in items %} {{item.source}}={{item.source_version}} {%- endfor %}
