@@ -667,22 +667,32 @@ def run_dose(rec, config, dist, dist_dir, scratch, dists_dir,
 # report entry
 # ---------------------------------------------------------------------------
 
-HEALTH_DEF = (pathlib.Path(__file__).resolve().parent
-              / "tests" / "golden" / "jq" / "health_def.jq").read_text()
-HEALTH_BODY = (pathlib.Path(__file__).resolve().parent
-               / "tests" / "golden" / "jq" / "health_body.jq").read_text()
-DOSE_ASSEMBLER = (pathlib.Path(__file__).resolve().parent
-                  / "tests" / "golden" / "jq" / "dose_assembler.jq").read_text()
-DOSE_MUTATE_DEBCHECK = (pathlib.Path(__file__).resolve().parent
-                        / "tests" / "golden" / "jq"
-                        / "dose_mutate_debcheck.jq").read_text()
-DOSE_MUTATE_BUILDDEBCHECK = (pathlib.Path(__file__).resolve().parent
-                             / "tests" / "golden" / "jq"
-                             / "dose_mutate_builddebcheck.jq").read_text()
-ENTRY_PROGRAM = (pathlib.Path(__file__).resolve().parent
-                 / "tests" / "golden" / "jq" / "entry_program.jq").read_text()
-SUMMARY_BODY = (pathlib.Path(__file__).resolve().parent
-                / "tests" / "golden" / "jq" / "summary_body.jq").read_text()
+HEALTH_DEF = r"""def health_marker:
+  (if .binary > 0 then "+" else "-" end)
+  + (if .source > 0 then "+" else "-" end)
+  + (if .nosource_count == 0 then "+" else "-" end)
+  + (if .nobinary_count == 0 then "+" else "-" end)
+  + (if .noarch_count == 0 then "+" else "-" end)
+  + (if .outdate.count == 0 then "+" else "-" end)
+  + (if (.dose != null and .dose.debcheck_count == 0) then "+" else "-" end)
+  + (if (.dose != null and .dose.builddebcheck_count == 0) then "+" else "-" end);"""
+
+HEALTH_BODY = r"""{binary:$binary,source:$source,nosource_count:$nosource,nobinary_count:$nobinary,noarch_count:$noarch,outdate:{count:$outdate},dose:.} """
+
+DOSE_ASSEMBLER = r"""
+        split("\n--\n") as $parts |
+        ($parts[0] | split("\n") | map(select(length>0))) as $deb |
+        ($parts[1] | split("\n") | map(select(length>0))) as $bdb |
+        {debcheck_count:($deb|length), debcheck:$deb,
+         builddebcheck_count:($bdb|length), builddebcheck:$bdb}"""
+
+DOSE_MUTATE_DEBCHECK = r""". + {debcheck_count:-1, debcheck:[]}"""
+
+DOSE_MUTATE_BUILDDEBCHECK = r""". + {builddebcheck_count:-1, builddebcheck:[]}"""
+
+ENTRY_PROGRAM = r"""{dist:$dist,run_date:$runDate,commit_hash:$commitHash,packages_compressed_mtime:$packagesCompMtime,binary:$binary,source:$source,nosource_count:$nosource,nosource:.,nobinary_count:$nobinary,nobinary:$nobin[0],noarch_count:$noarch,noarch:$na[0],outdate:{count:$outdate,list:$outd[0]},dose:$dose[0],health:$health}"""
+
+SUMMARY_BODY = r"""{generated_at:$generatedAt,run_date:$runDate,commit_hash:$commitHash,dist_count:$count,distributions:[ .[] | .health = health_marker ]}"""
 
 
 def _jq_list_file(scratch, dist, name, values):
