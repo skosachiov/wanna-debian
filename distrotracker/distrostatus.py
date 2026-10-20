@@ -67,8 +67,7 @@ def resolve_settings(parsed):
     (only flags that were explicitly given are non-None)."""
     g = lambda name: getattr(parsed, name, None)
 
-    root_dir = g("root_dir") or _env("ROOT_DIR") or str(
-        pathlib.Path(__file__).resolve().parent)
+    root_dir = g("root_dir") or _env("ROOT_DIR") or os.getcwd()
     meta_dir = g("meta_dir") or _env("META_DIR") or f"{root_dir}/metadata"
     config_file = g("config_file") or _env("CONFIG_FILE") or f"{meta_dir}/config.json"
     dists_dir = g("dists_dir") or _env("DISTS_DIR") or f"{meta_dir}/dists"
@@ -156,7 +155,7 @@ def build_parser(s):
                          "and each check as it begins"))
     p.add_argument("--root-dir", dest="root_dir", default=s.root_dir,
                    metavar="PATH",
-                   help=("Project root (overrides ROOT_DIR; default: script "
+                   help=("Project root (overrides ROOT_DIR; default: current "
                          f"directory) [{s.root_dir}]"))
     p.add_argument("--meta-dir", dest="meta_dir", default=s.meta_dir,
                    metavar="PATH",
@@ -200,7 +199,7 @@ def build_parser(s):
     p.epilog = (
         "Environment (flags override these; values fall back to "
         "built-in defaults):\n"
-        "  ROOT_DIR      Root of the project (default: script directory)\n"
+        "  ROOT_DIR      Root of the project (default: current directory)\n"
         "  META_DIR      Path to the metadata mirror (default: ROOT_DIR/metadata)\n"
         "  REPORTS_DIR   Where report.json and report.md are written "
         "(default: ROOT_DIR/reports)\n"
