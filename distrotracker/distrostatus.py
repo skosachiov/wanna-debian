@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import argparse
+import logging
 import os
 import pathlib
 import shlex
@@ -21,13 +22,12 @@ ENV_INCOMPLETENESS_LEGACY = "INCOMPLETNESS"
 
 
 def die(message):
-    print(f"distrostatus: {message}", file=sys.stderr)
+    logging.error("distrostatus: %s", message)
     sys.exit(1)
 
 
-def prog(message, verbose):
-    if verbose:
-        print(f"distrostatus: {message}", file=sys.stderr)
+def prog(message):
+    logging.debug("distrostatus: %s", message)
 
 
 def q(value):
@@ -50,7 +50,7 @@ class Settings:
     incompleteness: str
     base_dist: str
     outdate_ref: str
-    verbose: bool
+    log_level: str
 
 
 def _env(name, legacy=None):
@@ -79,12 +79,13 @@ def resolve_settings(parsed):
                       or "1024")
     base_dist = g("base_dist") or _env("BASE_DIST") or "testing"
     outdate_ref = g("outdate_ref") or _env("OUTDATE_REF") or "debian_sources"
+    log_level = g("log_level") or _env("LOG_LEVEL") or "INFO"
 
     return Settings(
         root_dir=root_dir, meta_dir=meta_dir, config_file=config_file,
         dists_dir=dists_dir, reports_dir=reports_dir, dists_max=dists_max,
         incompleteness=incompleteness, base_dist=base_dist,
-        outdate_ref=outdate_ref, verbose=bool(g("verbose")))
+        outdate_ref=outdate_ref, log_level=log_level)
 
 
 # ---------------------------------------------------------------------------
@@ -120,7 +121,7 @@ def _pre_parser():
 
     p = _Quiet(add_help=False, argument_default=argparse.SUPPRESS,
                exit_on_error=False)
-    p.add_argument("--verbose", action="store_true", default=argparse.SUPPRESS)
+    p.add_argument("--log-level", dest="log_level")
     p.add_argument("--root-dir", dest="root_dir")
     p.add_argument("--meta-dir", dest="meta_dir")
     p.add_argument("--reports-dir", dest="reports_dir")
@@ -137,6 +138,9 @@ class _PreParseError(Exception):
     pass
 
 
+LOG_LEVELS = ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
+
+
 def build_parser(s):
     """Real parser, with resolved defaults shown in the help text."""
     p = _Parser(
@@ -149,10 +153,11 @@ def build_parser(s):
         add_help=False)
     p.add_argument("--help", "-h", action="help",
                    help="Print this usage and exit")
-    p.add_argument("--verbose", action="store_true",
-                   default=s.verbose,
-                   help=("Print progress to stderr: the current distribution "
-                         "and each check as it begins"))
+    p.add_argument("--log-level", dest="log_level", default=s.log_level,
+                   choices=LOG_LEVELS, metavar="LEVEL",
+                   help=("Logging level: one of "
+                         f"{', '.join(LOG_LEVELS)} (overrides LOG_LEVEL; "
+                         f"default: INFO) [{s.log_level}]"))
     p.add_argument("--root-dir", dest="root_dir", default=s.root_dir,
                    metavar="PATH",
                    help=("Project root (overrides ROOT_DIR; default: current "
@@ -215,6 +220,8 @@ def build_parser(s):
         "                resolver-only input to the dose checks (default: testing)\n"
         "  OUTDATE_REF   Reference distribution the Outdate check compares\n"
         "                source packages against (default: debian_sources)\n"
+        "  LOG_LEVEL     Logging level: one of "
+        f"{', '.join(LOG_LEVELS)} (default: INFO)\n"
         "\n"
         "Required tools: sort, wc, jq, paste, grep (with -P), find, stat,\n"
         "date, awk, uniq, sed, cut, head, distrotracker, dose-debcheck,\n"
@@ -904,6 +911,8 @@ def write_markdown(reports_dir, generated_at, compact_date, commit_hash, dist_co
 def run(argv=None):
     argv = sys.argv[1:] if argv is None else argv
     parser, args = parse_args(argv)
+    logging.basicConfig(level=getattr(logging, args.log_level),
+                        format='%(asctime)s %(levelname)s %(message)s')
     check_tools()
     if not pathlib.Path(args.config_file).is_file():
         die(f"config file not found: {args.config_file}")
@@ -940,28 +949,28 @@ def run(argv=None):
             dist = pathlib.Path(dist_dir).name
             if not needs_reprocess(args.reports_dir, dist, dist_dir, config,
                                    args.incompleteness):
-                prog(f"skipping {dist} (report is current)", args.verbose)
+                prog(f"skipping {dist} (report is current)")
                 continue
             if dists_max is not None and processed >= dists_max:
                 break
             processed += 1
 
-            prog(f"processing dist {dist}", args.verbose)
+            prog(f"processing dist {dist}")
             rec = DistRecord(dist=dist)
-            prog(f"running count on {dist}", args.verbose)
+            prog(f"running count on {dist}")
             run_count(rec, config, dist)
-            prog(f"running no-source on {dist}", args.verbose)
+            prog(f"running no-source on {dist}")
             run_nosource(rec, config, dist, scratch)
-            prog(f"running no-binary on {dist}", args.verbose)
+            prog(f"running no-binary on {dist}")
             run_nobinary(rec, config, dist, scratch)
-            prog(f"running no-arch on {dist}", args.verbose)
+            prog(f"running no-arch on {dist}")
             run_noarch(rec, config, dist, scratch)
-            prog(f"running outdate on {dist}", args.verbose)
+            prog(f"running outdate on {dist}")
             run_outdate(rec, config, dist, scratch, args.outdate_ref)
-            prog(f"running dose on {dist}", args.verbose)
+            prog(f"running dose on {dist}")
             run_dose(rec, config, dist, dist_dir, scratch, args.dists_dir,
                      args.base_dist, args.incompleteness, incompleted_parent)
-            prog(f"building report entry on {dist}", args.verbose)
+            prog(f"building report entry on {dist}")
             build_report_entry(rec, config, args, scratch, dist, dist_dir,
                                compact_date, commit_hash)
             pipeline(f"rm -rf {q(scratch)}/{q(dist)}.*", check=False)
@@ -975,8 +984,9 @@ def run(argv=None):
         cleanup()
         signal.signal(signal.SIGTERM, old_term)
 
-    print(f"distrostatus: analyzed {dist_count} distributions; report written "
-          f"to {args.reports_dir} (report.json, report.md)")
+    logging.info("distrostatus: analyzed %d distributions; report written "
+                 "to %s (report.json, report.md)",
+                 dist_count, args.reports_dir)
     return 0
 
 
