@@ -345,56 +345,47 @@ def has_build(config, build):
     return build in config.builds
 
 
-def is_incompleted_dist(name):
-    # Match prefix-reponame-suffix or prefix_reponame_suffix patterns
-    if "-" in name:
-        parts = name.split("-")
-        if len(parts) == 3:
-            # Any 3-part form with separators is considered a incompleted pattern variant
-            # and we look for reponame as middle component typically
-            return True
-    if "_" in name:
-        parts = name.split("_")
-        if len(parts) == 3:
-            return True
-    # Also handle 2-part forms that might be prefix-reponame or prefix_reponame
-    # where first is prefix indicating incompleted? Or just check common forms
-    if "-" in name:
-        parts = name.split("-")
-        if len(parts) == 2:
-            # Could be prefix-reponame style; treat as incompleted pattern variant
-            return True
-    if "_" in name:
-        parts = name.split("_")
-        if len(parts) == 2:
-            return True
-    return False
+def compute_upper_level_dist_names(dist_names):
+    counter_other_dist = {name: 0 for name in dist_names}
+    for dist in dist_names:
+        for other in dist_names:
+            if dist != other and dist in other:
+                counter_other_dist[other] += 1
+    return {name for name, c in counter_other_dist.items() if c == 0}
 
 
-def incompleted_parent_of(name):
-    if not is_incompleted_dist(name):
+def incompleted_parent_of(name, upper_level_set):
+    """Return the upper-level dist that provides `name`'s background pool,
+    or None when `name` is itself upper-level.
+
+    The parent is the longest upper-level name that is a substring of
+    `name` (most specific match). Upper-level dists never have a parent,
+    enforcing "ONLY upper level use as bg"."""
+    if name in upper_level_set:
         return None
-    # Try dash split for prefix-reponame-suffix or prefix-reponame
-    if "-" in name:
-        parts = name.split("-")
-        if len(parts) == 3:
-            # prefix-reponame-suffix -> reponame is middle
-            return parts[1]
-        if len(parts) == 2:
-            # prefix-reponame -> reponame is second part? Or first?
-            # "incompleted_bookworm" style was prefix_reponame in old terms; but without using tokens,
-            # try to extract reponame - often it's the second component
-            # Prefer the component that is likely the base name (more common as directory name)
-            # Try second as reponame
-            return parts[1]
-    # Try underscore split
-    if "_" in name:
-        parts = name.split("_")
-        if len(parts) == 3:
-            return parts[1]
-        if len(parts) == 2:
-            return parts[1]
-    return None
+    candidates = [u for u in upper_level_set if u != name and u in name]
+    if not candidates:
+        return None
+    return max(candidates, key=len)
+
+
+def incompleted_parent_map(dists_dir):
+    """Map each non-upper-level dist to its upper-level background dist.
+
+    Upper-level dists are never keys, so they cannot be selected as the
+    background for anyone else.
+    """
+    root = pathlib.Path(dists_dir)
+    if not root.is_dir():
+        return {}
+    dist_names = [d.name for d in root.iterdir() if d.is_dir()]
+    upper_level = compute_upper_level_dist_names(dist_names)
+    mapping = {}
+    for name in dist_names:
+        parent = incompleted_parent_of(name, upper_level)
+        if parent is not None:
+            mapping[name] = parent
+    return mapping
 
 
 def newest_index_mtime(index_dir):
@@ -430,19 +421,6 @@ def newest_compressed_index_mtime(index_dir):
         return None
     s = argv(["stat", "-c", "%Y", index_dir], check=False)
     return int(s.stdout.strip()) if s.returncode == 0 else None
-
-
-def incompleted_parent_map(dists_dir):
-    mapping = {}
-    root = pathlib.Path(dists_dir)
-    for d in sorted(root.iterdir()) if root.is_dir() else []:
-        if not d.is_dir():
-            continue
-        name = d.name
-        parent = incompleted_parent_of(name)
-        if parent and (root / parent).is_dir():
-            mapping[name] = parent
-    return mapping
 
 
 def ordered_dist_dirs(dists_dir):
@@ -610,9 +588,9 @@ def run_dose(rec, config, dist, dist_dir, scratch, dists_dir,
     bg_bootstrap_p = ""
     bg_bootstrap_s = ""
     bg_start = []
-    if is_incompleted_dist(dist):
-        parent = incompleted_parent.get(dist, "")
-        if parent and (pathlib.Path(dists_dir) / parent).is_dir():
+    if dist in incompleted_parent:
+        parent = incompleted_parent[dist]
+        if (pathlib.Path(dists_dir) / parent).is_dir():
             bg_start.append(f"{dists_dir}/{parent}/")
     elif rec.binary_count < int(incompleteness):
         if base_dist and (pathlib.Path(dists_dir) / base_dist).is_dir():
