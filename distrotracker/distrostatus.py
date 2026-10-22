@@ -50,6 +50,7 @@ class Settings:
     incompleteness: str
     base_dist: str
     outdate_ref: str
+    stable_ref: str
     log_level: str
 
 
@@ -79,13 +80,14 @@ def resolve_settings(parsed):
                       or "1024")
     base_dist = g("base_dist") or _env("BASE_DIST") or "testing"
     outdate_ref = g("outdate_ref") or _env("OUTDATE_REF") or "debian_sources"
+    stable_ref = g("stable_ref") or _env("STABLE_REF") or "stable"
     log_level = g("log_level") or _env("LOG_LEVEL") or "INFO"
 
     return Settings(
         root_dir=root_dir, meta_dir=meta_dir, config_file=config_file,
         dists_dir=dists_dir, reports_dir=reports_dir, dists_max=dists_max,
         incompleteness=incompleteness, base_dist=base_dist,
-        outdate_ref=outdate_ref, log_level=log_level)
+        outdate_ref=outdate_ref, stable_ref=stable_ref, log_level=log_level)
 
 
 # ---------------------------------------------------------------------------
@@ -131,6 +133,7 @@ def _pre_parser():
     p.add_argument("--incompleteness", dest="incompleteness")
     p.add_argument("--base-dist", dest="base_dist")
     p.add_argument("--outdate-ref", dest="outdate_ref")
+    p.add_argument("--stable-ref", dest="stable_ref")
     return p
 
 
@@ -201,6 +204,11 @@ def build_parser(s):
                    help=("Reference distribution the Outdate check compares "
                          "source packages against (overrides OUTDATE_REF; "
                          f"default: debian_sources) [{s.outdate_ref}]"))
+    p.add_argument("--stable-ref", dest="stable_ref", default=s.stable_ref,
+                   metavar="DIST",
+                   help=("Reference distribution the stable-diff check "
+                         "compares against (overrides STABLE_REF; "
+                         f"default: stable) [{s.stable_ref}]"))
     p.epilog = (
         "Environment (flags override these; values fall back to "
         "built-in defaults):\n"
@@ -220,6 +228,8 @@ def build_parser(s):
         "                resolver-only input to the dose checks (default: testing)\n"
         "  OUTDATE_REF   Reference distribution the Outdate check compares\n"
         "                source packages against (default: debian_sources)\n"
+        "  STABLE_REF    Reference distribution the stable-diff check compares\n"
+        "                against (default: stable)\n"
         "  LOG_LEVEL     Logging level: one of "
         f"{', '.join(LOG_LEVELS)} (default: INFO)\n"
         "\n"
@@ -474,6 +484,8 @@ class DistRecord:
     nobinary_list: list = field(default_factory=list)
     noarch_list: list = field(default_factory=list)
     outdate_list: list = field(default_factory=list)
+    stable_diff_list: list = field(default_factory=list)
+    stable_diff_tested: bool = False
     dose_debcheck_list: list = field(default_factory=list)
     dose_builddebcheck_list: list = field(default_factory=list)
     dose_tested: bool = False
@@ -571,6 +583,71 @@ def run_outdate(rec, config, dist, scratch, outdate_ref):
         rec.outdate_list = _read_lines(tmp)
 
 
+def run_stable_diff(rec, config, dist, scratch, meta_dir, dists_dir, stable_ref):
+    """Compare (source, arch) binary-package counts against the reference dist.
+
+    The pipeline mirrors the shell example:
+
+        comm -12  <(stable sources)  <(dist sources) |
+          distrotracker -k --latest -d <d> -s -b binary-amd64 |
+          jq -r '.[] | "\\(.source) \\(.arch)"' | sort | uniq -c |
+          awk '{ count=$1; $1=""; print $0 " " count }'
+
+    then
+
+        awk 'NR==FNR {a[$1" "$2]=$3; next}
+             {d = a[$1" "$2] - $3; if (d != 0) print $1, $2, d}'
+
+    The diff is `stable_count - dist_count`, so a positive value means the
+    dist has dropped packages relative to the reference.
+    """
+    if not has_build(config, BINARY_BUILD):
+        return
+    if dist == stable_ref:
+        return  # N/A for the reference itself
+    if rec.binary_count == 0:
+        prog(f"stable-diff: {dist} has no binary packages, skipping")
+        return
+    if not (pathlib.Path(dists_dir) / stable_ref).is_dir():
+        prog(f"stable-diff: reference dist {stable_ref} not present, skipping")
+        return
+    rec.stable_diff_tested = True
+
+    source_jq = "jq -r -c '.[] | \"\\(.source)\"'"
+    arch_jq = "jq -r -c '.[] | \"\\(.source) \\(.arch)\"'"
+    counts_awk = "awk '{ count=$1; $1=\"\"; print $0 \" \" count }'"
+    diff_awk = ('awk \'NR==FNR {a[$1" "$2]=$3; next} '
+                '{d = a[$1" "$2] - $3; if (d != 0) print $1, $2, d}\'')
+
+    tmp_stable = f"{scratch}/{dist}.stable_diff_stable"
+    tmp_target = f"{scratch}/{dist}.stable_diff_target"
+    tmp_out = f"{scratch}/{dist}.stable_diff"
+
+    common_left = (
+        f"<(distrotracker --all -k -D {q(meta_dir)} -d {q(stable_ref)} "
+        f"-b {q(BINARY_BUILD)} | {source_jq} | sort -u)")
+    common_right = (
+        f"<(distrotracker --all -k -D {q(meta_dir)} -d {q(dist)} "
+        f"-b {q(BINARY_BUILD)} | {source_jq} | sort -u)")
+
+    pipeline(
+        f"comm -12 {common_left} {common_right} "
+        f"| distrotracker -k --latest -d {q(stable_ref)} "
+        f"-s -b {q(BINARY_BUILD)} "
+        f"| {arch_jq} | sort | uniq -c | {counts_awk} > {q(tmp_stable)} || true",
+        check=False)
+    pipeline(
+        f"comm -12 {common_left} {common_right} "
+        f"| distrotracker -k --latest -d {q(dist)} "
+        f"-s -b {q(BINARY_BUILD)} "
+        f"| {arch_jq} | sort | uniq -c | {counts_awk} > {q(tmp_target)} || true",
+        check=False)
+    pipeline(
+        f"{diff_awk} {q(tmp_stable)} {q(tmp_target)} > {q(tmp_out)} || true",
+        check=False)
+    rec.stable_diff_list = _read_lines(tmp_out)
+
+
 def run_dose(rec, config, dist, dist_dir, scratch, dists_dir,
              base_dist, incompleteness, incompleted_parent):
     if not has_build(config, BINARY_BUILD):
@@ -658,10 +735,11 @@ HEALTH_DEF = r"""def health_marker:
   + (if .nobinary_count == 0 then "+" else "-" end)
   + (if .noarch_count == 0 then "+" else "-" end)
   + (if .outdate.count == 0 then "+" else "-" end)
+  + (if (.stable_diff != null and .stable_diff.count == 0) then "+" else "-" end)
   + (if (.dose != null and .dose.debcheck_count == 0) then "+" else "-" end)
   + (if (.dose != null and .dose.builddebcheck_count == 0) then "+" else "-" end);"""
 
-HEALTH_BODY = r"""{binary:$binary,source:$source,nosource_count:$nosource,nobinary_count:$nobinary,noarch_count:$noarch,outdate:{count:$outdate},dose:.} """
+HEALTH_BODY = r"""{binary:$binary,source:$source,nosource_count:$nosource,nobinary_count:$nobinary,noarch_count:$noarch,outdate:{count:$outdate},stable_diff:{count:$stableDiff},dose:.} """
 
 DOSE_ASSEMBLER = r"""
         split("\n--\n") as $parts |
@@ -674,7 +752,7 @@ DOSE_MUTATE_DEBCHECK = r""". + {debcheck_count:-1, debcheck:[]}"""
 
 DOSE_MUTATE_BUILDDEBCHECK = r""". + {builddebcheck_count:-1, builddebcheck:[]}"""
 
-ENTRY_PROGRAM = r"""{dist:$dist,run_date:$runDate,commit_hash:$commitHash,packages_compressed_mtime:$packagesCompMtime,binary:$binary,source:$source,nosource_count:$nosource,nosource:.,nobinary_count:$nobinary,nobinary:$nobin[0],noarch_count:$noarch,noarch:$na[0],outdate:{count:$outdate,list:$outd[0]},dose:$dose[0],health:$health}"""
+ENTRY_PROGRAM = r"""{dist:$dist,run_date:$runDate,commit_hash:$commitHash,packages_compressed_mtime:$packagesCompMtime,binary:$binary,source:$source,nosource_count:$nosource,nosource:.,nobinary_count:$nobinary,nobinary:$nobin[0],noarch_count:$noarch,noarch:$na[0],outdate:{count:$outdate,list:$outd[0]},stable_diff:{count:$stableDiff,list:$sd[0]},dose:$dose[0],health:$health}"""
 
 SUMMARY_BODY = r"""{generated_at:$generatedAt,run_date:$runDate,commit_hash:$commitHash,dist_count:$count,distributions:[ .[] | .health = health_marker ]}"""
 
@@ -729,6 +807,7 @@ def build_health(rec, scratch, dist):
            "--argjson", "nobinary", str(rec._nobinary_count),
            "--argjson", "noarch", str(rec._noarch_count),
            "--argjson", "outdate", str(rec._outdate_count),
+           "--argjson", "stableDiff", str(rec._stable_diff_count),
            HEALTH_DEF + "\n      " + HEALTH_BODY + " | health_marker"]
     stdin = pathlib.Path(dose_file).read_text() if pathlib.Path(dose_file).is_file() else ""
     r = subprocess.run(cmd, input=stdin, capture_output=True, text=True, check=True)
@@ -747,10 +826,13 @@ def build_report_entry(rec, config, args, scratch, dist, dist_dir,
         rec._noarch_count = len(rec.noarch_list)
         rec._outdate_count = len(rec.outdate_list)
     rec._nosource_count = -1 if rec.binary_count == 0 else len(rec.nosource_list)
+    rec._stable_diff_count = (-1 if not rec.stable_diff_tested
+                              else len(rec.stable_diff_list))
 
     _jq_list_file(scratch, dist, "nobinary", rec.nobinary_list)
     _jq_list_file(scratch, dist, "noarch", rec.noarch_list)
     _jq_list_file(scratch, dist, "outdate", rec.outdate_list)
+    _jq_list_file(scratch, dist, "stable_diff", rec.stable_diff_list)
     dose_file = _build_dose_json(rec, scratch, dist)
 
     if rec.source_count == 0:
@@ -774,6 +856,7 @@ def build_report_entry(rec, config, args, scratch, dist, dist_dir,
            "--slurpfile", "nobin", f"{scratch}/{dist}.nobinary.json",
            "--slurpfile", "na", f"{scratch}/{dist}.noarch.json",
            "--slurpfile", "outd", f"{scratch}/{dist}.outdate.json",
+           "--slurpfile", "sd", f"{scratch}/{dist}.stable_diff.json",
            "--slurpfile", "dose", dose_file,
            "--arg", "dist", dist,
            "--arg", "runDate", compact_date,
@@ -785,6 +868,7 @@ def build_report_entry(rec, config, args, scratch, dist, dist_dir,
            "--argjson", "nobinary", str(rec._nobinary_count),
            "--argjson", "noarch", str(rec._noarch_count),
            "--argjson", "outdate", str(rec._outdate_count),
+           "--argjson", "stableDiff", str(rec._stable_diff_count),
            "--argjson", "health", health,
            ENTRY_PROGRAM]
     r = subprocess.run(cmd, input=r1.stdout, capture_output=True, text=True, check=True)
@@ -849,9 +933,9 @@ def write_markdown(reports_dir, generated_at, compact_date, commit_hash, dist_co
         f"Distributions analyzed: {dist_count}", "",
         "## Summary", "",
         "| Packages-mtime | Distribution | Binary | Source | No-source | "
-        "No-binary | No-arch | Outdate | Dose-deb | Dose-build | Health |",
+        "No-binary | No-arch | Outdate | Stable-diff | Dose-deb | Dose-build | Health |",
         "|----------------|--------------|--------|--------|-----------|"
-        "-----------|---------|---------|----------|------------|--------|",
+        "-----------|---------|---------|-------------|----------|------------|--------|",
     ]
     for f in _md_order(reports_dir):
         def jqr(prog):
@@ -871,6 +955,8 @@ def write_markdown(reports_dir, generated_at, compact_date, commit_hash, dist_co
         nb = jqr(".nobinary_count")
         na = jqr(".noarch_count")
         od = jqr(".outdate.count")
+        sdc_raw = jqr("if .stable_diff == null then \"-1\" else (.stable_diff.count|tostring) end")
+        sdc = "-" if sdc_raw == "-1" else sdc_raw
         dd = jqr('if .dose == null then "-" else (.dose.debcheck_count|tostring) end')
         db = jqr('if .dose == null then "-" else (.dose.builddebcheck_count|tostring) end')
         h = subprocess.run(
@@ -878,7 +964,7 @@ def write_markdown(reports_dir, generated_at, compact_date, commit_hash, dist_co
             capture_output=True, text=True).stdout.strip()
         lines.append(
             f"| {pm} | [{name}](./{name}.json) | {b} | {s} | {ns} | {nb} | "
-            f"{na} | {od} | {dd} | {db} | {h} |")
+            f"{na} | {od} | {sdc} | {dd} | {db} | {h} |")
     pathlib.Path(f"{reports_dir}/report.md").write_text("\n".join(lines) + "\n")
 
 
@@ -943,6 +1029,9 @@ def run(argv=None):
             run_nobinary(rec, config, dist, scratch)
             prog(f"running no-arch on {dist}")
             run_noarch(rec, config, dist, scratch)
+            prog(f"running stable-diff on {dist}")
+            run_stable_diff(rec, config, dist, scratch,
+                            args.meta_dir, args.dists_dir, args.stable_ref)
             prog(f"running outdate on {dist}")
             run_outdate(rec, config, dist, scratch, args.outdate_ref)
             prog(f"running dose on {dist}")
