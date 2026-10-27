@@ -617,7 +617,7 @@ def run_stable_diff(rec, config, dist, scratch, meta_dir, dists_dir, stable_ref)
     arch_jq = "jq -r -c '.[] | \"\\(.source) \\(.arch)\"'"
     counts_awk = "awk '{ count=$1; $1=\"\"; print $0 \" \" count }'"
     diff_awk = ('awk \'NR==FNR {a[$1" "$2]=$3; next} '
-                '{d = a[$1" "$2] - $3; if (d != 0) print $1, $2, d}\'')
+                '{d = $3 - a[$1" "$2]; if (d != 0) print $1, $2, d}\'')
 
     tmp_stable = f"{scratch}/{dist}.stable_diff_stable"
     tmp_target = f"{scratch}/{dist}.stable_diff_target"
